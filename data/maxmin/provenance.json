@@ -1,0 +1,149 @@
+{
+  "generated": "2026-08-30T18:47:25",
+  "git_rev": "7b4df73",
+  "procedures": {
+    "P1": {
+      "name": "simulation-only",
+      "llm": null,
+      "selection": "over sampled candidates",
+      "rejection": true,
+      "measured_in": "synthetic embedding space",
+      "artifact_rendered": false,
+      "calculus": "text/level-description space (score_axes)"
+    },
+    "P2": {
+      "name": "real-text, select-and-reject",
+      "llm": "openai/gpt-5.6-luna",
+      "selection": "over K rendered-as-text candidates, losers discarded",
+      "rejection": true,
+      "measured_in": "text (n-gram + nomic-embed-text)",
+      "artifact_rendered": false,
+      "calculus": "text/level-description space (score_axes)"
+    },
+    "P2.5": {
+      "name": "cross-modal gate WITH rejection (superseded)",
+      "llm": "openai/gpt-5.6-luna",
+      "selection": "render, then accept/reject on CLAP validity + novelty",
+      "rejection": true,
+      "measured_in": "rendered artifact (CLAP audio)",
+      "artifact_rendered": true,
+      "calculus": "bandit-style axis credit, not the calculus proper"
+    },
+    "P3": {
+      "name": "cross-modal steering, no rejection",
+      "llm": "openai/gpt-5.6-luna",
+      "selection": "over PROMPTS pre-render, via shared text/artifact embedding",
+      "rejection": false,
+      "measured_in": "rendered artifact (CLAP/MERT audio, CLIP image)",
+      "artifact_rendered": true,
+      "calculus": "real space (score_axes_realized / score_axes_coverage)"
+    }
+  },
+  "results": {
+    "figures/summary.json": {
+      "procedure": "P1",
+      "script": "simulate.py",
+      "note": "poetry world, 6 policies, n=10,000",
+      "bytes": 2326,
+      "modified": "2026-08-30T15:25:57"
+    },
+    "figures/exam_summary.json": {
+      "procedure": "P1",
+      "script": "simulate_exam.py",
+      "note": "hard-floor bank packing",
+      "bytes": 1399,
+      "modified": "2026-08-30T15:32:49"
+    },
+    "figures/budget_comparison.json": {
+      "procedure": "P1",
+      "script": "experiment_budget.py",
+      "note": "budget-matched baselines + ablations",
+      "bytes": 2514,
+      "modified": "2026-08-30T15:38:28"
+    },
+    "figures/coverage_horizon.json": {
+      "procedure": "P1",
+      "script": "coverage_horizon.py",
+      "note": "inability-to-be-novel, 5 -> 10,000",
+      "bytes": 18084,
+      "modified": "2026-08-30T15:49:04"
+    },
+    "figures/slice_world.json": {
+      "procedure": "P1",
+      "script": "simulate_slices.py",
+      "note": "conditional world, d=24 m=3",
+      "bytes": 25751,
+      "modified": "2026-08-30T15:50:45"
+    },
+    "figures/theory_checks.json": {
+      "procedure": "P1",
+      "script": "verify_theory.py",
+      "note": "8 theorem checks",
+      "bytes": 1001,
+      "modified": "2026-08-30T15:33:49"
+    },
+    "figures/slice_theory_checks.json": {
+      "procedure": "P1",
+      "script": "verify_slices.py",
+      "note": "7 conditional-dimension checks",
+      "bytes": 2279,
+      "modified": "2026-08-30T15:45:26"
+    },
+    "figures/real_curves.json": {
+      "procedure": "P2",
+      "script": "metrics.py",
+      "note": "literal+latent diversity, n=5..10,000",
+      "bytes": 4417,
+      "modified": "2026-08-30T16:07:15"
+    },
+    "figures/arm_comparison.json": {
+      "procedure": "P2",
+      "script": "compare_arms.py",
+      "note": "7 arms at matched n, text metrics",
+      "bytes": 7983,
+      "modified": "2026-08-30T16:31:09"
+    },
+    "figures/head_to_head.json": {
+      "procedure": "P2",
+      "script": "head_to_head.py",
+      "note": "vs MMLU, matched n=1000",
+      "bytes": 3816,
+      "modified": "2026-08-30T17:23:17"
+    },
+    "figures/mureka_text.json": {
+      "procedure": "P2",
+      "script": "audio_domain.py prompts",
+      "note": "instrumental PROMPT diversity only, no audio",
+      "bytes": 477,
+      "modified": "2026-08-30T17:33:54"
+    },
+    "figures/vision_summary.json": {
+      "procedure": "P2",
+      "script": "figures_real.py",
+      "note": "text vs CLIP on 199 low-quality renders",
+      "bytes": 244,
+      "modified": "2026-08-30T16:32:06"
+    },
+    "figures/vision_compare.json": {
+      "procedure": "P2",
+      "script": "vision_compare.py VISION_TAG=high",
+      "note": "7 arms x 100 HIGH-quality renders of P2 corpora, matched n=96; a medium-quality n=48 pass exists and differs in BOTH quality and n, so the two are not a clean quality ablation",
+      "bytes": 2796,
+      "modified": "2026-08-30T18:46:54"
+    },
+    "real/lyria_online/run_summary.json": {
+      "procedure": "P2.5",
+      "script": "lyria_online.py",
+      "note": "CLAP gate WITH rejection -- superseded by lyria_steer.py; kept for the rejection-cost comparison",
+      "bytes": 2795,
+      "modified": "2026-08-30T18:26:47"
+    }
+  },
+  "missing_not_yet_produced": [
+    "figures/audio_compare.json",
+    "figures/lyria_length_probe.json",
+    "real/lyria_steer/run_summary.json",
+    "real/dalle_steer_maxmin/run_summary.json",
+    "real/dalle_steer_coverage/run_summary.json"
+  ]
+}
