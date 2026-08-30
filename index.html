@@ -13,7 +13,7 @@
 body{background:var(--bg);color:var(--fg);margin:0;font-size:17px;line-height:1.62;
 font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
 main{max-width:46rem;margin:0 auto;padding:3rem 1.2rem 6rem}
-h1{font-size:2.1rem;line-height:1.2;margin:0 0 .3rem}
+h1{font-size:2.05rem;line-height:1.2;margin:0 0 .8rem}
 h2{font-size:1.42rem;margin:2.6rem 0 .7rem;padding-bottom:.3rem;border-bottom:1px solid var(--rule)}
 h3{font-size:1.12rem;margin:1.9rem 0 .5rem}
 p{margin:0 0 1rem}a{color:var(--accent)}
@@ -39,7 +39,87 @@ padding:1rem 1.2rem;margin:1.5rem 0 2rem}
 </head>
 <body>
 <main>
-<div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; <a href="paper/paper.tex">LaTeX</a> &middot; <a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data on GitHub</a><br><span style="color:var(--muted);font-size:.9em">Every number is tagged with the procedure that produced it &mdash; see <code>data/maxmin/provenance.json</code>.</span></div>
+<div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; <a href="paper/paper.tex">LaTeX</a> &middot; <a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data</a><br><span style="color:var(--muted);font-size:.9em">~46k real generations, rendered images and audio, every number tagged with the procedure that produced it (<code>data/maxmin/provenance.json</code>).</span></div>
+<h1
+id="if-you-generate-synthetic-data-three-of-your-assumptions-are-probably-wrong">If
+you generate synthetic data, three of your assumptions are probably
+wrong</h1>
+<p>This project generated <strong>~46,000 real items</strong> —
+instructions, exam questions, image prompts, music prompts — from one
+model, rendered hundreds of them to actual images and audio, and
+measured what "diverse" actually means at three levels. The findings
+below are the ones that change what you'd do on Monday.</p>
+<h3
+id="1-your-duplicate-rate-is-worse-than-you-think-and-temperature-wont-fix-it">1.
+Your duplicate rate is worse than you think, and temperature won't fix
+it</h3>
+<p>Ask a strong model for a psychometric test question ten thousand
+times: <strong>72.3% of the corpus is byte-identical duplicate
+text.</strong> One question appears 1,637 times. Turning temperature up
+to 1.6 leaves it at 61.6%. Conditioning each call on explicit latent
+choices (what the task demands, what the distractors encode, …) drops it
+to <strong>0.2%</strong> — three orders of magnitude, from prompt
+structure alone. The same pipeline on image prompts produces
+<em>zero</em> duplicates, so validating on one domain tells you nothing
+about another. <strong>Count exact duplicates before you compute any
+diversity metric; they silently set the scale of every distance
+statistic.</strong></p>
+<h3
+id="2-the-diversity-youre-measuring-is-not-the-diversity-youre-shipping">2.
+The diversity you're measuring is not the diversity you're shipping</h3>
+<p>Text-embedding similarity between image-generation prompts predicts
+whether the <strong>rendered images</strong> look alike at <em>r</em> =
+0.155 — about 2% of the variance. A prompt set can be lexically and
+semantically varied and still render to near-interchangeable pictures,
+because the downstream model has its own mode structure. If your product
+is images, audio, or agent behaviour, <strong>measure diversity on the
+artifact, not the prompt.</strong> (Doing so is cheap: CLIP/CLAP
+embeddings of a few hundred rendered samples.)</p>
+<h3
+id="3-diverse-means-two-different-things-and-they-fight-each-other">3.
+"Diverse" means two different things, and they fight each other</h3>
+<p><em>Coverage</em> — reach as much of the space as possible in n
+items. <em>Max-min</em> — let no two items resemble each other.
+Optimizing one can wreck the other: greedy k-center (the classic max-min
+selector, and what a DPP approximates) wins min-gap in both our domains
+and comes <strong>last on coverage — a sixth of random
+selection</strong>. The two highest-Vendi selectors are the two worst
+covering ones. If you deduplicate training data, you want coverage; if
+you build eval suites or item banks, you want max-min; a "diversity
+score" that names neither is not telling you which one you got.</p>
+<h3 id="also-measured-also-actionable">Also measured, also
+actionable</h3>
+<ul>
+<li><strong>Literal and semantic diversity move in opposite
+directions</strong> as a corpus grows: vocabulary exhausts (distinct-2:
+0.87 → 0.11) while embedding spread keeps rising. Report both; either
+alone misleads.</li>
+<li><strong>Uncentered embedding-Vendi is mostly kernel
+artifact</strong> when your corpus sits in a narrow cosine cone
+(same-domain mean pairwise similarity: 0.88). Mean-center before you
+trust it, and publish the similarity distribution.</li>
+<li><strong>Evol-Instruct produces items <em>closer</em> to the corpus
+than naive sampling</strong> (median NN distance 0.025 vs 0.046) —
+mutating an existing item manufactures a neighbour of that item. It
+looks better on lexical metrics; both levels must be measured to catch
+this.</li>
+<li>Against five published methods, latent-axis conditioning + selection
+wins every metric we measure (+36% centered Vendi over the best,
+Persona-Hub-style conditioning). Against <strong>human-written
+MMLU</strong>, it wins on duplication and lexical variety and reaches
+69% of human semantic diversity — the honest gap.</li>
+<li>Every number on this page is tagged with the <strong>procedure that
+produced it</strong> (the method changed three times during the work;
+results are labelled, not restated).</li>
+</ul>
+<p>The full paper below has the theory that explains these — why a fixed
+prompt has a finite novelty budget (novelty decays as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>m</mi></mrow></msup><annotation encoding="application/x-tex">n^{-1/m}</annotation></semantics></math>
+in the <em>conditional</em> dimension, which is small), why only
+<em>transverse</em> prompt motion opens new space, and the calculus we
+use to decide which latent variable to condition on next.</p>
+<hr />
+<hr />
 <h1
 id="coverage-and-max-min-diversity-in-synthetic-data-generation">Coverage
 and Max-Min Diversity in Synthetic Data Generation</h1>
@@ -3786,6 +3866,56 @@ level, <code>farthest_levels</code> picks the outlier
 centre first and the outlier second. That is k-center versus facility
 location, reproduced inside the axis calculus, and it is the mechanism
 behind the table above.</p>
+<h2 id="iii2b-the-duality-taken-seriously">III.2b The duality, taken
+seriously</h2>
+<p>Calling coverage "the dual of max-min" is exactly right in one sense
+and importantly wrong in another, and both halves have algorithmic
+consequences we verified on real embeddings
+(<code>coverage/duality.py</code>).</p>
+<p><strong>Where they are dual.</strong> For radius ε, a
+<em>maximal</em> ε-packing is automatically an ε-covering: any uncovered
+point could have been added to the packing. We confirm this numerically
+on 3,000 held-out human instructions — at every ε tested, the greedy
+maximal packing covers 100.0% of the set, and the classical sandwich
+N_cov(ε) ≤ N_pack(ε) ≤ N_cov(ε/2) holds. Max-min run to maximality
+<em>is</em> a covering algorithm, and greedy k-center 2-approximates the
+covering <strong>radius</strong>.</p>
+<p><strong>Where they are not.</strong> That duality concerns the
+worst-case radius: the distance from the least-covered point to its
+nearest center. The coverage that matters for synthetic data is
+<strong>measure-weighted</strong> — what fraction of the reference
+distribution lies within reach — and the two come apart exactly when the
+measure is non-uniform, which it always is. k-center is driven by
+outliers: every isolated point sets the max and so commands a center.
+Measure-weighted coverage is driven by mass: an outlier is worth its own
+measure and no more. At a budget far below what the space needs, the
+prescriptions are opposite — and that is the entire content of our
+k-center result (first on min-gap, last on coverage). The true dual of
+measure-weighted coverage is fractional set cover, whose primal is
+submodular; max-min is not.</p>
+<p><strong>What the duality still buys: packing calibrates, covering
+places.</strong> Even where packing is the wrong way to <em>place</em>
+points, it is the right way to <em>choose the scale</em>. Define ε*(n)
+as the radius at which a maximal packing of the reference has about n
+points — the finest resolution an n-item corpus can deliver. Measured on
+the held-out human reference: ε*(100) = 0.549, ε*(450) = 0.472, ε*(1000)
+= 0.418. This retroactively diagnoses our failed fixed-ε comparison with
+more precision than "the ε was too small": its ε sat at the 2nd
+percentile of pairwise distances <em>regardless of budget</em>, while a
+450-item corpus genuinely supports about the 2.6th percentile — the
+error was choosing resolution independently of n. Protocol: calibrate ε
+by packing, then place by greedy marginal coverage against the
+measure.</p>
+<p><strong>The ceiling decomposition.</strong> In a generative setting,
+selection cannot cover what generation never proposed. We therefore
+report every coverage number as achieved = ceiling × efficiency, where
+the ceiling is the coverage of the reference by the union of
+<em>all</em> candidates the generator produced, and efficiency is the
+fraction of that ceiling the selector captured. A low ceiling with high
+efficiency says the axes are too narrow and more search is wasted — only
+support expansion (recursive refinement) can help; the reverse says the
+selector is the problem. Without the split, "we lost on coverage" is not
+actionable.</p>
 <h2 id="iii3-what-both-objectives-share">III.3 What both objectives
 share</h2>
 <p>Both are limited by the same thing, and neither optimizer can fix it.

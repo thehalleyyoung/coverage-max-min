@@ -3462,6 +3462,60 @@ with three tightly-clustered common levels and one rare outlying level,
 second. That is k-center versus facility location, reproduced inside the
 axis calculus, and it is the mechanism behind the table above.
 
+\subsection{III.2b The duality, taken
+seriously}\label{iii2b-the-duality-taken-seriously}
+
+Calling coverage "the dual of max-min" is exactly right in one sense and
+importantly wrong in another, and both halves have algorithmic
+consequences we verified on real embeddings
+(\texttt{coverage/duality.py}).
+
+\textbf{Where they are dual.} For radius ε, a \emph{maximal} ε-packing
+is automatically an ε-covering: any uncovered point could have been
+added to the packing. We confirm this numerically on 3,000 held-out
+human instructions --- at every ε tested, the greedy maximal packing
+covers 100.0\% of the set, and the classical sandwich N\_cov(ε) ≤
+N\_pack(ε) ≤ N\_cov(ε/2) holds. Max-min run to maximality \emph{is} a
+covering algorithm, and greedy k-center 2-approximates the covering
+\textbf{radius}.
+
+\textbf{Where they are not.} That duality concerns the worst-case
+radius: the distance from the least-covered point to its nearest center.
+The coverage that matters for synthetic data is
+\textbf{measure-weighted} --- what fraction of the reference
+distribution lies within reach --- and the two come apart exactly when
+the measure is non-uniform, which it always is. k-center is driven by
+outliers: every isolated point sets the max and so commands a center.
+Measure-weighted coverage is driven by mass: an outlier is worth its own
+measure and no more. At a budget far below what the space needs, the
+prescriptions are opposite --- and that is the entire content of our
+k-center result (first on min-gap, last on coverage). The true dual of
+measure-weighted coverage is fractional set cover, whose primal is
+submodular; max-min is not.
+
+\textbf{What the duality still buys: packing calibrates, covering
+places.} Even where packing is the wrong way to \emph{place} points, it
+is the right way to \emph{choose the scale}. Define ε*(n) as the radius
+at which a maximal packing of the reference has about n points --- the
+finest resolution an n-item corpus can deliver. Measured on the held-out
+human reference: ε*(100) = 0.549, ε*(450) = 0.472, ε*(1000) = 0.418.
+This retroactively diagnoses our failed fixed-ε comparison with more
+precision than "the ε was too small": its ε sat at the 2nd percentile of
+pairwise distances \emph{regardless of budget}, while a 450-item corpus
+genuinely supports about the 2.6th percentile --- the error was choosing
+resolution independently of n. Protocol: calibrate ε by packing, then
+place by greedy marginal coverage against the measure.
+
+\textbf{The ceiling decomposition.} In a generative setting, selection
+cannot cover what generation never proposed. We therefore report every
+coverage number as achieved = ceiling × efficiency, where the ceiling is
+the coverage of the reference by the union of \emph{all} candidates the
+generator produced, and efficiency is the fraction of that ceiling the
+selector captured. A low ceiling with high efficiency says the axes are
+too narrow and more search is wasted --- only support expansion
+(recursive refinement) can help; the reverse says the selector is the
+problem. Without the split, "we lost on coverage" is not actionable.
+
 \subsection{III.3 What both objectives
 share}\label{iii3-what-both-objectives-share}
 
