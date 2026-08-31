@@ -1187,25 +1187,32 @@ image model and by the fact that much of what varies in the text
 (c) Pairwise similarities in the two spaces correlate at only r =
 0.170.}
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. Sixteen renders from each policy, same generator and budget. Top row: naive prompting, a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still collapses to one visual mode --- magenta and cyan collage, classical bust, barcode, neon lettering. Bottom row: max-min steering with literal-space repulsion, where palette, medium, composition and register all vary. The bottom row remains fonder of grids and tiled panels than a human art director would be; §6.6 says why the objective does nothing to discourage that.}]{figures/fig13_contact_sheet.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §6.6 and §6.11 quantify.}]{figures/fig13_contact_sheet.png}}
 
-\emph{Figure 7. Sixteen renders from each policy, same generator and
-budget. Top row: naive prompting, a corpus with a 0.000 exact-duplicate
-rate and healthy lexical diversity that still collapses to one visual
-mode --- magenta and cyan collage, classical bust, barcode, neon
-lettering. Bottom row: max-min steering with literal-space repulsion,
-where palette, medium, composition and register all vary. The bottom row
-remains fonder of grids and tiled panels than a human art director would
-be; §6.6 says why the objective does nothing to discourage that.}
+\emph{Figure 7. Sixteen renders per policy, same generator, same budget,
+same image model. Rows 1--2, naive prompting: a corpus with a 0.000
+exact-duplicate rate and healthy lexical diversity that still returns
+one visual mode, with magenta and cyan collage, barcodes and QR codes,
+Renaissance portraits and classical busts, Michelangelo hands, warning
+triangles and neon OPEN signs recurring across nearly every panel. Rows
+3--4, max-min steering with literal and latent repulsion on both the
+text and vision sides: medium, palette, register and composition all
+move, across a medieval triptych, a botanical cabinet, a photographed
+sculpture installation, a torn-paper abstract and a civic notice. Tiling
+survives the steering: 38\% of the steered renders still score as
+literal tilings and 42\% still share a palette with a nearest neighbour,
+which §6.6 and §6.11 quantify.}
 
-A reader looking at the bottom row will notice that it still favours
-grids, panels and tiled compositions more than a human art director
-would. That is what the objective asks for and no more. A max-min corpus
-is scored on how far apart its items are, and nothing in the score says
-the corpus should look like any particular distribution of artworks ---
-there is no likelihood term, no reference set, no penalty for sitting in
-a region of image space that real post-modern art rarely occupies. If
-the generator\textquotesingle s prior happens to place a whole family of
+A reader looking at rows 3 and 4 of Figure 7 will notice that they still
+favour grids, panels and tiled compositions more than a human art
+director would, and the structural audit agrees: 38\% of those renders
+score above 0.5 on the autocorrelation tiling measure. That is what the
+objective asks for and no more. A max-min corpus is scored on how far
+apart its items are, and nothing in the score says the corpus should
+look like any particular distribution of artworks --- there is no
+likelihood term, no reference set, no penalty for sitting in a region of
+image space that real post-modern art rarely occupies. If the
+generator\textquotesingle s prior happens to place a whole family of
 mutually distant images inside the tiled-grid region, spreading points
 is satisfied by staying there and varying what fills the cells. Part
 II\textquotesingle s objective is the one that has a reference

@@ -179,27 +179,11 @@ def fig_vision():
 
 
 def fig_contact_sheet(k: int = 32):
-    """A contact sheet of rendered artworks -- the qualitative evidence."""
-    from PIL import Image
-    d = HERE / "real" / "dalle_naive" / "images_high"
-    if not d.exists():
-        d = HERE / "real" / "dalle_naive" / "images"
-    files = sorted(d.glob("*.png"))[:k]
-    if not files:
-        return
-    cols = 8
-    rows = (len(files) + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.15, rows * 1.15))
-    for ax, f in zip(np.array(axes).ravel(), files):
-        ax.imshow(Image.open(f).convert("RGB").resize((176, 176)))
-        ax.axis("off")
-    for ax in np.array(axes).ravel()[len(files):]:
-        ax.axis("off")
-    fig.suptitle(f"First {len(files)} rendered instructions "
-                 f"(naive prompting, gpt-image-1-mini, high quality)", y=1.005, fontsize=10)
-    fig.tight_layout()
-    fig.savefig(FIG / "fig13_contact_sheet.png", bbox_inches="tight")
-    plt.close(fig)
+    """Figure 13 is the two-panel naive-vs-steered sheet built by
+    make_contact_sheet.py; delegate so a rerun here cannot overwrite it with a
+    single-policy sheet."""
+    from make_contact_sheet import sheet
+    sheet()
 
 
 
