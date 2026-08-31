@@ -49,10 +49,10 @@ LIMITATIONS = """
 """
 
 CONCLUSION = """
-Neither objective is limited by its optimizer. What determines whether a corpus
-can keep growing without collapsing into paraphrase, and whether it can blanket
-the space it is drawn from, is the dimension of the generator's conditional
-support relative to the manifold it lives in. Saturation arrives at rate
+No measure here is limited by its optimizer. What determines whether a corpus can
+keep growing without collapsing into paraphrase, and whether it can blanket the
+space it is drawn from, is the dimension of the generator's conditional support
+relative to the manifold it lives in. Saturation arrives at rate
 *n*<sup>−1/*m*</sup> rather than *n*<sup>−1/*d*</sup>, a single prompt covers an
 ε<sup>*d*−*m*</sup> fraction of what the model could write, and only transverse
 prompt motion raises the ceiling. Everything else buys a constant factor against
@@ -66,9 +66,9 @@ transverse any more is the moment the horizon has been reached, and the only
 remaining move is to ask the generator to subdivide its own vocabulary of
 variation.
 
-The two objectives share that machinery and diverge exactly twice, at how an
-axis is scored and at how a candidate is chosen, and those two differences are
-enough to reverse the ranking of methods. Greedy k-center wins min-gap in both
+Pointing the loop at a different measure changes exactly two things, how an axis
+is scored and how a candidate is chosen, and those two differences are enough to
+reverse the ranking of methods. Greedy k-center wins min-gap in both
 domains and finishes last on coverage; orthogonalized conditioning, which is
 load-bearing under max-min, scores below plain conditioning under coverage. A
 corpus is not diverse or undiverse in the abstract. It is diverse with respect
@@ -87,6 +87,138 @@ to distrust a single diversity number, and together they are the argument for
 the practice we ended up recommending: measure at the level of the artifact you
 are shipping, report the literal and the latent separately, name the
 denominator, and count your duplicates before computing anything else.
+"""
+
+
+INTRO = """
+Ask a language model for a poem ten times and you get ten poems. Ask it ten
+thousand times and you get a few hundred poems and a great deal of paraphrase.
+Any fixed conditional distribution behaves this way under repeated sampling,
+whatever model supplies it: the distribution has a shape, and sampling traces
+that shape ever more densely rather than expanding it.
+
+The practical version of this is now everywhere. Synthetic training data is
+worth what it adds to the training set. An evaluation suite that clusters in a
+few families gives false assurance. Test-item banks, red-team prompt sets,
+persona corpora and augmentation pipelines all consume generated text in bulk,
+and all of them degrade in a way that standard quality metrics do not detect:
+every individual item is fine, and the collection is redundant.
+
+Because the failure is a property of the collection rather than of any item,
+catching it requires a measure over collections, and here the problem begins. A
+practitioner has many to choose from. Exact-duplicate rate is unambiguous and
+blind to paraphrase. Distinct-*n* and self-repetition read the surface and say
+nothing about meaning. The Vendi Score summarises an embedding spectrum and is
+close to insensitive to whether every item opens with the same clause. Median
+nearest-neighbour distance registers exactly that and says nothing about the
+shape of the whole. Precision, recall, density and coverage against a reference
+corpus say how a corpus sits relative to real examples, and need a reference to
+be defined at all. Worst-case nearest-neighbour distance, the packing radius, is
+the only one that treats a single collision as a defect.
+
+These do not agree. Section 4.1 shows corpora that one of them calls healthy and
+another calls collapsed, including a poetry corpus with a 0.000 duplicate rate
+in which eight of eight sampled openings are the same sentence with two slots
+filled, and a corpus whose mean-centered Vendi barely moves across the change
+that triples its nearest-neighbour distance. This paper takes that seriously
+rather than picking a favourite. **The measure is chosen before the corpus is,
+and it determines what the generator loop should do.**
+
+What follows is a method for improving a chosen measure — Recursive Axis
+Conditioning — and an account of how much of it changes when the measure does.
+We take two measures furthest, because they sit at opposite ends of what
+practitioners ask for and because their optima genuinely conflict: coverage of
+the reachable space at a finite budget, and the max-min packing objective over an
+unbounded stream. The answer, in short, is that the loop is shared and the
+measure enters at two points, and that those two points are enough to reverse
+which method looks best.
+"""
+
+
+MEASURES = """
+Every number in this paper is one of the following, and they disagree often
+enough that the disagreements are themselves a result.
+
+**Exact-duplicate rate.** The fraction of the corpus that is byte-identical to
+something else in it. Unambiguous, cheap, and the first thing to compute: a
+naively prompted psychometric corpus is 73.6% duplicates, and no embedding,
+threshold or interpretation is needed to see it. It is also blind to paraphrase.
+Deduplicating that corpus removes 2,726 identical copies of one question and
+leaves behind the same question with one word changed, the same question with
+its options reshuffled, and the same question on different numbers.
+
+**Distinct-*n*, self-repetition, *n*-gram Vendi.** Surface statistics over token
+sequences. They catch templating that duplicate rate misses and they read
+meaning not at all. A poetry corpus with a 0.000 duplicate rate and a distinct-2
+of 0.610 — healthy by both — has eight of eight sampled poems opening *At
+dusk/dawn, the windows/river/rooftops gather …*.
+
+**Mean-centered embedding Vendi.** The exponential of the von Neumann entropy of
+the corpus Gram matrix, an effective number of distinct items. It summarises the
+whole spectrum, which makes it insensitive to local structure: on the poetry
+pair above it reads 37.00 for the templated corpus and 38.81 for the varied one,
+a difference the page makes in a second. Centering matters as much as the
+statistic — the shared mean direction of text embeddings compresses the
+uncentered score by roughly 2.7×, so an uncentered Vendi is reporting the cone
+as much as the content.
+
+**Median nearest-neighbour distance.** How much room the typical item has. It
+registers the poetry difference the Vendi Score misses, 0.089 against 0.239, and
+it is the statistic that goes to exactly zero when the median item has a perfect
+twin. It says nothing about the shape of the corpus as a whole.
+
+**Worst-case nearest-neighbour distance (the packing radius).** The minimum over
+all pairs. It is the only measure here under which a single collision is a
+defect regardless of everything else, which is what an exam bank needs: two
+items testing the same rule are a security failure whatever the other 2,498
+items look like. Optimizing it is the max-min objective of §4.2.
+
+**Coverage, density, precision and recall against a reference.** Ratios computed
+against a corpus of real examples, using reference-side k-NN radii so nothing is
+tunable per corpus. These are the only measures here that know what the space is
+supposed to look like, and the only ones that let corpora of different scales be
+compared, which is why the head-to-head against released corpora uses them.
+Covered fraction at a *fixed* radius does not survive that comparison: it
+correlates −0.991 with within-corpus spacing, so it ranks corpora by how tightly
+they cluster rather than by how much they reach.
+
+**A judged threshold.** Where an application defines the failure, the radius can
+be measured instead of assumed. Adjudicating 236 item pairs blind puts the
+enemy-item radius for exam questions at δ = 0.0354 on this embedder, and that
+number, rather than a convention, is what a usable-capacity table rests on.
+
+**Measures on the rendered artifact.** When the text is an instruction to a
+second generative model, the corpus that matters is the rendered one. Text
+embeddings predict rendered-image similarity at *r* = 0.170, so a text-side
+measure explains about 3% of the variance in what the reader receives, and every
+text-side method in this literature, ours included, is optimizing a proxy.
+
+Two lessons run through the rest of the paper. The measure has to be named for a
+diversity claim to carry information, and it has to be computed at the level of
+the artifact being shipped.
+"""
+
+
+MAXMIN_DEF = r"""
+Under an unbounded horizon the objective is a two-term score evaluated against
+everything generated so far. Let *E* be an embedding oracle and let
+*X<sub>n</sub>* = {*x*<sub>1</sub>, …, *x<sub>n</sub>*} be the corpus. For a
+candidate *c*,
+
+$$
+J_\lambda(c \mid X_n) \;=\; \lambda \cdot \underbrace{\frac{1}{n}\sum_{i=1}^{n}\lVert E(c) - E(x_i)\rVert}_{\text{anchor: keep it typical}} \;-\; (1-\lambda)\cdot \underbrace{\min_{i \le n} \lVert E(c) - E(x_i)\rVert}_{\text{repulsion: keep it new}}
+$$
+
+and we accept the candidate minimizing *J*<sub>λ</sub>. The anchor keeps
+generation on the manifold, the repulsion pushes it away from what already
+exists, and λ trades them off. Both terms are cheap to maintain online: the
+anchor decomposes into distance-to-centroid plus a candidate-independent
+constant, so ranking by it is *O*(*D*) per candidate and *O*(1) in *n*, and the
+repulsion needs one nearest-neighbour query, which we bound by subsampling.
+
+Neither term is where the difficulty lives, as §5 shows. Both
+behave predictably; what does not is the set of candidates they are evaluated
+on.
 """
 
 # ---------------------------------------------------------------- section 1
@@ -179,9 +311,12 @@ selection rule, not the loop that carries them.
 """
 
 BRIDGE_THEORY = """
-Everything below constrains both objectives. The first group concerns what a
-fixed prompt can reach at all, and applies whatever is done with the candidates
-it produces; the second concerns the covering functional in particular.
+Nothing below depends on which measure was chosen. The results in this section
+bound what a fixed prompt can reach at all, and a measure computed on the
+resulting corpus inherits that bound whatever it is measuring. The first group
+concerns the conditional support and applies to any selection rule; the second
+concerns the covering functional in particular, and is what makes greedy
+selection defensible when coverage is the measure.
 """
 
 OUTLINE = [
@@ -189,7 +324,7 @@ OUTLINE = [
         ("text", LEAD),
     ]),
     ("Introduction", [
-        ("mm", "1"),
+        ("text", INTRO),
         ("sub", "The oracle asymmetry", "mm", "1.1"),
         ("sub", "Contributions", "text", CONTRIB),
     ]),
@@ -199,17 +334,19 @@ OUTLINE = [
     ]),
     ("Which measure, and what changes with it", [
         ("text", BRIDGE_REL),
-        ("sub", "Max-min, stated", "mm", "3.1"),
+        ("sub", "The measures in use", "text", MEASURES),
+        ("sub", "Max-min, stated", "text", MAXMIN_DEF),
+        ("sub", "The reachable manifold and the conditional slice", "mm", "3.1"),
         ("sub", "Coverage, stated", "cv", "2"),
         ("sub", "Where they coincide", "iii", "2b"),
         ("sub", "Coverage is not packing", "cv", "3.4"),
         ("sub", "Where they part, measured", "iii", "1"),
         ("sub", "Why the scoring rule has to fork", "iii", "2"),
         ("sub", "The comparison that shows the fork", "iii", "2c"),
-        ("sub", "What both objectives share", "iii", "3"),
+        ("sub", "What every measure here shares", "iii", "3"),
         ("sub", "Practical guidance", "iii", "4"),
     ]),
-    ("Theory: what limits both", [
+    ("Theory: what limits any of them", [
         ("text", BRIDGE_THEORY),
         ("sub", "Saturation at a fixed prompt", "mm", "3.2"),
         ("sub", "The slice deficit", "mm", "3.3"),

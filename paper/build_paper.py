@@ -251,6 +251,22 @@ SEAMS = [
      "consistent with \u00a74: coverage is monotone"),
     ("Part II's objective is the one that has a reference distribution in it",
      "The covering objective is the one that has a reference distribution in it"),
+    ("We call the method **Recursive Axis Conditioning** (RAC): the generator is asked for "
+     "the language-valued axes along which its own outputs can differ, those axes are ranked "
+     "and their most-different levels chosen, and an axis that runs out of transverse variation "
+     "is split into finer conditional sub-axes.",
+     "The loop below is written once and pointed at a measure. We call it **Recursive Axis "
+     "Conditioning** (RAC): the generator is asked for the language-valued axes along which its "
+     "own outputs can differ, those axes are ranked and their most-different levels chosen, and "
+     "an axis that runs out of transverse variation is split into finer conditional sub-axes. "
+     "Two components read the measure and the rest do not, which is what makes the same stack "
+     "serve objectives whose optima conflict."),
+    ("Steps 1\u20137 are shared by both objectives. The objective enters at two points only:",
+     "Steps 1\u20137 are shared whatever the measure. The measure enters at two points only:"),
+    ("Generator: `openai/gpt-5.6-luna` via OpenRouter. Text embeddings:",
+     "Every number below states the measure it is computed under and the *n* it is computed at, "
+     "since \u00a74.1 showed how far the measures can diverge on one corpus. Generator: "
+     "`openai/gpt-5.6-luna` via OpenRouter. Text embeddings:"),
 ]
 
 

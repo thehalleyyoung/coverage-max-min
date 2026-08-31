@@ -3,9 +3,9 @@ import base64, pathlib, re, subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
 LAND = """
-# Coverage and Max-Min Diversity in Synthetic Data Generation
+# Improving Diversity Metrics in Synthetic Data Generation
 
-**One method for two objectives, and the conditional dimension that limits both**
+**One conditioning method, the metrics it can be pointed at, and the conditional dimension that limits all of them**
 
 ---
 """
@@ -117,7 +117,7 @@ def main():
     (HERE / "index.html").write_text(
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-        '<title>Coverage and Max-Min Diversity in Synthetic Data Generation</title>\n'
+        '<title>Improving Diversity Metrics in Synthetic Data Generation</title>\n'
         f'<style>{css}{NAV_CSS}</style>\n</head>\n<body>\n'
         f'<div class="layout">\n{toc}\n<main>\n{banner}\n{body}\n</main>\n</div>\n'
         f'{NAV_JS}</body>\n</html>\n')

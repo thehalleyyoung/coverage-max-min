@@ -1,6 +1,12 @@
-# Coverage and Max-Min Diversity in Synthetic Data Generation
+# Improving Diversity Metrics in Synthetic Data Generation
 
-Two objectives share one budget of *n* generations and pull in opposite directions:
+*One conditioning method, the metrics it can be pointed at, and the conditional dimension that limits all of them*
+
+A synthetic corpus is judged by a measure, and the measure is chosen before the corpus
+is. Duplicate rate, distinct-*n*, mean-centered Vendi, nearest-neighbour distance and
+coverage against a reference disagree often enough that a corpus one calls healthy
+another calls collapsed. This is a method for improving a *chosen* measure, and an
+account of how much of it changes when the measure does. The two we take furthest:
 
 - **Coverage** — *in n turns, reach as much of the space as possible.*
 - **Max-min** — *in n turns, make no two items resemble each other.*
