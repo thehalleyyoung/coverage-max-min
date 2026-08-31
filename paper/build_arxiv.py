@@ -254,28 +254,28 @@ only support expansion (recursive refinement) can help; the reverse says the
 selector is the problem. Without the split, "we lost on coverage" is not
 actionable.
 
-## III.2c The campaign that proves the fork
+## III.2c The comparison that proves the fork
 
-Part II's §10 reports a diagnosis-driven campaign to beat Alpaca on scale-free
-coverage of human-written instructions, under a controlled protocol (same 175
-human seeds, same generator, budget matched in generator calls, evaluation on a
-reference half no loop ever read). The outcome — first place among twelve
-corpora, 0.4441 against Alpaca's 0.3722, at 1/20th of Alpaca's budget, with the
-field's highest precision — matters to this joint paper for two reasons beyond
-the win.
+Part II's §10 compares our coverage method with the released Alpaca, PersonaHub
+and WizardLM corpora under a controlled protocol (same 175 human seeds, same
+generator, budget matched in generator calls, evaluation on a reference half
+nothing ever read). Ours places first of twelve — 0.4441 against Alpaca's
+0.3722, at one-twentieth of Alpaca's budget, with the field's highest
+precision. Two rows of its ablation matter to this joint paper beyond the
+ranking.
 
-First, **the orthogonalization inversion**. The arm that applied Part I's
-orthogonalized conditioning to the coverage objective scored *below plain
-conditioning* (0.2941 vs 0.3147): orthogonalization pushes generation away from
-the occupied span, which is away from the reference-dense core coverage is paid
-to fill. Each paper's load-bearing tool, applied to the other's objective,
-loses to doing nothing. The calculi fork because they must.
+First, **the orthogonalization row**. The configuration applying Part I's
+orthogonalized conditioning to the coverage objective scores 0.2941, below
+plain conditioning's 0.3147: orthogonalization steers generation away from the
+occupied span, which is away from the reference-dense core coverage is paid to
+fill. Each part's load-bearing tool, applied to the other's objective, reduces
+performance. The calculi fork because they must.
 
-Second, **the Vendi exhibit**. The winning coverage corpus has the *lowest*
-mean-centered Vendi of any arm in its cohort (62.1; density 1.69). It wins by
-deliberately spending items where the reference measure is — twins included.
-A practitioner ranking corpora by a single "diversity score" would rank the
-coverage champion last. There is no one number; there are two objectives.
+Second, **the Vendi row**. The winning coverage corpus has the *lowest*
+mean-centered Vendi of any configuration in its cohort (62.1; density 1.69):
+it spends items where the reference measure is, near-duplicates included. A
+single "diversity score" would rank the coverage winner last. There is no one
+number; there are two objectives.
 
 ## III.3 What both objectives share
 

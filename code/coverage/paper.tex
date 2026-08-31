@@ -583,53 +583,24 @@ The method stack transfers almost unchanged --- elicited axes, judge gate, ledge
 
 The deepest difference is epistemic: the infinite-horizon paper never has to say what fraction of anything it achieved, while a coverage claim is \emph{always} a ratio, which is why the denominator problem (\S{}7) exists only on this side of the duality. Conversely, the budgeted side gets something the unbounded side cannot have: a completion semantics. A coverage run can report ``we are 62\% done at resolution $\varepsilon$ and the marginal item now buys 0.1\% '' --- a spend/stop signal no packing objective provides.
 
-\section{Beating Alpaca: a diagnosis-driven campaign}
-Earlier sections reported that our corpora lost to the released instruction sets on scale-free coverage of human-written Dolly instructions --- Alpaca at 0.365 against our best 0.103 --- and were told to treat that as a bug report rather than a verdict. This section is the debugging session, run to completion. It ends with a corpus that takes first place among twelve, beating Alpaca 0.4441 to 0.3722 on a reference no part of the pipeline ever aimed at, at matched evaluated-\emph{n}, with the highest precision in the field. Every step was measured before it was believed, three hypotheses died on the way, and the mechanism that finally worked is a direct instantiation of the covering theory of \S{}3 --- including one component that \emph{hurt} until the objective's own logic said to invert it.
+\section{Comparison with released instruction corpora}
+We compare against the released corpora of the three most-used synthetic-instruction methods --- Alpaca (Self-Instruct, 52k), PersonaHub (50k), and WizardLM Evol-Instruct (143k) --- on scale-free coverage of human-written instructions, together with a budget-matched ablation of our own configurations.
 
-\subsection{Making the fight fair}
-Alpaca is synthetic, but it is not \emph{unseeded}: Self-Instruct bootstraps from 175 human-written seed tasks and few-shot-prompts every generation from them, so its distribution is anchored to human instruction style by construction. Scoring a seedless pipeline against human-distribution coverage measures the head start, not the method. The controlled design: every arm receives the same 175 seed tasks (the actual \texttt{seed\_tasks.jsonl} Alpaca grew from), the same generator, the same budget counted in \textbf{generator calls} --- so rejection and selection losses are paid, not hidden --- the same embedder, and evaluation on a held-out half of Dolly that nothing in any loop ever reads. The steering half (STEER) and the evaluation half are disjoint; the generator never sees one word of either.
+\subsection{Protocol}
+Human-written reference: databricks-dolly-15k, split into two disjoint 3,000-item halves --- a STEER half that our method may read as embeddings on the selection side, and an evaluation half that nothing in any pipeline ever reads, and at which no corpus (ours or released) was ever aimed. All scores below are on the evaluation half. Estimator: Naeem et al. (2020) coverage/density with reference-side k-NN radii, reported as AUC over k $\in$ \{3, 5, 10, 20\}; radii are a property of the reference alone, identical for every corpus, with nothing tunable per corpus. Every corpus is evaluated as a uniform random sample at matched \emph{n} = 450. Our arms and the reimplemented baselines all receive the same 175 human seed tasks (the \texttt{seed\_tasks.jsonl} Alpaca was built from), the same generator, and the same budget of 2,400 generator calls --- rejection and selection losses are counted, not hidden. The generator never sees a reference word in any arm.
 
-\subsection{Three hypotheses, two deaths}
-\textbf{Reservoir depth --- dead.} Alpaca evaluates as 450 draws from 52,002 items; our arms held \textasciitilde{}2,400. Constraining Alpaca to a random 2,400-item reservoir left its score unchanged (0.3743). Its edge is per-item, not statistical depth.
-
-\textbf{Register offset --- dead, and inverted.} Our few-shot items were \emph{closer} to Dolly per-item (median nearest-reference distance 0.307 vs Alpaca's 0.355) at comparable length. Proximity was never the problem.
-
-\textbf{Within-corpus twinning --- confirmed, massively.} In a 450-item sample of our few-shot corpus, \textbf{80.2\% of items have a near-twin} at cosine distance < 0.15 (median within-sample nearest-neighbour distance 0.041, with exact duplicates at the 10th percentile). Alpaca: 0.9\%. Dolly itself: 1.3\%. The generator that produced a 72.3\%-duplicate psychometric bank produces, under few-shot, a corpus of near-paraphrases that \emph{looks} varied. Our items each sit close to some reference point; they sit close to the \emph{same} reference points.
-
-\subsection{The mechanism, assembled from the theory}
-Four components, each an answer to a measured failure:
+\subsection{Method}
+The submitted configuration (v4) is coverage-retrieval conditioning with every render kept:
 
 \begin{enumerate}
-  \item \textbf{Aim by retrieval} (the inverse-oracle workaround). We cannot decode a target embedding into text, but we can sample an \emph{uncovered} reference region and retrieve the nearest texts we already own --- seeds plus our own corpus --- as the few-shot exemplars. Few-shot does the decoding; generation lands where nothing is. The reference enters as embeddings on the steering side only.
-  \item \textbf{Radius-adaptive mode choice} (facility location, enacted in the prompt). Each reference point carries its own k-NN radius. A \emph{tight} radius means a dense region: coverage there demands typicality, so the prompt switches to imitate-closely mode --- no diversification contracts at all. A \emph{wide} radius means sparse territory: full diversification with explicit in-prompt negatives (the nearest own outputs to the target, shown as ``not like these''). Targets are sampled density-weighted ($\propto$ 1/$r^{2}$), because dense cores are many-points-per-item and expire fast. This single change moved the interim score from 0.3014 to 0.4485.
-  \item \textbf{Twin suppression in the literal channel}: level-usage balancing (the coverage calculus's headroom term applied at conditioning time), a terse-register mandate, and the in-prompt negatives.
-  \item \textbf{Keep everything.} Coverage is monotone; at a generation-matched budget every discard is a tax no selector can repay.
+  \item \textbf{Aim by retrieval.} Sample an uncovered reference region (density-weighted, $\propto$ 1/$r^{2}$) and retrieve the nearest texts we already own --- seed tasks plus our own corpus --- as the few-shot exemplars. The reference enters as embeddings on the steering side only; retrieval over owned text substitutes for the missing inverse oracle.
+  \item \textbf{Radius-adaptive mode.} The target's own k-NN radius selects the prompt mode: tight radius (dense region) -> imitate the local task family closely; wide radius (sparse region) -> full diversification, with the nearest own outputs shown as explicit in-prompt negatives.
+  \item \textbf{Literal-channel spread.} Level-usage balancing across the elicited axis lattice (the calculus's headroom term applied at conditioning time) and a terse-register mandate.
+  \item \textbf{Keep everything.} Coverage is monotone in items; at a generation-matched budget, every discard is a permanent loss.
 \end{enumerate}
 
-\subsection{The ladder: every rung falsifies a hypothesis}
-All arms, full budget, scored on the held-out half (full-corpus AUC over k $\in$ \{3,5,10,20\}):
-
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{lrrr}
-\toprule
-\textbf{arm} & \textbf{kept} & \textbf{AUC} & \textbf{what it isolates} \\
-\midrule
-\textbf{v4: aim + density-adapt + keep-all} & 2,398 & \textbf{0.6597} & the assembled mechanism \\
-Self-Instruct (reimplemented) & 1,833 & 0.3262 & +ROUGE filter $\approx$ nothing (+0.0016) \\
-bare few-shot from seeds & 2,399 & 0.3246 & seeds do the anchoring; corpus is a twin farm \\
-axis conditioning, keep-all & 1,310 & 0.3147 & conditioning alone under-performs few-shot \\
-\textbf{orthogonalized conditioning (v3)} & 1,152 & \textbf{0.2941} & \textbf{orthogonalization is anti-coverage} \\
-selective 1-of-8 & 304 & 0.2591 & selection is a coverage tax \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Two rungs deserve emphasis. The celebrated ROUGE filter of Self-Instruct contributes 0.0016 --- the seeds contribute essentially everything. And the orthogonalized-conditioning arm --- our own Part-I machinery, applied faithfully --- scored \emph{below plain conditioning}. That is not an implementation failure; it is the theory's prediction landing on our own method. Orthogonalization pushes generation away from the occupied span, which is away from the reference-dense core that coverage is paid to fill: the k-center mistake, committed at the conditioning level. The packing tool, applied to the covering objective, loses to doing nothing.
-
-\subsection{The verdict}
-Scored on the STEER-disjoint reference half --- no corpus under test, ours or theirs, was aimed at any scored point --- at matched evaluated-\emph{n} = 450, identical estimator (Naeem et al. coverage/density with reference-side k-NN radii, AUC over k):
+\subsection{Results}
+All twelve corpora, evaluation half, matched \emph{n} = 450:
 
 \begin{table}[htbp]
 \centering
@@ -638,25 +609,53 @@ Scored on the STEER-disjoint reference half --- no corpus under test, ours or th
 \toprule
 \textbf{rank} & \textbf{corpus} & \textbf{AUC} & \textbf{precision} \\
 \midrule
-1 & \textbf{ours v4} & \textbf{0.4441} & \textbf{0.973} \\
-2 & Alpaca (52k) & 0.3722 & 0.87 \\
-3 & ours selective & 0.2591 & 0.93 \\
+1 & \textbf{ours (coverage-retrieval conditioning)} & \textbf{0.4441} & \textbf{0.973} \\
+2 & Alpaca (Self-Instruct, 52k) & 0.3722 & 0.87 \\
+3 & ours: selective (1-of-8) & 0.2591 & 0.93 \\
 4 & PersonaHub (50k) & 0.2532 & 0.78 \\
 5 & WizardLM Evol-Instruct (143k) & 0.2329 & 0.77 \\
-6--9 & fair-fight ablation arms & 0.2102--0.2188 &  \\
-10--12 & unseeded arms (naive, high-temp, axis-only) & 0.095--0.101 &  \\
+6 & Self-Instruct (reimpl., same seeds/budget) & 0.2188 &  \\
+7 & ours: conditioning keep-all & 0.2127 &  \\
+8 & few-shot from seeds & 0.2114 &  \\
+9 & ours: orthogonalized conditioning & 0.2102 &  \\
+10 & axis-conditioned, unseeded & 0.1008 &  \\
+11 & naive & 0.1003 &  \\
+12 & high temperature & 0.0947 &  \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A 19\% margin over Alpaca, achieved at 1/20th of Alpaca's generation budget, with the field's highest precision. The interim leak-free check told the same story mid-run (0.4276 vs 0.3666 at n=528 of budget), so the result does not depend on the final corpus size.
+Our method places first, 19\% above Alpaca, with the highest precision in the field, at roughly one-twentieth of Alpaca's generation budget. An interim measurement at 22\% of budget (n = 528) already scored 0.4276 against Alpaca's 0.3666 on the same protocol, so the result does not depend on final corpus size. PersonaHub and WizardLM score below our selective arm despite 20--60$\times$ the scale.
 
-\textbf{The asymmetry, stated plainly.} v4 consumes a sample of the target distribution --- as embeddings, on the steering side only. Alpaca had no such input. That is not an incidental advantage; it is the method's entire point --- coverage is always coverage \emph{of} something, and a method that may specify the something should. The like-for-like no-reference comparison is the ladder's middle rungs, where our no-STEER arms sit at parity with (slightly below) the Self-Instruct family. The claim this section supports is therefore precise: \emph{given a specification of the space to cover --- even one the generator itself never reads --- retrieval-aimed, density-adaptive conditioning covers it far better than any tested method covers it blind, and better than the strongest seeded baseline covers it at twenty times the budget.}
+Budget-matched ablation (full corpora, 2,400 generator calls each, same evaluation half):
 
-\textbf{The dissociation's sharpest exhibit.} v4's mean-centered Vendi is 62.1 --- the \emph{lowest} of any fair-fight arm (its density: 1.69, nearly twice uniform). The corpus that wins coverage is the internal-diversity loser, deliberately: it spends items where the reference measure is, twins included. Anyone selecting a ``diverse synthetic corpus'' by Vendi score would rank the winner last.
+\begin{table}[htbp]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{configuration} & \textbf{kept} & \textbf{AUC} & \textbf{density} & \textbf{precision} & \textbf{recall} \\
+\midrule
+\textbf{full method (v4)} & 2,398 & \textbf{0.6597} & 1.637 & \textbf{0.960} & \textbf{0.178} \\
+Self-Instruct (reimpl.) & 1,833 & 0.3262 & 1.050 & 0.949 & 0.161 \\
+few-shot from seeds & 2,399 & 0.3246 & 1.052 & 0.935 & 0.152 \\
+conditioning, keep-all & 1,310 & 0.3147 & 0.704 & 0.864 & 0.068 \\
+orthogonalized conditioning & 1,152 & 0.2941 & 0.718 & 0.873 & 0.101 \\
+selective (1-of-8) & 304 & 0.2591 & 1.009 & 0.928 & 0.099 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
-\subsection{What it cost, and what broke}
-The campaign consumed roughly \$6 of generation across six arms. Two negative results were kept: hypothesis deaths H1 and H2 above, and the v3 inversion. One retraction was made along the way: an early probe reported plan-compliance and alignment figures computed on corrupted prompt-audio pairings in a different domain (\S{}audio); the repaired figures replaced them and the incident is registered in the provenance ledger. Every number in this section carries a P3 provenance tag; the arms' logs, the seed file, both Dolly halves, and the evaluation harness are in the repository.
+The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2--4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09--0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6) and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything --- consistent with \S{}III of the companion analysis: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
+
+\subsection{Notes}
+\textbf{Reference-sample asymmetry.} Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability --- coverage is always coverage \emph{of} something, and a method that may specify the something should --- but the like-for-like no-reference comparison is rows 2--5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
+
+\textbf{Coverage and internal diversity are different objectives.} The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
+
+All arm logs, the seed file, both reference halves, and the evaluation harness are in the repository; every number carries a provenance tag.
 
 \section{Limitations}
 \begin{itemize}
