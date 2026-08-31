@@ -228,9 +228,9 @@ keeps items non-redundant. We call the resulting problem
 specifically in its asymptotics: what happens to the objective, and to
 the cost of satisfying it, as \emph{n} grows.
 
-Our central claim is that the interesting structure is not in the
-objective but in the \textbf{support}. Conditioned on a fixed prompt
-\emph{x}, a language model\textquotesingle s output distribution
+Our central claim locates the interesting structure in the
+\textbf{support} rather than in the objective. Conditioned on a fixed
+prompt \emph{x}, a language model\textquotesingle s output distribution
 concentrates on a submanifold of dimension \emph{m} that is far smaller
 than the dimension \emph{d} of the reachable semantic manifold. We prove
 and numerically verify five consequences of that gap. Novelty at fixed
@@ -302,10 +302,10 @@ breadth-versus-depth theorem is false as originally stated.
 
 Ask a language model for a poem ten times and you get ten poems. Ask it
 ten thousand times and you do not get ten thousand poems; you get a few
-hundred poems and a great deal of paraphrase. This is not a defect of
-any particular model --- it is what sampling from a fixed conditional
-distribution does. The distribution has a shape, and repeated sampling
-traces that shape ever more densely rather than expanding it.
+hundred poems and a great deal of paraphrase. Any fixed conditional
+distribution behaves this way under repeated sampling, whatever model
+supplies it. The distribution has a shape, and repeated sampling traces
+that shape ever more densely rather than expanding it.
 
 The practical version of this problem is now everywhere. Synthetic
 training data is valuable in proportion to how much it is \emph{not}
@@ -587,10 +587,11 @@ displacements give 11.18 (check P4).
 draw decays as n\^{}(-1/k), with fitted slopes matching theory for k =
 3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}
 
-This is the theorem that makes the calculus of §4 possible. It says the
-value of conditioning on a new latent variable is not "how different
-does it sound" but \textbf{how much of its variation lies outside what
-the corpus already spans} --- a computable quantity.
+This is the theorem that makes the calculus of §4 possible. It measures
+the value of conditioning on a new latent variable as \textbf{how much
+of its variation lies outside what the corpus already spans} --- a
+computable quantity, in place of the intuition of how different it
+sounds.
 
 \paragraph{I.3.5 Novelty pressure leaves the
 manifold}\label{i35-novelty-pressure-leaves-the-manifold}
@@ -1301,12 +1302,11 @@ on real text at real settings it does not even buy that.
 \textbf{Evol-Instruct is worse than naive at the thing diversity methods
 exist for.} Its median nearest-neighbour distance is 0.025, against
 naive\textquotesingle s 0.046 --- it produces items \emph{closer} to the
-existing corpus than independent sampling does. This is not a bug in our
-reimplementation, it is the mechanism working as designed: mutating an
-existing item produces a neighbour of that item. Evol-Instruct raises
-\emph{distinct-2} (0.413 vs 0.334) because the mutations reword things,
-so a purely literal evaluation would score it as an improvement.
-Measuring both levels is what catches it.
+existing corpus than independent sampling does. The mechanism is working
+as designed: mutating an existing item produces a neighbour of that
+item. Evol-Instruct raises \emph{distinct-2} (0.413 vs 0.334) because
+the mutations reword things, so a purely literal evaluation would score
+it as an improvement. Measuring both levels is what catches it.
 
 \textbf{Self-Instruct\textquotesingle s guard is literal, so it defends
 the literal level only.} It achieves the second-best self-repetition
@@ -2760,8 +2760,8 @@ pre-refinement pool, which is comparable across policies and cannot be
 gamed by growing the space, and (ii) the policy\textquotesingle s own
 final reachable pool, labeled as self-referential, with the growth of
 the reachable set (modes reached, spec count) reported alongside. A
-single "we covered X\%" from a self-expanding pipeline is not a result;
-it is a choice of denominator.
+single "we covered X\%" from a self-expanding pipeline reflects a choice
+of denominator.
 
 \subsubsection{II.8 Live pilot}\label{ii8-live-pilot}
 
@@ -2976,9 +2976,9 @@ wrong.
 not a
 space}\label{ii92-confound-1-the-denominator-encoded-a-distribution-not-a-space}
 
-Unconditioned prompting is not "the reachable space"; it is one region
-of it. Scoring conditioned generation against it asks "how much of what
-the model would say anyway does this method reproduce?" --- and a method
+Unconditioned prompting describes one region of the reachable space.
+Scoring conditioned generation against it asks "how much of what the
+model would say anyway does this method reproduce?" --- and a method
 whose entire purpose is to leave that region must score low. This is the
 honest-denominator problem of §7 in its sharpest form: the denominator
 was not neutral, it was the naive policy\textquotesingle s own

@@ -85,27 +85,27 @@ non-redundant. We call the resulting problem <em>infinite-horizon
 diversity</em> (IHD), and we are interested specifically in its
 asymptotics: what happens to the objective, and to the cost of
 satisfying it, as <em>n</em> grows.</p>
-<p>Our central claim is that the interesting structure is not in the
-objective but in the <strong>support</strong>. Conditioned on a fixed
-prompt <em>x</em>, a language model's output distribution concentrates
-on a submanifold of dimension <em>m</em> that is far smaller than the
-dimension <em>d</em> of the reachable semantic manifold. We prove and
-numerically verify five consequences of that gap. Novelty at fixed
-prompt decays like <em>n</em><sup>−1/<em>m</em></sup>, not
-<em>n</em><sup>−1/<em>d</em></sup>, so saturation arrives much sooner
-than the ambient dimension suggests (measured slopes −0.472, −0.309,
-−0.195 for <em>m</em> = 2, 3, 5 against predictions −0.5, −0.333, −0.2).
-A single prompt ε-covers a vanishing ε<sup><em>d</em>−<em>m</em></sup>
-fraction of the manifold. Only prompt motion <em>transverse</em> to the
-already-occupied span raises the reachable dimension: parallel motion
-leaves the union's effective dimension at 1.9, transverse motion takes
-it to 11.2. Under free prompt-switching the optimal number of samples
-per prompt is exactly one; an interior optimum appears only once
-switching has overhead (<em>n</em>* = 10 at cost <em>c</em> = 3,
-<em>n</em>* = 30 at <em>c</em> = 30). And unconstrained max–min
-selection is not consistent: it picks an off-manifold candidate
-essentially whenever one appears in the pool, an 8.4× amplification over
-the base rate.</p>
+<p>Our central claim locates the interesting structure in the
+<strong>support</strong> rather than in the objective. Conditioned on a
+fixed prompt <em>x</em>, a language model's output distribution
+concentrates on a submanifold of dimension <em>m</em> that is far
+smaller than the dimension <em>d</em> of the reachable semantic
+manifold. We prove and numerically verify five consequences of that gap.
+Novelty at fixed prompt decays like <em>n</em><sup>−1/<em>m</em></sup>,
+not <em>n</em><sup>−1/<em>d</em></sup>, so saturation arrives much
+sooner than the ambient dimension suggests (measured slopes −0.472,
+−0.309, −0.195 for <em>m</em> = 2, 3, 5 against predictions −0.5,
+−0.333, −0.2). A single prompt ε-covers a vanishing
+ε<sup><em>d</em>−<em>m</em></sup> fraction of the manifold. Only prompt
+motion <em>transverse</em> to the already-occupied span raises the
+reachable dimension: parallel motion leaves the union's effective
+dimension at 1.9, transverse motion takes it to 11.2. Under free
+prompt-switching the optimal number of samples per prompt is exactly
+one; an interior optimum appears only once switching has overhead
+(<em>n</em>* = 10 at cost <em>c</em> = 3, <em>n</em>* = 30 at <em>c</em>
+= 30). And unconstrained max–min selection is not consistent: it picks
+an off-manifold candidate essentially whenever one appears in the pool,
+an 8.4× amplification over the base rate.</p>
 <p>We assume an embedding oracle mapping text to a fixed-size vector,
 and — critically — <strong>no reverse oracle</strong>. We can compute
 exactly where we would like the next item to land and still have no way
@@ -156,10 +156,10 @@ and our breadth-versus-depth theorem is false as originally stated.</p>
 <h2>1. Introduction</h2>
 <p>Ask a language model for a poem ten times and you get ten poems. Ask
 it ten thousand times and you do not get ten thousand poems; you get a
-few hundred poems and a great deal of paraphrase. This is not a defect
-of any particular model — it is what sampling from a fixed conditional
-distribution does. The distribution has a shape, and repeated sampling
-traces that shape ever more densely rather than expanding it.</p>
+few hundred poems and a great deal of paraphrase. Any fixed conditional
+distribution behaves this way under repeated sampling, whatever model
+supplies it. The distribution has a shape, and repeated sampling traces
+that shape ever more densely rather than expanding it.</p>
 <p>The practical version of this problem is now everywhere. Synthetic
 training data is valuable in proportion to how much it is <em>not</em>
 already in the training set. Evaluation suites that cluster in a few
@@ -416,10 +416,11 @@ alt="Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays 
 <p><em>Figure 1. Measured saturation. (a) Expected min-gap of a fresh
 draw decays as n^(-1/k), with fitted slopes matching theory for k = 3,
 8, 32. (b) Best-of-K oversampling buys only K^(1/k).</em></p>
-<p>This is the theorem that makes the calculus of §4 possible. It says
-the value of conditioning on a new latent variable is not "how different
-does it sound" but <strong>how much of its variation lies outside what
-the corpus already spans</strong> — a computable quantity.</p>
+<p>This is the theorem that makes the calculus of §4 possible. It
+measures the value of conditioning on a new latent variable as
+<strong>how much of its variation lies outside what the corpus already
+spans</strong> — a computable quantity, in place of the intuition of how
+different it sounds.</p>
 </section>
 <section id="35-novelty-pressure-leaves-the-manifold" class="level3">
 <h3>3.5 Novelty pressure leaves the manifold</h3>
@@ -1317,12 +1318,11 @@ at real settings it does not even buy that.</p>
 <p><strong>Evol-Instruct is worse than naive at the thing diversity
 methods exist for.</strong> Its median nearest-neighbour distance is
 0.025, against naive's 0.046 — it produces items <em>closer</em> to the
-existing corpus than independent sampling does. This is not a bug in our
-reimplementation, it is the mechanism working as designed: mutating an
-existing item produces a neighbour of that item. Evol-Instruct raises
-<em>distinct-2</em> (0.413 vs 0.334) because the mutations reword
-things, so a purely literal evaluation would score it as an improvement.
-Measuring both levels is what catches it.</p>
+existing corpus than independent sampling does. The mechanism is working
+as designed: mutating an existing item produces a neighbour of that
+item. Evol-Instruct raises <em>distinct-2</em> (0.413 vs 0.334) because
+the mutations reword things, so a purely literal evaluation would score
+it as an improvement. Measuring both levels is what catches it.</p>
 <p><strong>Self-Instruct's guard is literal, so it defends the literal
 level only.</strong> It achieves the second-best self-repetition (0.137)
 — its ROUGE filter is doing real work — while its centered Vendi (53.05)

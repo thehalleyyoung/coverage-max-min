@@ -741,7 +741,7 @@ pre-refinement pool, which is comparable across policies and cannot be
 gamed by growing the space, and (ii) the policy's own final reachable pool,
 labeled as self-referential, with the growth of the reachable set (modes
 reached, spec count) reported alongside. A single "we covered X%" from a
-self-expanding pipeline is not a result; it is a choice of denominator.
+self-expanding pipeline reflects a choice of denominator.
 
 ## 8. Live pilot
 
@@ -915,7 +915,7 @@ measure is not measuring what its name says. Three things were wrong.
 
 ### 9.2 Confound 1: the denominator encoded a distribution, not a space
 
-Unconditioned prompting is not "the reachable space"; it is one region of it.
+Unconditioned prompting describes one region of the reachable space.
 Scoring conditioned generation against it asks "how much of what the model
 would say anyway does this method reproduce?" — and a method whose entire
 purpose is to leave that region must score low. This is the honest-denominator

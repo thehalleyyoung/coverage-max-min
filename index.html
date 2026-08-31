@@ -177,13 +177,13 @@ non-redundant. We call the resulting problem <em>infinite-horizon
 diversity</em> (IHD), and we are interested specifically in its
 asymptotics: what happens to the objective, and to the cost of
 satisfying it, as <em>n</em> grows.</p>
-<p>Our central claim is that the interesting structure is not in the
-objective but in the <strong>support</strong>. Conditioned on a fixed
-prompt <em>x</em>, a language model's output distribution concentrates
-on a submanifold of dimension <em>m</em> that is far smaller than the
-dimension <em>d</em> of the reachable semantic manifold. We prove and
-numerically verify five consequences of that gap. Novelty at fixed
-prompt decays like
+<p>Our central claim locates the interesting structure in the
+<strong>support</strong> rather than in the objective. Conditioned on a
+fixed prompt <em>x</em>, a language model's output distribution
+concentrates on a submanifold of dimension <em>m</em> that is far
+smaller than the dimension <em>d</em> of the reachable semantic
+manifold. We prove and numerically verify five consequences of that gap.
+Novelty at fixed prompt decays like
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>m</mi></mrow></msup><annotation encoding="application/x-tex">n^{-1/m}</annotation></semantics></math>,
 not
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mi>d</mi></mrow></msup><annotation encoding="application/x-tex">n^{-1/d}</annotation></semantics></math>,
@@ -249,10 +249,10 @@ and our breadth-versus-depth theorem is false as originally stated.</p>
 <h3 id="i1-introduction">I.1 Introduction</h3>
 <p>Ask a language model for a poem ten times and you get ten poems. Ask
 it ten thousand times and you do not get ten thousand poems; you get a
-few hundred poems and a great deal of paraphrase. This is not a defect
-of any particular model — it is what sampling from a fixed conditional
-distribution does. The distribution has a shape, and repeated sampling
-traces that shape ever more densely rather than expanding it.</p>
+few hundred poems and a great deal of paraphrase. Any fixed conditional
+distribution behaves this way under repeated sampling, whatever model
+supplies it. The distribution has a shape, and repeated sampling traces
+that shape ever more densely rather than expanding it.</p>
 <p>The practical version of this problem is now everywhere. Synthetic
 training data is valuable in proportion to how much it is <em>not</em>
 already in the training set. Evaluation suites that cluster in a few
@@ -509,10 +509,11 @@ alt="Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays 
 <p><em>Figure 1. Measured saturation. (a) Expected min-gap of a fresh
 draw decays as n^(-1/k), with fitted slopes matching theory for k = 3,
 8, 32. (b) Best-of-K oversampling buys only K^(1/k).</em></p>
-<p>This is the theorem that makes the calculus of §4 possible. It says
-the value of conditioning on a new latent variable is not "how different
-does it sound" but <strong>how much of its variation lies outside what
-the corpus already spans</strong> — a computable quantity.</p>
+<p>This is the theorem that makes the calculus of §4 possible. It
+measures the value of conditioning on a new latent variable as
+<strong>how much of its variation lies outside what the corpus already
+spans</strong> — a computable quantity, in place of the intuition of how
+different it sounds.</p>
 <h4 id="i35-novelty-pressure-leaves-the-manifold">I.3.5 Novelty pressure
 leaves the manifold</h4>
 <p>Let the proposal distribution be a mixture (1 −
@@ -1376,12 +1377,11 @@ at real settings it does not even buy that.</p>
 <p><strong>Evol-Instruct is worse than naive at the thing diversity
 methods exist for.</strong> Its median nearest-neighbour distance is
 0.025, against naive's 0.046 — it produces items <em>closer</em> to the
-existing corpus than independent sampling does. This is not a bug in our
-reimplementation, it is the mechanism working as designed: mutating an
-existing item produces a neighbour of that item. Evol-Instruct raises
-<em>distinct-2</em> (0.413 vs 0.334) because the mutations reword
-things, so a purely literal evaluation would score it as an improvement.
-Measuring both levels is what catches it.</p>
+existing corpus than independent sampling does. The mechanism is working
+as designed: mutating an existing item produces a neighbour of that
+item. Evol-Instruct raises <em>distinct-2</em> (0.413 vs 0.334) because
+the mutations reword things, so a purely literal evaluation would score
+it as an improvement. Measuring both levels is what catches it.</p>
 <p><strong>Self-Instruct's guard is literal, so it defends the literal
 level only.</strong> It achieves the second-best self-repetition (0.137)
 — its ROUGE filter is doing real work — while its centered Vendi (53.05)
@@ -2928,8 +2928,8 @@ fixed pre-refinement pool, which is comparable across policies and
 cannot be gamed by growing the space, and (ii) the policy's own final
 reachable pool, labeled as self-referential, with the growth of the
 reachable set (modes reached, spec count) reported alongside. A single
-"we covered X%" from a self-expanding pipeline is not a result; it is a
-choice of denominator.</p>
+"we covered X%" from a self-expanding pipeline reflects a choice of
+denominator.</p>
 <h3 id="ii8-live-pilot">II.8 Live pilot</h3>
 <h4 id="ii81-setup-and-what-it-cost">II.8.1 Setup and what it cost</h4>
 <p>The pilot builds a red-team <em>evaluation</em> prompt suite on the
@@ -3185,13 +3185,12 @@ wrong.</p>
 <h4
 id="ii92-confound-1-the-denominator-encoded-a-distribution-not-a-space">II.9.2
 Confound 1: the denominator encoded a distribution, not a space</h4>
-<p>Unconditioned prompting is not "the reachable space"; it is one
-region of it. Scoring conditioned generation against it asks "how much
-of what the model would say anyway does this method reproduce?" — and a
-method whose entire purpose is to leave that region must score low. This
-is the honest-denominator problem of §7 in its sharpest form: the
-denominator was not neutral, it was the naive policy's own
-distribution.</p>
+<p>Unconditioned prompting describes one region of the reachable space.
+Scoring conditioned generation against it asks "how much of what the
+model would say anyway does this method reproduce?" — and a method whose
+entire purpose is to leave that region must score low. This is the
+honest-denominator problem of §7 in its sharpest form: the denominator
+was not neutral, it was the naive policy's own distribution.</p>
 <p>Our first repair — a union of all arms — was not enough, because an
 unweighted union is dominated by whichever stratum has the most points
 (the 5,000-point naive reference), smuggling the same distribution back

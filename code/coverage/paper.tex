@@ -338,7 +338,7 @@ Each number is true and each, alone, misleads. Against the \emph{fixed base pool
 
 The operational face of the problem is the pool refresh of \S{}4: when refinement opens a region, the estimation pool must be re-drawn to include it, or the selector sees zero marginal gain precisely where the new territory is. We hit this live before we hit it in theory: in the pilot's first run, axis-conditioned candidates embedded $\approx$ 0.88 from an unconditioned-only pool with $\varepsilon _sel$ = 0.73 --- every candidate scored zero and the selector went blind --- and the fix was to build the reference pool from \emph{both} strata of the proposal process (\S{}8). The denominator must track the reachable distribution of the pipeline as it currently exists.
 
-Our reporting rule, followed in every table above: state the denominator next to every coverage number, and report at least (i) the fixed pre-refinement pool, which is comparable across policies and cannot be gamed by growing the space, and (ii) the policy's own final reachable pool, labeled as self-referential, with the growth of the reachable set (modes reached, spec count) reported alongside. A single ``we covered X\%'' from a self-expanding pipeline is not a result; it is a choice of denominator.
+Our reporting rule, followed in every table above: state the denominator next to every coverage number, and report at least (i) the fixed pre-refinement pool, which is comparable across policies and cannot be gamed by growing the space, and (ii) the policy's own final reachable pool, labeled as self-referential, with the growth of the reachable set (modes reached, spec count) reported alongside. A single ``we covered X\%'' from a self-expanding pipeline reflects a choice of denominator.
 
 \section{Live pilot}
 \subsection{Setup and what it cost}
@@ -433,7 +433,7 @@ The parent project's \texttt{real/} directory contains two 10,000-item corpora o
 A number that ranks methods in exact reverse order of every other diversity measure is not measuring what its name says. Three things were wrong.
 
 \subsection{Confound 1: the denominator encoded a distribution, not a space}
-Unconditioned prompting is not ``the reachable space''; it is one region of it. Scoring conditioned generation against it asks ``how much of what the model would say anyway does this method reproduce?'' --- and a method whose entire purpose is to leave that region must score low. This is the honest-denominator problem of \S{}7 in its sharpest form: the denominator was not neutral, it was the naive policy's own distribution.
+Unconditioned prompting describes one region of the reachable space. Scoring conditioned generation against it asks ``how much of what the model would say anyway does this method reproduce?'' --- and a method whose entire purpose is to leave that region must score low. This is the honest-denominator problem of \S{}7 in its sharpest form: the denominator was not neutral, it was the naive policy's own distribution.
 
 Our first repair --- a union of all arms --- was not enough, because an unweighted union is dominated by whichever stratum has the most points (the 5,000-point naive reference), smuggling the same distribution back in. The fix is a \textbf{stratum-balanced} reference in which every generation method contributes exactly the same number of points, scored \textbf{leave-one-out} so no corpus is ever scored against itself.
 
