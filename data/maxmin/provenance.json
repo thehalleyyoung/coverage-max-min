@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T18:47:25",
+  "generated": "2026-08-30T21:55:18",
   "git_rev": "7b4df73",
   "procedures": {
     "P1": {
@@ -131,6 +131,76 @@
       "bytes": 2796,
       "modified": "2026-08-30T18:46:54"
     },
+    "real/lyria_steer/run_summary.json": {
+      "procedure": "P3",
+      "script": "lyria_steer.py",
+      "note": "100 tracks, CLAP-steered, 0 rejections. RETRACTION NOTE: figures from the session-2 summary (plan_match 0.0, alignment -0.09) were computed on corrupted prompt-audio pairings (async filename mismatch + broken resume); 22/24 pairings were exactly recovered via plan-shape + audio-scalar bipartite matching, 2 renders quarantined; clean values: plan_match 0.11 @658 chars, alignment +0.05",
+      "bytes": 6382,
+      "modified": "2026-08-30T21:27:21"
+    },
+    "real/dalle_steer_maxmin/run_summary.json": {
+      "procedure": "P3",
+      "script": "image_steer.py maxmin",
+      "note": "CLIP-steered max-min, 0 rejections",
+      "bytes": 2226,
+      "modified": "2026-08-30T19:14:50"
+    },
+    "real/dalle_steer_coverage/run_summary.json": {
+      "procedure": "P3",
+      "script": "image_steer.py coverage",
+      "note": "CLIP-steered coverage, 0 rejections",
+      "bytes": 2227,
+      "modified": "2026-08-30T19:31:09"
+    },
+    "figures/steer_crossscore.json": {
+      "procedure": "P3",
+      "script": "post-hoc from image_steer.py outputs",
+      "note": "2x2 crossover: each objective wins itself, loses the other; same machinery and budget",
+      "bytes": 331,
+      "modified": "2026-08-30T19:32:01"
+    },
+    "coverage/figures/summary_scalefree_h2h.json": {
+      "procedure": "P2",
+      "script": "coverage/scalefree_h2h.py",
+      "note": "released corpora vs ours on neutral Dolly ref; Naeem coverage/density",
+      "bytes": 10791,
+      "modified": "2026-08-30T21:52:11"
+    },
+    "coverage/figures/summary_duality.json": {
+      "procedure": "P1",
+      "script": "coverage/duality.py",
+      "note": "packing/covering duality checks + eps*(n) calibration on real embeddings",
+      "bytes": 2054,
+      "modified": "2026-08-30T19:08:17"
+    },
+    "coverage/figures/summary_fair_fight.json": {
+      "procedure": "P3",
+      "script": "coverage/fair_fight.py",
+      "note": "same 175 human seeds, same generator, budget matched in GENERATOR CALLS, scored on disjoint held-out Dolly",
+      "bytes": 4651,
+      "modified": "2026-08-30T21:49:15"
+    },
+    "coverage/figures/summary_scalefree_h2h_cleanref.json": {
+      "procedure": "P3",
+      "script": "REF_MODE=fair_eval coverage/scalefree_h2h.py 450",
+      "note": "THE OFFICIAL TABLE: 12 corpora, matched n=450, STEER-disjoint reference; v4 first at 0.4441 vs Alpaca 0.3722",
+      "bytes": 10807,
+      "modified": "2026-08-30T21:52:03"
+    },
+    "real/dalle_steer2_maxmin/run_summary.json": {
+      "procedure": "P3",
+      "script": "image_steer.py maxmin 60 steer2",
+      "note": "four-quadrant literal+latent repulsion, before/after vs v1",
+      "bytes": 2852,
+      "modified": "2026-08-30T20:20:47"
+    },
+    "real/dalle_steer2_coverage/run_summary.json": {
+      "procedure": "P3",
+      "script": "image_steer.py coverage 60 steer2",
+      "note": "four-quadrant repulsion, coverage objective; ref coverage 0.206->0.247",
+      "bytes": 2948,
+      "modified": "2026-08-30T20:43:19"
+    },
     "real/lyria_online/run_summary.json": {
       "procedure": "P2.5",
       "script": "lyria_online.py",
@@ -141,9 +211,6 @@
   },
   "missing_not_yet_produced": [
     "figures/audio_compare.json",
-    "figures/lyria_length_probe.json",
-    "real/lyria_steer/run_summary.json",
-    "real/dalle_steer_maxmin/run_summary.json",
-    "real/dalle_steer_coverage/run_summary.json"
+    "figures/lyria_length_probe.json"
   ]
 }

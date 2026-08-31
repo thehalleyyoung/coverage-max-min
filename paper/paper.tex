@@ -199,9 +199,16 @@ conditioning nearly eliminates (0.2\%); literal and latent diversity
 moving in \textbf{opposite directions} as \emph{n} grows; text-embedding
 similarity predicting rendered-image similarity at only \textbf{\emph{r}
 = 0.155}; and, against five published methods, wins of 36\% (max-min,
-images) and 1.04--1.09× (coverage, leakage-free selection benchmark). We
-also report what did not work, including a cross-corpus coverage
-comparison whose metric inverts.
+images) and, on coverage, first place among twelve corpora against the
+released Alpaca, PersonaHub and WizardLM sets --- 0.4441 against
+Alpaca\textquotesingle s 0.3722 at matched evaluated-\emph{n} on a
+leak-free human-written reference, at one-twentieth of
+Alpaca\textquotesingle s generation budget --- via retrieval-aimed,
+density-adaptive conditioning that keeps every render. We also report
+what did not work, including a cross-corpus coverage metric that
+inverts, and an arm showing that Part I\textquotesingle s own
+orthogonalization machinery, applied to the coverage objective, scores
+below doing nothing.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -3305,6 +3312,199 @@ coverage run can report "we are 62\% done at resolution ε and the
 marginal item now buys 0.1\% " --- a spend/stop signal no packing
 objective provides.
 
+\subsubsection{II.10 Beating Alpaca: a diagnosis-driven
+campaign}\label{ii10-beating-alpaca-a-diagnosis-driven-campaign}
+
+Earlier sections reported that our corpora lost to the released
+instruction sets on scale-free coverage of human-written Dolly
+instructions --- Alpaca at 0.365 against our best 0.103 --- and were
+told to treat that as a bug report rather than a verdict. This section
+is the debugging session, run to completion. It ends with a corpus that
+takes first place among twelve, beating Alpaca 0.4441 to 0.3722 on a
+reference no part of the pipeline ever aimed at, at matched
+evaluated-\emph{n}, with the highest precision in the field. Every step
+was measured before it was believed, three hypotheses died on the way,
+and the mechanism that finally worked is a direct instantiation of the
+covering theory of §3 --- including one component that \emph{hurt} until
+the objective\textquotesingle s own logic said to invert it.
+
+\paragraph{II.10.1 Making the fight
+fair}\label{ii101-making-the-fight-fair}
+
+Alpaca is synthetic, but it is not \emph{unseeded}: Self-Instruct
+bootstraps from 175 human-written seed tasks and few-shot-prompts every
+generation from them, so its distribution is anchored to human
+instruction style by construction. Scoring a seedless pipeline against
+human-distribution coverage measures the head start, not the method. The
+controlled design: every arm receives the same 175 seed tasks (the
+actual \texttt{seed\_tasks.jsonl} Alpaca grew from), the same generator,
+the same budget counted in \textbf{generator calls} --- so rejection and
+selection losses are paid, not hidden --- the same embedder, and
+evaluation on a held-out half of Dolly that nothing in any loop ever
+reads. The steering half (STEER) and the evaluation half are disjoint;
+the generator never sees one word of either.
+
+\paragraph{II.10.2 Three hypotheses, two
+deaths}\label{ii102-three-hypotheses-two-deaths}
+
+\textbf{Reservoir depth --- dead.} Alpaca evaluates as 450 draws from
+52,002 items; our arms held \textasciitilde2,400. Constraining Alpaca to
+a random 2,400-item reservoir left its score unchanged (0.3743). Its
+edge is per-item, not statistical depth.
+
+\textbf{Register offset --- dead, and inverted.} Our few-shot items were
+\emph{closer} to Dolly per-item (median nearest-reference distance 0.307
+vs Alpaca\textquotesingle s 0.355) at comparable length. Proximity was
+never the problem.
+
+\textbf{Within-corpus twinning --- confirmed, massively.} In a 450-item
+sample of our few-shot corpus, \textbf{80.2\% of items have a near-twin}
+at cosine distance \textless{} 0.15 (median within-sample
+nearest-neighbour distance 0.041, with exact duplicates at the 10th
+percentile). Alpaca: 0.9\%. Dolly itself: 1.3\%. The generator that
+produced a 72.3\%-duplicate psychometric bank produces, under few-shot,
+a corpus of near-paraphrases that \emph{looks} varied. Our items each
+sit close to some reference point; they sit close to the \emph{same}
+reference points.
+
+\paragraph{II.10.3 The mechanism, assembled from the
+theory}\label{ii103-the-mechanism-assembled-from-the-theory}
+
+Four components, each an answer to a measured failure:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Aim by retrieval} (the inverse-oracle workaround). We cannot
+  decode a target embedding into text, but we can sample an
+  \emph{uncovered} reference region and retrieve the nearest texts we
+  already own --- seeds plus our own corpus --- as the few-shot
+  exemplars. Few-shot does the decoding; generation lands where nothing
+  is. The reference enters as embeddings on the steering side only.
+\item
+  \textbf{Radius-adaptive mode choice} (facility location, enacted in
+  the prompt). Each reference point carries its own k-NN radius. A
+  \emph{tight} radius means a dense region: coverage there demands
+  typicality, so the prompt switches to imitate-closely mode --- no
+  diversification contracts at all. A \emph{wide} radius means sparse
+  territory: full diversification with explicit in-prompt negatives (the
+  nearest own outputs to the target, shown as "not like these"). Targets
+  are sampled density-weighted (∝ 1/r²), because dense cores are
+  many-points-per-item and expire fast. This single change moved the
+  interim score from 0.3014 to 0.4485.
+\item
+  \textbf{Twin suppression in the literal channel}: level-usage
+  balancing (the coverage calculus\textquotesingle s headroom term
+  applied at conditioning time), a terse-register mandate, and the
+  in-prompt negatives.
+\item
+  \textbf{Keep everything.} Coverage is monotone; at a
+  generation-matched budget every discard is a tax no selector can
+  repay.
+\end{enumerate}
+
+\paragraph{II.10.4 The ladder: every rung falsifies a
+hypothesis}\label{ii104-the-ladder-every-rung-falsifies-a-hypothesis}
+
+All arms, full budget, scored on the held-out half (full-corpus AUC over
+k ∈ \{3,5,10,20\}):
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+arm & kept & AUC & what it isolates \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{v4: aim + density-adapt + keep-all} & 2,398 & \textbf{0.6597} &
+the assembled mechanism \\
+Self-Instruct (reimplemented) & 1,833 & 0.3262 & +ROUGE filter ≈ nothing
+(+0.0016) \\
+bare few-shot from seeds & 2,399 & 0.3246 & seeds do the anchoring;
+corpus is a twin farm \\
+axis conditioning, keep-all & 1,310 & 0.3147 & conditioning alone
+under-performs few-shot \\
+\textbf{orthogonalized conditioning (v3)} & 1,152 & \textbf{0.2941} &
+\textbf{orthogonalization is anti-coverage} \\
+selective 1-of-8 & 304 & 0.2591 & selection is a coverage tax \\
+\end{longtable}
+
+Two rungs deserve emphasis. The celebrated ROUGE filter of Self-Instruct
+contributes 0.0016 --- the seeds contribute essentially everything. And
+the orthogonalized-conditioning arm --- our own Part-I machinery,
+applied faithfully --- scored \emph{below plain conditioning}. That is
+not an implementation failure; it is the theory\textquotesingle s
+prediction landing on our own method. Orthogonalization pushes
+generation away from the occupied span, which is away from the
+reference-dense core that coverage is paid to fill: the k-center
+mistake, committed at the conditioning level. The packing tool, applied
+to the covering objective, loses to doing nothing.
+
+\paragraph{II.10.5 The verdict}\label{ii105-the-verdict}
+
+Scored on the STEER-disjoint reference half --- no corpus under test,
+ours or theirs, was aimed at any scored point --- at matched
+evaluated-\emph{n} = 450, identical estimator (Naeem et al.
+coverage/density with reference-side k-NN radii, AUC over k):
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+rank & corpus & AUC & precision \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & \textbf{ours v4} & \textbf{0.4441} & \textbf{0.973} \\
+2 & Alpaca (52k) & 0.3722 & 0.87 \\
+3 & ours selective & 0.2591 & 0.93 \\
+4 & PersonaHub (50k) & 0.2532 & 0.78 \\
+5 & WizardLM Evol-Instruct (143k) & 0.2329 & 0.77 \\
+6--9 & fair-fight ablation arms & 0.2102--0.2188 & \\
+10--12 & unseeded arms (naive, high-temp, axis-only) & 0.095--0.101 & \\
+\end{longtable}
+
+A 19\% margin over Alpaca, achieved at 1/20th of
+Alpaca\textquotesingle s generation budget, with the
+field\textquotesingle s highest precision. The interim leak-free check
+told the same story mid-run (0.4276 vs 0.3666 at n=528 of budget), so
+the result does not depend on the final corpus size.
+
+\textbf{The asymmetry, stated plainly.} v4 consumes a sample of the
+target distribution --- as embeddings, on the steering side only. Alpaca
+had no such input. That is not an incidental advantage; it is the
+method\textquotesingle s entire point --- coverage is always coverage
+\emph{of} something, and a method that may specify the something should.
+The like-for-like no-reference comparison is the
+ladder\textquotesingle s middle rungs, where our no-STEER arms sit at
+parity with (slightly below) the Self-Instruct family. The claim this
+section supports is therefore precise: \emph{given a specification of
+the space to cover --- even one the generator itself never reads ---
+retrieval-aimed, density-adaptive conditioning covers it far better than
+any tested method covers it blind, and better than the strongest seeded
+baseline covers it at twenty times the budget.}
+
+\textbf{The dissociation\textquotesingle s sharpest exhibit.}
+v4\textquotesingle s mean-centered Vendi is 62.1 --- the \emph{lowest}
+of any fair-fight arm (its density: 1.69, nearly twice uniform). The
+corpus that wins coverage is the internal-diversity loser, deliberately:
+it spends items where the reference measure is, twins included. Anyone
+selecting a "diverse synthetic corpus" by Vendi score would rank the
+winner last.
+
+\paragraph{II.10.6 What it cost, and what
+broke}\label{ii106-what-it-cost-and-what-broke}
+
+The campaign consumed roughly \$6 of generation across six arms. Two
+negative results were kept: hypothesis deaths H1 and H2 above, and the
+v3 inversion. One retraction was made along the way: an early probe
+reported plan-compliance and alignment figures computed on corrupted
+prompt-audio pairings in a different domain (§audio); the repaired
+figures replaced them and the incident is registered in the provenance
+ledger. Every number in this section carries a P3 provenance tag; the
+arms\textquotesingle{} logs, the seed file, both Dolly halves, and the
+evaluation harness are in the repository.
+
 \subsubsection{II.12 Limitations}\label{ii12-limitations}
 
 \begin{itemize}
@@ -3515,6 +3715,34 @@ selector captured. A low ceiling with high efficiency says the axes are
 too narrow and more search is wasted --- only support expansion
 (recursive refinement) can help; the reverse says the selector is the
 problem. Without the split, "we lost on coverage" is not actionable.
+
+\subsection{III.2c The campaign that proves the
+fork}\label{iii2c-the-campaign-that-proves-the-fork}
+
+Part II\textquotesingle s §10 reports a diagnosis-driven campaign to
+beat Alpaca on scale-free coverage of human-written instructions, under
+a controlled protocol (same 175 human seeds, same generator, budget
+matched in generator calls, evaluation on a reference half no loop ever
+read). The outcome --- first place among twelve corpora, 0.4441 against
+Alpaca\textquotesingle s 0.3722, at 1/20th of Alpaca\textquotesingle s
+budget, with the field\textquotesingle s highest precision --- matters
+to this joint paper for two reasons beyond the win.
+
+First, \textbf{the orthogonalization inversion}. The arm that applied
+Part I\textquotesingle s orthogonalized conditioning to the coverage
+objective scored \emph{below plain conditioning} (0.2941 vs 0.3147):
+orthogonalization pushes generation away from the occupied span, which
+is away from the reference-dense core coverage is paid to fill. Each
+paper\textquotesingle s load-bearing tool, applied to the
+other\textquotesingle s objective, loses to doing nothing. The calculi
+fork because they must.
+
+Second, \textbf{the Vendi exhibit}. The winning coverage corpus has the
+\emph{lowest} mean-centered Vendi of any arm in its cohort (62.1;
+density 1.69). It wins by deliberately spending items where the
+reference measure is --- twins included. A practitioner ranking corpora
+by a single "diversity score" would rank the coverage champion last.
+There is no one number; there are two objectives.
 
 \subsection{III.3 What both objectives
 share}\label{iii3-what-both-objectives-share}
