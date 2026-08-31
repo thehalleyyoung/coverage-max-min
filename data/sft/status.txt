@@ -1,5 +1,5 @@
-=== 2026-08-31T17:36:52Z ===
-runs complete: 40
+=== 2026-08-31T17:43:09Z ===
+runs complete: 42
 
 arm                   items seeds     superni_macro   (tokens)
 coverage-selected       300     2  0.2929 ±0.0006      20929
@@ -14,6 +14,7 @@ full Alpaca pool        300     7  0.2773 ±0.0327      22513
 full Alpaca pool       2398     8  0.2918 ±0.0124     180427
 full Alpaca pool       5000     2  0.3042 ±0.0035     376007
 full Alpaca pool      12000     1  0.3108 ±0.0000     895716
+full Alpaca pool      25000     1  0.3083 ±0.0000    1864343
 
 ceiling (best full-pool point): 0.3108
   coverage-selected    ITEMS to 95% of ceiling: 884
