@@ -109,7 +109,7 @@ HEAD = r"""# Coverage and Max-Min Diversity in Synthetic Data Generation
 Synthetic corpora are generated under a fixed budget of *n* model calls, and two
 different things are wanted from that budget. **Coverage** asks to reach as much
 of the space as possible in *n* turns. **Max-min** asks that no two of the *n*
-items resemble each other. These are not two phrasings of one goal: coverage will
+items resemble each other. They pull in different directions: coverage will
 place two items near each other if between them they reach a large region, and
 max-min will leave most of the space empty provided nothing collides. We study
 both, on one generator, one set of embedders, and one budget, and we show they
@@ -124,36 +124,43 @@ of the space it could reach, and fifteen numerical checks establish the
 consequences: novelty at fixed prompt decays as *n*<sup>−1/*m*</sup>, not
 *n*<sup>−1/*d*</sup>; one prompt ε-covers a vanishing ε<sup>*d*−*m*</sup>
 fraction; only prompt motion *transverse* to the already-occupied span raises the
-ceiling; and unconstrained max-min selection is inconsistent, selecting an
-off-manifold candidate essentially whenever one is offered.
+ceiling; and the optimal number of samples to draw per prompt is set by the ratio
+of prompt-switching cost to sampling cost, reaching one when switching is free.
 
 We assume an embedding oracle and, critically, **no inverse**. We can compute
 exactly where the next item ought to land and have no way to decode that point
 into text. Every architectural choice follows: the system must propose, measure
 and select rather than solve, and its only steering handles are language-valued.
-We therefore elicit latent axes from the generator itself and rank them with an
-**axis-scoring rule** — spread × transversality × independence × headroom —
-which takes two forms, one per objective, differing on exactly the two terms the
-objectives differ on. The scoring is evaluated recursively, in the space the artifact actually
-occupies, and the latent lattice refines itself where it saturates.
+The method we build from that constraint is **Recursive Axis Conditioning**
+(RAC). The generator is asked to name the axes along which its own outputs can
+differ; those axes are ranked by an **axis-scoring rule** (spread ×
+transversality × independence × headroom) their most-different values are
+selected, and an axis with nothing transverse left to offer is split into finer
+sub-axes that apply only inside the region that exhausted it. The score takes two
+forms, one per objective, differing on exactly the two terms the objectives
+differ on, and it is evaluated in the space the artifact actually occupies rather
+than only in text.
 
 We validate on ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered
 images, and ~200 rendered instrumentals, measuring diversity at three levels:
-literal (*n*-gram), latent (text embedding), and — where the artifact is not text
-— in the space the product occupies (CLIP for images, CLAP and MERT for audio).
-Headline findings: a psychometric corpus that is **72.3% exact duplicates** with
-one item repeated 1,637 times, which temperature barely dents (61.6%) and latent
+literal (*n*-gram), latent (text embedding), and (where the artifact is not text) in the space the product occupies (CLIP for images, CLAP and MERT for audio).
+On coverage, RAC places first among twelve corpora against the released Alpaca,
+PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722 at matched
+evaluated-*n* on a human-written reference no corpus was aimed at, on
+one-twentieth of Alpaca's generation budget and with the highest precision in the
+field. On max-min, it wins every literal and latent measure against five
+published methods in both text domains, reaching 124.8 mean-centered Vendi on
+psychometric items where persona conditioning reaches 99.7 and naive prompting
+7.1. Along the way: a psychometric corpus that is **72.3% exact duplicates** with
+one item repeated 1,637 times, which temperature barely dents (61.6%) and
 conditioning nearly eliminates (0.2%); literal and latent diversity moving in
-**opposite directions** as *n* grows; text-embedding similarity predicting
-rendered-image similarity at only ***r* = 0.155**; and, against five published
-methods, wins of 36% (max-min, images) and, on coverage, first place among twelve
-corpora against the released Alpaca, PersonaHub and WizardLM sets — 0.4441
-against Alpaca's 0.3722 at matched evaluated-*n* on a leak-free human-written
-reference, at one-twentieth of Alpaca's generation budget — via
-retrieval-aimed, density-adaptive conditioning that keeps every render. We also
-report what did not work, including a cross-corpus coverage metric that
-inverts, and an arm showing that Part I's own orthogonalization machinery,
-applied to the coverage objective, scores below doing nothing.
+**opposite directions** as *n* grows; and text-embedding similarity predicting
+rendered-image similarity at only ***r* = 0.170**, so every text-side method
+here optimizes a proxy that explains about 3% of the variance in what the reader
+receives. The two objectives resist being served by one tool: the arm applying
+Part I's orthogonalized conditioning to the coverage objective scores below plain
+conditioning, because steering away from the occupied span steers away from
+where the reference measure is densest.
 
 ---
 """
@@ -165,8 +172,8 @@ JOINT = r"""
 
 Everything above was two papers sharing a theory section. This part is the reason
 to publish them together: run both objectives on the same generator, the same
-embedder and the same budget, and they do not merely differ in emphasis — they
-rank methods almost oppositely.
+embedder and the same budget, and they rank methods almost
+oppositely.
 
 ## III.1 The dissociation, measured
 
@@ -224,11 +231,11 @@ covering algorithm, and greedy k-center 2-approximates the covering **radius**.
 **Where they are not.** That duality concerns the worst-case radius: the distance
 from the least-covered point to its nearest center. The coverage that matters
 for synthetic data is **measure-weighted** — what fraction of the reference
-distribution lies within reach — and the two come apart exactly when the measure
+distribution lies within reach, and the two come apart exactly when the measure
 is non-uniform, which it always is. k-center is driven by outliers: every
 isolated point sets the max and so commands a center. Measure-weighted coverage
 is driven by mass: an outlier is worth its own measure and no more. At a budget
-far below what the space needs, the prescriptions are opposite — and that is the
+far below what the space needs, the prescriptions are opposite, and that is the
 entire content of our k-center result (first on min-gap, last on coverage). The
 true dual of measure-weighted coverage is fractional set cover, whose primal is
 submodular; max-min is not.
@@ -252,8 +259,8 @@ reference by the union of *all* candidates the generator produced, and
 efficiency is the fraction of that ceiling the selector captured. A low ceiling
 with high efficiency says the axes are too narrow and more search is wasted —
 only support expansion (recursive refinement) can help; the reverse says the
-selector is the problem. Without the split, "we lost on coverage" is not
-actionable.
+selector is the problem. Without the split, "we lost on coverage" gives no
+indication of what to change.
 
 ## III.2c The comparison that proves the fork
 
@@ -287,7 +294,7 @@ Part I §I.3. Both need the same typicality constraint to be well-posed, since a
 novelty-seeking score can otherwise be satisfied by output that has left the
 manifold altogether. And both are measured through an embedder whose
 geometry can invert the result: we report a cross-corpus coverage comparison in
-which our worst corpus by every other measure — 19.8% exact duplicates — scores
+which our worst corpus by every other measure (19.8% exact duplicates) scores
 the **highest** coverage, 50× a published corpus's, because at an ε in the 2nd
 percentile of reference distances the metric rewards centrality rather than
 spread.

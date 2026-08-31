@@ -9,7 +9,7 @@
 Synthetic corpora are generated under a fixed budget of *n* model calls, and two
 different things are wanted from that budget. **Coverage** asks to reach as much
 of the space as possible in *n* turns. **Max-min** asks that no two of the *n*
-items resemble each other. These are not two phrasings of one goal: coverage will
+items resemble each other. They pull in different directions: coverage will
 place two items near each other if between them they reach a large region, and
 max-min will leave most of the space empty provided nothing collides. We study
 both, on one generator, one set of embedders, and one budget, and we show they
@@ -24,36 +24,43 @@ of the space it could reach, and fifteen numerical checks establish the
 consequences: novelty at fixed prompt decays as $n^{-1/m}$, not
 $n^{-1/d}$; one prompt ε-covers a vanishing $ε^{d-m}$
 fraction; only prompt motion *transverse* to the already-occupied span raises the
-ceiling; and unconstrained max-min selection is inconsistent, selecting an
-off-manifold candidate essentially whenever one is offered.
+ceiling; and the optimal number of samples to draw per prompt is set by the ratio
+of prompt-switching cost to sampling cost, reaching one when switching is free.
 
 We assume an embedding oracle and, critically, **no inverse**. We can compute
 exactly where the next item ought to land and have no way to decode that point
 into text. Every architectural choice follows: the system must propose, measure
 and select rather than solve, and its only steering handles are language-valued.
-We therefore elicit latent axes from the generator itself and rank them with an
-**axis-scoring rule** — spread × transversality × independence × headroom —
-which takes two forms, one per objective, differing on exactly the two terms the
-objectives differ on. The scoring is evaluated recursively, in the space the artifact actually
-occupies, and the latent lattice refines itself where it saturates.
+The method we build from that constraint is **Recursive Axis Conditioning**
+(RAC). The generator is asked to name the axes along which its own outputs can
+differ; those axes are ranked by an **axis-scoring rule** (spread ×
+transversality × independence × headroom) their most-different values are
+selected, and an axis with nothing transverse left to offer is split into finer
+sub-axes that apply only inside the region that exhausted it. The score takes two
+forms, one per objective, differing on exactly the two terms the objectives
+differ on, and it is evaluated in the space the artifact actually occupies rather
+than only in text.
 
 We validate on ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered
 images, and ~200 rendered instrumentals, measuring diversity at three levels:
-literal (*n*-gram), latent (text embedding), and — where the artifact is not text
-— in the space the product occupies (CLIP for images, CLAP and MERT for audio).
-Headline findings: a psychometric corpus that is **72.3% exact duplicates** with
-one item repeated 1,637 times, which temperature barely dents (61.6%) and latent
+literal (*n*-gram), latent (text embedding), and (where the artifact is not text) in the space the product occupies (CLIP for images, CLAP and MERT for audio).
+On coverage, RAC places first among twelve corpora against the released Alpaca,
+PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722 at matched
+evaluated-*n* on a human-written reference no corpus was aimed at, on
+one-twentieth of Alpaca's generation budget and with the highest precision in the
+field. On max-min, it wins every literal and latent measure against five
+published methods in both text domains, reaching 124.8 mean-centered Vendi on
+psychometric items where persona conditioning reaches 99.7 and naive prompting
+7.1. Along the way: a psychometric corpus that is **72.3% exact duplicates** with
+one item repeated 1,637 times, which temperature barely dents (61.6%) and
 conditioning nearly eliminates (0.2%); literal and latent diversity moving in
-**opposite directions** as *n* grows; text-embedding similarity predicting
-rendered-image similarity at only ***r* = 0.155**; and, against five published
-methods, wins of 36% (max-min, images) and, on coverage, first place among twelve
-corpora against the released Alpaca, PersonaHub and WizardLM sets — 0.4441
-against Alpaca's 0.3722 at matched evaluated-*n* on a leak-free human-written
-reference, at one-twentieth of Alpaca's generation budget — via
-retrieval-aimed, density-adaptive conditioning that keeps every render. We also
-report what did not work, including a cross-corpus coverage metric that
-inverts, and an arm showing that Part I's own orthogonalization machinery,
-applied to the coverage objective, scores below doing nothing.
+**opposite directions** as *n* grows; and text-embedding similarity predicting
+rendered-image similarity at only ***r* = 0.170**, so every text-side method
+here optimizes a proxy that explains about 3% of the variance in what the reader
+receives. The two objectives resist being served by one tool: the arm applying
+Part I's orthogonalized conditioning to the coverage objective scores below plain
+conditioning, because steering away from the occupied span steers away from
+where the reference measure is densest.
 
 ---
 
@@ -68,9 +75,9 @@ Our central claim locates the interesting structure in the **support** rather th
 
 We assume an embedding oracle mapping text to a fixed-size vector, and — critically — **no reverse oracle**. We can compute exactly where we would like the next item to land and still have no way to decode that point into text. Every architectural choice follows from that asymmetry: the system must propose, measure, and select rather than solve, and the only steering handles are language-valued.
 
-We therefore build the generation stack — **Recursive Axis Conditioning**, RAC — around latent behaviors elicited from the generator itself, organized by an **axis-scoring rule** that ranks candidate latent variables by the product of four measurable factors — spread, transversality, independence, and headroom — and selects each variable's most-different values by farthest-point search in level space. When the score reports that no available variable clears a promise floor, it emits a *refine* decision, and the generator is asked to split the exhausted variable into finer sub-variables. The recursion is the only mechanism in the paper that changes the asymptote rather than the constant.
+We therefore build the generation stack (**Recursive Axis Conditioning**, RAC) around latent behaviors elicited from the generator itself, organized by an **axis-scoring rule** that ranks candidate latent variables by the product of four measurable factors (spread, transversality, independence, and headroom), and selects each variable's most-different values by farthest-point search in level space. When the score reports that no available variable clears a promise floor, it emits a *refine* decision, and the generator is asked to split the exhausted variable into finer sub-variables. The recursion is the only mechanism in the paper that changes the asymptote rather than the constant.
 
-We test this on **43,000 real generations** from `openai/gpt-5.6-luna` across three domains — DALL·E instructions for post-modern artworks, psychometric exam items, and instrumental-music prompts — measuring diversity at three levels: literal (*n*-gram), latent (text embedding), and, where the artifact is not text, in the space the product actually occupies (CLIP for rendered images, CLAP and MERT for rendered audio). Four results stand out. Asked the same reasonable question ten thousand times, the model returns a psychometric corpus that is **72.3% exact duplicates**, one item repeated 1,637 times; raising the temperature to 1.6 leaves it at 61.6%, while latent conditioning drops it to 0.2%. Literal and latent diversity move in **opposite directions** as the corpus grows. Text-embedding similarity predicts *rendered-image* similarity at only **r = 0.170**, so every text-side diversity method — ours included — optimizes a proxy explaining about 3% of the variance in what the user receives. And against five real published methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature, naive) our method wins every metric, beating the strongest by 36% in mean-centered Vendi; against **human-written MMLU** it wins on lexical diversity and self-repetition while reaching 69% of a human exam bank's semantic diversity.
+We test this on **43,000 real generations** from `openai/gpt-5.6-luna` across three domains — DALL·E instructions for post-modern artworks, psychometric exam items, and instrumental-music prompts — measuring diversity at three levels: literal (*n*-gram), latent (text embedding), and, where the artifact is not text, in the space the product actually occupies (CLIP for rendered images, CLAP and MERT for rendered audio). Four results stand out. Asked the same reasonable question ten thousand times, the model returns a psychometric corpus that is **72.3% exact duplicates**, one item repeated 1,637 times; raising the temperature to 1.6 leaves it at 61.6%, while latent conditioning drops it to 0.2%. Literal and latent diversity move in **opposite directions** as the corpus grows. Text-embedding similarity predicts *rendered-image* similarity at only **r = 0.170**, so every text-side diversity method (ours included) optimizes a proxy explaining about 3% of the variance in what the user receives. And against five real published methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature, naive) our method wins every metric, beating the strongest by 36% in mean-centered Vendi; against **human-written MMLU** it wins on lexical diversity and self-repetition while reaching 69% of a human exam bank's semantic diversity.
 
 ---
 
@@ -88,7 +95,7 @@ $$
 
 and we accept the candidate minimizing *J*<sub>λ</sub>. The anchor term keeps generation on the manifold; the repulsion term pushes it away from what already exists. The interesting question is what happens to this as *n* → ∞.
 
-Our answer is that the objective is not where the difficulty lives. Both terms are cheap to maintain online and both behave predictably. The difficulty is that **the set of things the generator can propose is much smaller than it appears**, and the objective is powerless to enlarge it. Selection can only choose among what is offered. If the offering is confined to a thin slice, no selection rule — however clever, however well-tuned its λ — can produce diversity that the proposal distribution does not contain. Worse, as we show, aggressive selection under a fixed proposal distribution systematically degrades quality, because the only way to keep winning a novelty contest inside an exhausted region is to leave the manifold.
+Our answer is that the objective is not where the difficulty lives. Both terms are cheap to maintain online and both behave predictably. The difficulty is that **the set of things the generator can propose is much smaller than it appears**, and the objective is powerless to enlarge it. Selection can only choose among what is offered. If the offering is confined to a thin slice, no selection rule (however clever, however well-tuned its λ) can produce diversity that the proposal distribution does not contain. Worse, as we show, aggressive selection under a fixed proposal distribution systematically degrades quality, because the only way to keep winning a novelty contest inside an exhausted region is to leave the manifold.
 
 #### I.1.1 The oracle asymmetry
 
@@ -100,11 +107,11 @@ This is the structural fact that shapes the entire design, and it is worth dwell
 
 Consequently the system cannot *solve* for its next item. It can only:
 
-1. **propose** — sample from *p*(· | *x*) for some prompt *x* we are able to write;
-2. **measure** — embed the proposals and score them;
+1. **propose** (sample from *p*(· | *x*) for some prompt *x* we are able to write;
+2. **measure**) embed the proposals and score them;
 3. **select** — keep one.
 
-All of our leverage is therefore in step 1, in the choice of *x*, and that choice is expressible only in language. This is why the latent variables in our system are *language-valued* — named axes with named levels — rather than continuous codes: they are the only handles that reach the generator. It is also why the axis scoring of §I.4 exists. **The axis scoring is a surrogate for the missing inverse.** Since we cannot decode the direction we want to travel, we instead score the language-valued conditions we *can* write by how nearly their induced output distributions point that way.
+All of the control we have is therefore in step 1, in the choice of *x*, and that choice is expressible only in language. This is why the latent variables in our system are *language-valued* (named axes with named levels), rather than continuous codes: they are the only handles that reach the generator. It is also why the axis scoring of §I.4 exists. **The axis scoring is a surrogate for the missing inverse.** Since we cannot decode the direction we want to travel, we instead score the language-valued conditions we *can* write by how nearly their induced output distributions point that way.
 
 #### I.1.2 Contributions
 
@@ -118,7 +125,7 @@ All of our leverage is therefore in step 1, in the choice of *x*, and that choic
 
 ### I.2 Related work
 
-**Diversity metrics.** The Vendi Score (Friedman & Dieng, 2022) is the exponential of the von Neumann entropy of a normalized similarity matrix, interpretable as an effective number of distinct items. We use it throughout, with a computational note: under a linear kernel on unit-normalized embeddings, the *n* × *n* Gram matrix and the *D* × *D* second-moment matrix share their nonzero spectrum, so the score costs *O*(*nD*² + *D*³) rather than *O*(*n*³). We verify this to machine precision (max eigenvalue mismatch 1.1 × 1$0^{-16}$). This matters for our setting specifically: an infinite-horizon method needs an evaluation whose cost does not grow superlinearly in the thing it is evaluating.
+**Diversity metrics.** The Vendi Score (Friedman & Dieng, 2022) is the exponential of the von Neumann entropy of a normalized similarity matrix, interpretable as an effective number of distinct items. We use it throughout, with a computational note: under a linear kernel on unit-normalized embeddings, the *n* × *n* Gram matrix and the *D* × *D* second-moment matrix share their nonzero spectrum, so the score costs *O*(*nD*² + *D*³), rather than *O*(*n*³). We verify this to machine precision (max eigenvalue mismatch 1.1 × 1$0^{-16}$). This matters for our setting specifically: an infinite-horizon method needs an evaluation whose cost does not grow superlinearly in the thing it is evaluating.
 
 **Selection and subset choice.** Determinantal point processes model repulsion via volume in feature space. Farthest-point / *k*-center greedy is the classical max–min packing heuristic and we use it as a baseline (`fps_post`) and, at the level of axis values, as a component (§I.4.3). SemDeDup-style near-duplicate removal at a fixed radius appears as `dedup_post`. All of these are *post hoc* selectors over a fixed pool, which is exactly their limitation in our setting: they cannot change what is in the pool.
 
@@ -128,7 +135,7 @@ All of our leverage is therefore in step 1, in the choice of *x*, and that choic
 
 **Novelty search.** Novelty search in evolutionary computation rewards behavioral distance from an archive. Our repulsion term is a direct analogue, operating over an archive of embeddings rather than of behavior descriptors.
 
-**Coverage.** Part II treats the covering objective — maximizing the volume of a union of ε-balls at a *finite* budget — which is submodular where max–min is not. §I.7 relates the two.
+**Coverage.** Part II treats the covering objective (maximizing the volume of a union of ε-balls at a *finite* budget), which is submodular where max–min is not. §I.7 relates the two.
 
 ---
 
@@ -160,7 +167,7 @@ Verified at *m* = 3: best-of-8 yields a gain of 2.19 against $K^{1/3}$ = 2.00. S
 
 *Proof sketch.* The ε-neighbourhood of an *m*-dimensional set in *d* dimensions is a tube of volume Θ($ε^{d-m}$) · vol<sub>*m*</sub>(*S<sub>x</sub>*) for ε below the reach of *S<sub>x</sub>*. Dividing by vol<sub>*d*</sub>(*M*) gives the claim. ∎
 
-Measured at *d* = 8, *m* = 2: fitted exponent 5.06 against a predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5 → 0.12. The fitted exponent sits below prediction because at the larger ε the tube is no longer thin relative to the manifold, which flattens the low-ε end of the fit; the qualitative claim — coverage collapsing polynomially in ε with a large exponent — is unambiguous.
+Measured at *d* = 8, *m* = 2: fitted exponent 5.06 against a predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5 → 0.12. The fitted exponent sits below prediction because at the larger ε the tube is no longer thin relative to the manifold, which flattens the low-ε end of the fit; the qualitative claim (coverage collapsing polynomially in ε with a large exponent) is unambiguous.
 
 The practical reading is severe. **A single prompt, sampled infinitely often, covers essentially none of what the model could write.** Not "less than we would like" — a fraction that goes to zero polynomially as the resolution of interest sharpens.
 
@@ -253,9 +260,9 @@ We call the method **Recursive Axis Conditioning** (RAC): the generator is asked
 Per accepted item, a bounded number of model calls regardless of corpus size:
 
 1. **Spec choice.** Sample a pool of specs from the current axis lattice; embed their descriptions; keep the one with the largest residual outside the corpus's occupied eigenspace. Orthogonalization at the level of *conditions*, not outputs.
-2. **Generation.** *K* parallel completions conditioned on the spec, with the spec's levels stated as **contracts** — behaviors the text must exhibit, not suggestions — plus an explicit avoid-list from the ledger.
-3. **Judging.** One separate call scores craft (or, for exam items, validity) and checks each required behavior. Generation never grades itself.
-4. **Selection.** Utility = 0.4·quality + 0.35·orthogonality + 0.25·capped gap, behind a typicality gate: a hard rejection of candidates lying beyond *z* running radii from the corpus centroid. The gate is negative supervision only — it may reject, never endorse, and passing it is not evidence of quality — and the gap term is **capped** at 2 running scales, so no candidate earns unbounded credit for sitting far from everything.
+2. **Generation.** *K* parallel completions conditioned on the spec, with the spec's levels stated as **contracts** (behaviors the text must exhibit, not suggestions), plus an explicit avoid-list from the ledger.
+3. **Judging.** One separate call scores craft (or, for exam items, validity), and checks each required behavior. Generation never grades itself.
+4. **Selection.** Utility = 0.4·quality + 0.35·orthogonality + 0.25·capped gap, behind a typicality gate: a hard rejection of candidates lying beyond *z* running radii from the corpus centroid. The gate is negative supervision only (it may reject, never endorse, and passing it is not evidence of quality), and the gap term is **capped** at 2 running scales, so no candidate earns unbounded credit for sitting far from everything.
 5. **Mining.** Every 25 accepts, show the model 50 sampled items and ask what they have in common. Append the answer to a JSONL ledger; a bounded slice becomes the next prompts' avoid-list.
 6. **Refinement.** On a saturation signal, ask the generator to split the dominant saturated cell.
 
@@ -265,13 +272,13 @@ Every state the policy reads is bounded: running centroid and second-moment, EMA
 
 We ask the generator for axes that are near-orthogonal, structural rather than topical, and whose levels are all usable — explicitly steering away from subject matter, length, and rhyme toward craft decisions. On the live run this produced axes including *temporal stance*, *relationship to its own claim*, *syntactic weather*, and *the register the poem refuses*.
 
-Refinement shows the model the saturated cell and the mined attractors and asks it either to split a level into finer sub-levels or to mint a new axis meaningful only inside that cell. Refinement axes are **conditional** — they apply only when their parent level was chosen — so the lattice is a tree, and refining a saturated region does not inflate cost elsewhere.
+Refinement shows the model the saturated cell and the mined attractors and asks it either to split a level into finer sub-levels or to mint a new axis that applies only inside that cell. Refinement axes are **conditional** (they apply only when their parent level was chosen), so the lattice is a tree, and refining a saturated region does not inflate cost elsewhere.
 
 #### I.5.3 Why "orthogonalize", not "randomize"
 
-Forcing randomness — raising temperature, injecting random seed words — buys variance in the surface while leaving the mode structure intact, and degrades quality monotonically because temperature cannot distinguish *surprising* from *wrong*. The measurements bear this out: raising the sampling temperature to 1.6 moves distinct-2 from 0.3341 to 0.3342 and leaves 61.6% of the corpus byte-identical duplicates, against 72.3% at the default setting.
+Forcing randomness (raising temperature, injecting random seed words) buys variance in the surface while leaving the mode structure intact, and degrades quality monotonically because temperature cannot distinguish *surprising* from *wrong*. The measurements bear this out: raising the sampling temperature to 1.6 moves distinct-2 from 0.3341 to 0.3342 and leaves 61.6% of the corpus byte-identical duplicates, against 72.3% at the default setting.
 
-Forcing approximate orthogonality asks a different question — which direction is this corpus not yet spending energy on — which has a computable answer, improves rather than degrades quality when paired with a quality term, and remains meaningful as *n* grows. "Be random" gets no harder to satisfy and no more useful.
+Forcing approximate orthogonality asks a different question (which direction is this corpus not yet spending energy on), which has a computable answer, improves rather than degrades quality when paired with a quality term, and stays informative as *n* grows. "Be random" gets no harder to satisfy and no more useful.
 
 ---
 
@@ -289,7 +296,7 @@ Generator: `openai/gpt-5.6-luna` via OpenRouter. Text embeddings: `nomic-embed-t
 
 **Poetry.** A smaller pilot corpus, used to elicit and inspect the axis machinery on a domain where craft rather than content carries the variation, and to illustrate what the attractor mining recovers (§I.6.7).
 
-**Prompt length.** A text-to-music model honours concrete, performable direction — named instruments, room character, register, articulation, rhythmic feel, how it ends — and ignores paragraphs of abstract compositional theory. Long prompts therefore inflate every text-side diversity metric while changing the audio far less, which is the proxy gap §I.6.6 measures. Prompts are held to 2–4 sentences (~300 characters target, 423–449 mean in the corpora below) of specifically audible, instrumental-only direction, and the audio metrics decide.
+**Prompt length.** A text-to-music model honours concrete, performable direction (named instruments, room character, register, articulation, rhythmic feel, how it ends), and ignores paragraphs of abstract compositional theory. Long prompts therefore inflate every text-side diversity metric while changing the audio far less, which is the proxy gap §I.6.6 measures. Prompts are held to 2–4 sentences (~300 characters target, 423–449 mean in the corpora below) of specifically audible, instrumental-only direction, and the audio metrics decide.
 
 #### I.6.2 Methods compared
 
@@ -305,7 +312,7 @@ Five of these are real published approaches, implemented faithfully rather than 
 | `rac` | **Recursive Axis Conditioning** (ours): recursively elicited axes, spec-level orthogonalization, capped repulsion behind a typicality gate, append-only attractor ledger |
 | `rac+vision` | RAC, plus steering on the *rendered image* (§I.6.6) |
 
-`persona` is the load-bearing comparison. It has language-valued latent conditioning — the same basic idea as ours — but no orthogonality selection, no ledger, and no recursive refinement. The gap between `persona` and `rac` isolates exactly what those three components buy.
+`persona` is the load-bearing comparison. It has language-valued latent conditioning (the same basic idea as ours), but no orthogonality selection, no ledger, and no recursive refinement. The gap between `persona` and `rac` isolates exactly what those three components buy.
 
 One faithfulness caveat we chose deliberately: Self-Instruct's ROUGE filter compares a candidate against the entire pool, which is O(*n*) longest-common-subsequence computations per candidate and comes to dominate the loop at *n* in the thousands. We compare against a bounded random sample of 120 pool members. This makes our reimplementation *weaker* than the original at large *n*, and that is itself the point: the original's redundancy check does not have an infinite horizon, because its cost grows linearly in the corpus it is protecting.
 
@@ -318,16 +325,44 @@ Two 10,000-item corpora, one call each, no selection:
 | DALL·E instructions | 10,000 | 10,000 | 0.000 | 1× |
 | psychometric items | 10,000 | ~1,656 | **0.723** | **1,637×** |
 
-In the psychometric domain, 72.3% of a ten-thousand-item corpus is exact duplicate text, and one single question — *"What number comes next in the sequence: 2, 6, 12, 20, 30, ?"* — accounts for 1,637 of them. No embedding, no threshold, and no interpretation is required to see this; it is byte-identical repetition, and it is what a strong instruction-tuned model does when asked the same reasonable question ten thousand times.
+In the psychometric domain, 72.3% of a ten-thousand-item corpus is exact duplicate text, and one single question (*"What number comes next in the sequence: 2, 6, 12, 20, 30, ?"*) accounts for 1,637 of them. No embedding, no threshold, and no interpretation is required to see this; it is byte-identical repetition, and it is what a strong instruction-tuned model does when asked the same reasonable question ten thousand times.
 
-Two things make this more than a curiosity. First, **temperature barely helps**: at *T* = 1.6 the duplicate rate is still 0.616. Second, **conditioning nearly eliminates it**: persona conditioning drops it to 0.002. That single contrast is the paper's thesis reduced to two numbers — randomness does not buy diversity, conditioning does.
+Temperature barely helps: at *T* = 1.6 the duplicate rate is still 0.616. Conditioning nearly eliminates it: persona conditioning drops it to 0.002. Between those two numbers — randomness does not buy diversity, conditioning does.
 
 It also shows the failure is domain-shaped and invisible from one vantage point. The identical pipeline, prompt style, and model produce zero duplicates on DALL·E instructions. A practitioner who validated their pipeline on the first domain and deployed it on the second would ship a bank that is three-quarters one question.
 
-![Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row) and latent measures (bottom row) do not agree about what is happening.](figures/fig10_real_curves.png)
+![Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.](figures/fig10_real_curves.png)
 
-*Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row) and latent measures (bottom row) do not agree about what is happening.*
+*Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.*
 
+
+The same failure is visible in a corpus with no duplicates at all. The poetry pilot has an exact-duplicate rate of 0.000 under naive prompting and a distinct-2 of 0.610, so every literal counter reports a healthy corpus. Here are the opening lines of eight poems sampled at random from those sixty:
+
+> At dawn, the river gathered up the stars
+> At dusk, the windows gather fire,
+> At dusk, the rooftops gather amber light,
+> At dusk, the windows gather amber light,
+> At dawn, the windows gather up the rain,
+> At dusk, the river gathers every color
+> At dusk, the river gathers up the day,
+> At dusk, the river gathers up the sky,
+
+Eight of eight are the same sentence with two slots filled. The closest pair in that corpus sits at cosine similarity 0.946 and shares its first line verbatim (*"At dusk, the windows gather gold,"*) before diverging into the same sparrow stitching the same thread across the same evening. Sixty samples from one prompt behave like two and a half distinct items by Vendi Score, and the duplicate counter sees none of it.
+
+Eight openings from the sixty RAC produced under the same generator and budget:
+
+> Had you arrived at the registry after midnight, when the lamps were still accountable,
+> We have tried to piece that evening together from what remained.
+> I am the conjurer in the green coat, stepping into the light.
+> I have reconstructed the trench, Mara, from the surviving datum points.
+> I wore the cobalt pressure suit, and the regolith took my weight,
+> We went back through that winter in our minds.
+> "Attend, O citizens, beneath the unappeased sky:
+> At the appointed hour, you will rise beneath the bells,
+
+Counterfactual conditional, collective reconstruction, first-person performance, a report addressed to a named absent person, plain retrospect, public proclamation, prophecy. The closest pair RAC produces sits at 0.809 and shares a subject rather than a template: one poem is a nested incantation about a coal inside a chamber inside a breast, the other a kitchen-table conjuring trick performed for a child in a red coat.
+
+The measurements follow the reading. Against the naive corpus, RAC holds 2.7× the median nearest-neighbour distance (0.239 against 0.089), and cuts 4-gram self-repetition by a factor of 37 (0.0023 against 0.0855), at a distinct-2 of 0.774 against 0.610. Mean-centered Vendi moves very little in comparison, 38.81 against 37.00, and that is the honest reading of it: a spectral summary of sixty points in 768 dimensions is close to insensitive to the difference between sixty poems that begin the same way and sixty that do not. The nearest-neighbour statistic is what registers it, and the page registers it immediately.
 
 #### I.6.4 Literal and latent diversity move in opposite directions
 
@@ -341,9 +376,9 @@ Measuring the DALL·E naive corpus as it grows from *n* = 5 to *n* = 10,000, in 
 | 1,000 | 0.145 | 0.520 | 246.6 | 63.05 |
 | 1,750 | 0.112 | 0.577 | 283.3 | 65.30 |
 
-Literal diversity collapses monotonically — by *n* = 1,750 more than half of each new instruction's 4-grams have already appeared — while latent diversity *rises* and then saturates. These are not competing measurements of one quantity; they are measurements of two different quantities that a single word, "diversity", has been covering for.
+Literal diversity collapses monotonically (by *n* = 1,750 more than half of each new instruction's 4-grams have already appeared), while latent diversity *rises* and then saturates. They are measurements of two different quantities that a single word, "diversity", has been covering for.
 
-**Centering.** The uncentered embedding Vendi on this corpus reads 1.63 → 2.33, which would suggest ten thousand instructions behave like two distinct items. That number is mostly an artifact of the kernel. Same-domain embeddings sit in a narrow cone — mean pairwise cosine similarity is 0.883 here and 0.788 on the psychometric corpus — so the Gram spectrum is dominated by the shared mean direction and the score compresses toward 1. After removing the mean direction the same corpus reads 3.79 → 65.30, which is the honest curve and the one in the table. We report both, and we suggest any embedding-based diversity result publish the corpus's pairwise-similarity distribution alongside it, because the number is meaningless without it. Part II measured a mean pairwise cosine of 0.444 on its own pool with the same embedder — the cone is corpus-dependent, not a fixed property of the embedder, which is exactly why it has to be reported rather than assumed.
+**Centering.** The uncentered embedding Vendi on this corpus reads 1.63 → 2.33, which would suggest ten thousand instructions behave like two distinct items. That number is mostly an artifact of the kernel. Same-domain embeddings sit in a narrow cone (mean pairwise cosine similarity is 0.883 here and 0.788 on the psychometric corpus), so the Gram spectrum is dominated by the shared mean direction and the score compresses toward 1. After removing the mean direction the same corpus reads 3.79 → 65.30, which is the honest curve and the one in the table. We report both, and we suggest any embedding-based diversity result publish the corpus's pairwise-similarity distribution alongside it, because the number is meaningless without it. Part II measured a mean pairwise cosine of 0.444 on its own pool with the same embedder — the cone is corpus-dependent, not a fixed property of the embedder, which is exactly why it has to be reported rather than assumed.
 
 ![Figure 4. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.](figures/fig11_literal_vs_latent.png)
 
@@ -364,13 +399,13 @@ All seven arms, real corpora, DALL·E domain, every arm evaluated on the same nu
 | **RAC** | 0.660 | 0.068 | 167.0 | 77.67 | 0.171 |
 | **RAC + vision steering** | **0.699** | **0.040** | **170.9** | **91.97** | **0.192** |
 
-RAC wins every column, and adding vision steering improves on the text-only variant by a further 18% in centered Vendi. Three of the baselines fail in ways worth naming.
+RAC wins every column, and adding vision steering improves on the text-only variant by a further 18% in centered Vendi. Three of the baselines fail in different ways.
 
-**High temperature buys nothing.** distinct-2 of 0.291 against naive's 0.293, and an identical median nearest-neighbour distance of 0.045. Turning the temperature up moved the third decimal place, and moved it downward.
+High temperature buys nothing here: distinct-2 of 0.291 against naive's 0.293, and an identical median nearest-neighbour distance of 0.045. Turning the temperature up moved the third decimal place, and moved it downward.
 
-**Evol-Instruct is worse than naive at the thing diversity methods exist for.** Its median nearest-neighbour distance is 0.021, against naive's 0.045 — it produces items *closer* to the existing corpus than independent sampling does. The mechanism is working as designed: mutating an existing item produces a neighbour of that item. Evol-Instruct raises *distinct-2* (0.386 vs 0.293) because the mutations reword things, so a purely literal evaluation would score it as an improvement. Measuring both levels is what catches it.
+Evol-Instruct comes out worse than naive at the one thing a diversity method exists for. Its median nearest-neighbour distance is 0.021, against naive's 0.045 — it produces items *closer* to the existing corpus than independent sampling does. The mechanism is working as designed: mutating an existing item produces a neighbour of that item. Evol-Instruct raises *distinct-2* (0.386 vs 0.293), because the mutations reword things, so a purely literal evaluation would score it as an improvement. Measuring both levels is what catches it.
 
-**Self-Instruct's guard is literal, so it defends the literal level only.** It achieves the best self-repetition of any baseline (0.131) — its ROUGE filter is doing real work — while its centered Vendi (67.45) trails RAC by 10 points and RAC with vision steering by 24. A ROUGE-L threshold cannot see semantic redundancy, and semantic redundancy is what remains once the lexical kind is filtered.
+Self-Instruct's guard is literal, and it defends the literal level only. It achieves the best self-repetition of any baseline (0.131) (its ROUGE filter is doing real work), while its centered Vendi (67.45) trails RAC by 10 points and RAC with vision steering by 24. A ROUGE-L threshold cannot see semantic redundancy, and semantic redundancy is what remains once the lexical kind is filtered.
 
 ![Figure 5. Competitive comparison on real corpora at matched n, both domains, across four metrics.](figures/fig14_arms.png)
 
@@ -396,7 +431,7 @@ We rendered the first 199 DALL·E instructions from the naive corpus to actual i
 
 > Pairwise cosine similarity in text-embedding space correlates with pairwise cosine similarity in image-embedding space at **Pearson *r* = 0.170**.
 
-Knowing that two instructions are semantically far apart tells you very nearly nothing about whether the two pictures look different. Every text-side diversity method in the table above — ours included — is optimizing a proxy that explains roughly 2% of the variance in the thing the user actually receives.
+Knowing that two instructions are semantically far apart tells you very nearly nothing about whether the two pictures look different. Every text-side diversity method in the table above (ours included) is optimizing a proxy that explains roughly 2% of the variance in the thing the user actually receives.
 
 The qualitative version is more damning than the correlation. Independently generated instructions, from a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity, render to near-interchangeable pictures (Figure 7, top): the same magenta-and-cyan palette, a classical marble bust, neon signage, halftone collage, a receding grid. A vision judge shown samples of the set rates its distinctness 6–7 out of 10 and names the attractors precisely — *"muted beige, cream, brown, ochre and black foundations accented by saturated cyan/teal, turquoise, pink"*, *"appropriation of canonical or religious imagery, especially Mona Lisa-like female portraits"*, *"frontal, museum-like presentation with centered, symmetrical compositions"*.
 
@@ -406,22 +441,24 @@ This is a second mode collapse, downstream of ours, contributed by the image mod
 
 *Figure 6. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.*
 
-![Figure 7. Sixteen renders from each policy, same generator and budget. Top: naive prompting — a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that nonetheless collapses to one visual mode (magenta/cyan collage, classical bust, barcode, neon lettering). Bottom: max-min steering with literal-space repulsion — the palette, medium, composition and register vary across items.](figures/fig13_contact_sheet.png)
+![Figure 7. Sixteen renders from each policy, same generator and budget. Top row: naive prompting, a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still collapses to one visual mode — magenta and cyan collage, classical bust, barcode, neon lettering. Bottom row: max-min steering with literal-space repulsion, where palette, medium, composition and register all vary. The bottom row remains fonder of grids and tiled panels than a human art director would be; §I.6.6 says why the objective does nothing to discourage that.](figures/fig13_contact_sheet.png)
 
-*Figure 7. Sixteen renders from each policy, same generator and budget. Top: naive prompting — a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that nonetheless collapses to one visual mode (magenta/cyan collage, classical bust, barcode, neon lettering). Bottom: max-min steering with literal-space repulsion — the palette, medium, composition and register vary across items.*
+*Figure 7. Sixteen renders from each policy, same generator and budget. Top row: naive prompting, a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still collapses to one visual mode — magenta and cyan collage, classical bust, barcode, neon lettering. Bottom row: max-min steering with literal-space repulsion, where palette, medium, composition and register all vary. The bottom row remains fonder of grids and tiled panels than a human art director would be; §I.6.6 says why the objective does nothing to discourage that.*
 
 
-**The vision-steered arm** closes the loop where the product actually lives. It renders a bounded sample of accepted instructions, embeds them with CLIP, and feeds two things back into the text-side loop: a least-squares map from the crowded *image* directions into instruction-embedding space, so the text-side orthogonality term can push away from visual redundancy it cannot itself perceive; and mined *visual* attractors from the vision judge, appended to the same append-only ledger as the textual ones and repelled against in subsequent prompts. It is the paper's mechanism applied one level down: the ledger already repels against what the model keeps saying, and now also against what it keeps showing. It is the best arm in the table.
+A reader looking at the bottom row will notice that it still favours grids, panels and tiled compositions more than a human art director would. That is what the objective asks for and no more. A max-min corpus is scored on how far apart its items are, and nothing in the score says the corpus should look like any particular distribution of artworks — there is no likelihood term, no reference set, no penalty for sitting in a region of image space that real post-modern art rarely occupies. If the generator's prior happens to place a whole family of mutually distant images inside the tiled-grid region, spreading points is satisfied by staying there and varying what fills the cells. Part II's objective is the one that has a reference distribution in it, and a corpus scored on coverage of human-written material inherits a pull toward where that material actually sits. Buying both at once means carrying both terms, which is a different optimization from the one measured here.
+
+The vision-steered arm closes the loop where the product actually lives. It renders a bounded sample of accepted instructions, embeds them with CLIP, and feeds two things back into the text-side loop: a least-squares map from the crowded *image* directions into instruction-embedding space, so the text-side orthogonality term can push away from visual redundancy it cannot itself perceive; and mined *visual* attractors from the vision judge, appended to the same append-only ledger as the textual ones and repelled against in subsequent prompts. It is the paper's mechanism applied one level down: the ledger already repels against what the model keeps saying, and now also against what it keeps showing. It is the best arm in the table.
 
 #### I.6.7 Attractor mining works, and is legible
 
 The mining step produces findings specific enough to act on. From the poetry pilot, round 1 (*n* = 25): *"self-correction and immediate retraction: speakers repeatedly interrupt their own claims"*; *"ceremonial or institutional address: the voice of a bell-ringer, town crier, registrar, witness"*; *"threshold imagery and delayed passage: doors, gates, windows, bridges, shores"*. By round 2 (*n* = 50) it tracks the corpus's *drift* rather than restating round 1, noting that technical vocabulary is now being placed inside mythic frames and that recursive epistemic backtracking has become structural.
 
-Two observations. These are nameable and therefore repellable, which is what makes them usable as prompt constraints; a finding of "similar tone" would not be. And several of them are artifacts of *our own axis elicitation* — asking for craft-level axes like "relationship to its own claim" reliably produces self-correcting speakers. **The system's own conditioning becomes the next attractor.** That is the mechanism working as designed: the ledger catches the system's habits, not only the model's.
+These findings are nameable and therefore repellable, which is what makes them usable as prompt constraints; a finding of "similar tone" would not be. And several of them are artifacts of *our own axis elicitation* — asking for craft-level axes like "relationship to its own claim" reliably produces self-correcting speakers. **The system's own conditioning becomes the next attractor.** The ledger catches the system's own habits alongside the model's.
 
 #### I.6.8 The exam bank: a judged enemy-item radius
 
-Exam items invert the semantics of the other two domains. Two operational items closer than δ are *enemy items* — seeing one gives away the other — a test-security failure at any bank size, so the floor is a hard constraint rather than a term in a weighted sum, and the min-distance check must be exact against the full bank rather than subsampled. Item templates expose few manipulable slots, so each mode is a low-dimensional disk and the δ-packing number of a bank is finite and small: a bank has a capacity, and the operative question is what fraction of a nominal bank is actually usable. That turns on δ, so we measured it. 236 item pairs drawn from a human-written bank (MMLU) across the full range of embedding distance were put to a blind psychometric adjudication — does seeing one item give a material advantage on the other, through a shared fact, a re-skin, or matched distractor misconceptions — with the judge shown neither the distance nor the provenance. A logistic fit of enemy verdicts on distance crosses 50% at **δ = 0.0354**, which is the operative radius for this embedder and item type.
+Exam items invert the semantics of the other two domains. Two operational items closer than δ are *enemy items* (seeing one gives away the other) a test-security failure at any bank size, so the floor is a hard constraint rather than a term in a weighted sum, and the min-distance check must be exact against the full bank rather than subsampled. Item templates expose few manipulable slots, so each mode is a low-dimensional disk and the δ-packing number of a bank is finite and small: a bank has a capacity, and the operative question is what fraction of a nominal bank is actually usable. That turns on δ, so we measured it. 236 item pairs drawn from a human-written bank (MMLU) across the full range of embedding distance were put to a blind psychometric adjudication — does seeing one item give a material advantage on the other, through a shared fact, a re-skin, or matched distractor misconceptions — with the judge shown neither the distance nor the provenance. A logistic fit of enemy verdicts on distance crosses 50% at **δ = 0.0354**, which is the operative radius for this embedder and item type.
 
 Applying that radius to real banks — six generation policies at 2,500 items each, and the human bank under identical treatment:
 
@@ -450,23 +487,23 @@ The comparisons above are against our own reimplementations, which is the right 
 | persona conditioning | 0.0040 | 0.3887 | 0.1711 | 543.3 | 99.71 | 0.1346 |
 | **RAC** | **0.0000** | 0.4377 | **0.0503** | **622.2** | 135.58 | 0.2235 |
 
-Two results, and we want to be precise about which is which.
+The synthetic and human comparisons come out differently, and the difference matters.
 
-**Against every synthetic method, RAC wins every column.** Centered Vendi 135.6 against the best baseline's 99.7 — a 36% margin over persona conditioning, which is the closest published relative of our approach and differs from it exactly by the three components we add. Self-repetition 0.050 against persona's 0.171. The undiversified arms are not close: naive and high-temperature prompting score ~6.5 centered Vendi, because two-thirds of their corpora are byte-identical duplicates, and their median nearest-neighbour distance is exactly 0.0000 — the median item has a perfect twin.
+Against every synthetic method, RAC wins every column. Centered Vendi 135.6 against the best baseline's 99.7 — a 36% margin over persona conditioning, which is the closest published relative of our approach and differs from it exactly by the three components we add. Self-repetition 0.050 against persona's 0.171. The undiversified arms are not close: naive and high-temperature prompting score ~6.5 centered Vendi, because two-thirds of their corpora are byte-identical duplicates, and their median nearest-neighbour distance is exactly 0.0000 — the median item has a perfect twin.
 
-**Against the human bank, we split.** We *beat* MMLU on exact duplication (0.0000 vs 0.0040 — the human bank has some), on 4-gram self-repetition (0.050 vs 0.059), and on *n*-gram Vendi (622 vs 495): our items reuse less language than human-written ones do. We *lose* on the semantic measures — centered Vendi 135.6 against 197.5, and median nearest-neighbour distance 0.224 against 0.284. We reach roughly 69% of a human exam bank's effective semantic diversity.
+Against the human bank the result splits. We *beat* MMLU on exact duplication (0.0000 vs 0.0040 — the human bank has some), on 4-gram self-repetition (0.050 vs 0.059), and on *n*-gram Vendi (622 vs 495): our items reuse less language than human-written ones do. We *lose* on the semantic measures — centered Vendi 135.6 against 197.5, and median nearest-neighbour distance 0.224 against 0.284. We reach roughly 69% of a human exam bank's effective semantic diversity.
 
-That gap is the honest measure of what is left. MMLU's spread comes from 57 genuinely different subjects; ours comes from an axis lattice a single model proposed in one call, refined a handful of times. The lexical result says our surface variety already exceeds human-authored items; the semantic result says our *conceptual* variety does not, and that closing the remaining 31% is a question about how much genuinely different subject matter the generator can be induced to reach — which is precisely the reachable-dimension question of §I.3, not a tuning problem.
+That gap is the honest measure of what is left. MMLU's spread comes from 57 genuinely different subjects; ours comes from an axis lattice a single model proposed in one call, refined a handful of times. The lexical result says our surface variety already exceeds human-authored items; the semantic result says our *conceptual* variety does not, and that closing the remaining 31% is a question about how much genuinely different subject matter the generator can be induced to reach, which is precisely the reachable-dimension question of §I.3, not a tuning problem.
 
 #### I.6.10 Which metrics are independent of the objective
 
 Our selection rule maximizes a weighted sum of embedding-space orthogonality and embedding-space min-gap. We then report embedding-space diversity metrics. Those two facts are not independent: the centered Vendi Score is a monotone function of how flat the embedding Gram spectrum is, which is close to exactly what the orthogonality term climbs, and the median nearest-neighbour distance *is* the min-gap term. To that extent, the wins on centered Vendi and median nearest-neighbour distance are partly tautological: the method optimizes them and the baselines do not, so they should be read as confirmation that the optimizer works rather than as independent evidence.
 
-The independent evidence is that the method never observes the *literal* metrics at all. It reads embeddings; it has no access to token counts, *n*-gram overlap, or string identity. So exact-duplicate rate, distinct-2, 4-gram self-repetition, and *n*-gram Vendi are independent of the objective in a way the embedding metrics are not — and the method wins those too, including against the human-written bank on two of the four. In summary:
+The independent evidence is that the method never observes the *literal* metrics at all. It reads embeddings; it has no access to token counts, *n*-gram overlap, or string identity. So exact-duplicate rate, distinct-2, 4-gram self-repetition, and *n*-gram Vendi are independent of the objective in a way the embedding metrics are not, and the method wins those too, including against the human-written bank on two of the four. Sorted by how much weight they can bear:
 
 - **Embedding-space measures (Vendi, NN distance):** partly circular; confirmation that the optimizer works.
 - **Literal-space measures (duplication, distinct-2, self-repetition, *n*-gram Vendi):** independent, since nothing in the method targets them. These carry the argument.
-- **Rendered-artifact measures (CLIP, CLAP, MERT):** the most independent, living downstream of a second generative model the method never sees — which is why §I.6.6 matters more than its length suggests.
+- **Rendered-artifact measures (CLIP, CLAP, MERT):** the most independent, living downstream of a second generative model the method never sees, which is why §I.6.6 matters more than its length suggests.
 
 A reader who trusts only the third category still has the *r* = 0.170 result, which is a finding about every method in the table rather than a comparison between them.
 
@@ -474,19 +511,19 @@ A reader who trusts only the third category still has the *r* = 0.170 result, wh
 
 #### I.6.11 Literal-space repulsion: fixing what the embeddings cannot see
 
-Embedding metrics miss an entire class of repetition: tiled grids of one cell, prominent typography, a single shared palette, the same composition recolored. Audited with deliberately dumb, non-semantic signatures (a 16×16 luminance layout map, an autocorrelation tiling score, a hue histogram): half the images had a layout twin above 0.5 cosine, 40–45% were literal tilings, and 63–78% shared a palette — while prompt-level Jaccard sat at a healthy 0.14–0.17. Varied words, one visual mode: the conditional-dimension gap operating inside the *renderer*.
+Embedding metrics miss an entire class of repetition: tiled grids of one cell, prominent typography, a single shared palette, the same composition recolored. Audited with deliberately dumb, non-semantic signatures (a 16×16 luminance layout map, an autocorrelation tiling score, a hue histogram): half the images had a layout twin above 0.5 cosine, 40–45% were literal tilings, and 63–78% shared a palette, while prompt-level Jaccard sat at a healthy 0.14–0.17. Varied words, one visual mode: the conditional-dimension gap operating inside the *renderer*.
 
-The fix is a four-quadrant repulsion — {text, vision} × {literal, latent} — where the two literal quadrants were previously unpopulated: content-word overlap penalties and live overused-word bans on the text side; and on the vision side, measured structural bans injected into prompts (grids banned when recent renders tile, dominant hue pairs named and banned, layout-change demands when layouts collide) plus a learned text→bad-structure bridge that penalizes candidates near prompts whose renders tiled. Rerun at matched budget, palette twins halved (0.78 → 0.35 in the coverage arm), the coverage objective improved 21% (0.206 → 0.247), and layout/tiling moved modestly (0.51 → 0.46–0.48; 0.45 → 0.33) — a partial improvement, with the residue attributable to the image model's own prior resisting text-side instruction.
+The fix is a four-quadrant repulsion ({text, vision} × {literal, latent}) where the two literal quadrants were previously unpopulated: content-word overlap penalties and live overused-word bans on the text side; and on the vision side, measured structural bans injected into prompts (grids banned when recent renders tile, dominant hue pairs named and banned, layout-change demands when layouts collide), plus a learned text→bad-structure bridge that penalizes candidates near prompts whose renders tiled. Rerun at matched budget, palette twins halved (0.78 → 0.35 in the coverage arm), the coverage objective improved 21% (0.206 → 0.247), and layout/tiling moved modestly (0.51 → 0.46–0.48; 0.45 → 0.33) — a partial improvement, with the residue attributable to the image model's own prior resisting text-side instruction.
 
 #### I.6.12 Audio: prompts, the steered corpus, and embedder dependence
 
 **Prompt-level diversity.** At matched *n*, matched prompt length and the same generator, the conditioned arm reaches centered Vendi 43.03 against naive's 22.99 (1.87×), halves 4-gram self-repetition (0.140 vs 0.291), raises distinct-2 (0.545 vs 0.348) and *n*-gram Vendi (75.3 vs 56.0), and holds roughly three times the room between nearest neighbours (0.079 vs 0.027), on 100 prompts per arm. Neither arm produces exact duplicates, so the effect is semantic. This replicates on a third artifact type the pattern of §I.6.3 and §I.6.5: conditioning moves the number, sampling temperature does not.
 
-**The steered corpus.** 100 Lyria-3-Pro instrumentals generated by cross-modal steering with zero rejection — selection happens over prompts, every render is kept. Final measurements: 100% of tracks verify as instrumental in CLAP space (minimum instrumental-vs-vocal margin 0.077); mean-centered CLAP Vendi 17.43, against 11.5 (naive prompts) and 14.1 (axis-conditioned prompts) for the unsteered 47-track arms under the same embedder; opening loudness at 0.72 of each track's own median over the first three seconds, against a 0.46–0.61 baseline — the sparse-opening attractor substantially, not fully, suppressed.
+**The steered corpus.** 100 Lyria-3-Pro instrumentals generated by cross-modal steering with zero rejection — selection happens over prompts, every render is kept. Final measurements: 100% of tracks verify as instrumental in CLAP space (minimum instrumental-vs-vocal margin 0.077); mean-centered CLAP Vendi 17.43, against 11.5 (naive prompts), and 14.1 (axis-conditioned prompts) for the unsteered 47-track arms under the same embedder; opening loudness at 0.72 of each track's own median over the first three seconds, against a 0.46–0.61 baseline — the sparse-opening attractor substantially, not fully, suppressed.
 
-**Structural control.** Lyria honors its own section-marker format (`[[A0]] [[B1]] …`) and ignores wall-clock timestamps. Compliance with a requested section sequence is length-dependent: exact at prompt lengths near 560 characters, 0.11 at a mean of 658, zero by ~1,600. Structural contracts for music must be short or they are noise.
+**Structural control.** Lyria honors its own section-marker format (`[[A0]] [[B1]] …`), and ignores wall-clock timestamps. Compliance with a requested section sequence is length-dependent: exact at prompt lengths near 560 characters, 0.11 at a mean of 658, zero by ~1,600. Structural contracts for music must be short or they are noise.
 
-**Pre-render steerability is a property of the embedder, not of music.** Prompt-to-track alignment (Spearman between prompt-pair similarity through the text tower and track-pair similarity through the audio tower, naive/conditioned arms):
+Whether a prompt can be steered before rendering turns out to be a property of the embedder rather than of music. Prompt-to-track alignment (Spearman between prompt-pair similarity through the text tower and track-pair similarity through the audio tower, naive/conditioned arms):
 
 | embedder | alignment | note |
 |---|---|---|
@@ -504,7 +541,7 @@ The text corpora comprise 43,171 real generations for roughly $8.50 of OpenRoute
 
 ### I.7 Relation to the coverage problem
 
-Two objectives share the generation budget. **Max–min** is a packing objective: *k*-center-like, driven by the worst-case nearest pair, with no approximation guarantee under greedy selection. **Coverage** — given a finite budget, maximize the volume of a union of ε-balls — is a covering objective, closer to facility location, and monotone submodular, so greedy selection carries a (1 − 1/*e*) guarantee. The sections above develop the max–min side; Part II develops the coverage side across two further domains.
+Two objectives share the generation budget. **Max–min** is a packing objective: *k*-center-like, driven by the worst-case nearest pair, with no approximation guarantee under greedy selection. **Coverage** (given a finite budget, maximize the volume of a union of ε-balls) is a covering objective, closer to facility location, and monotone submodular, so greedy selection carries a (1 − 1/*e*) guarantee. The sections above develop the max–min side; Part II develops the coverage side across two further domains.
 
 Each objective's strength is the other's failure mode. Packing spreads points toward the boundary and over-invests in outliers, which is why max–min is sensitive to outliers: outliers are what it is designed to seek. Covering weights regions by measure and fills the bulk, which is why it leaves the frontier sparse. Neither reduces to the other, and the tools that serve one degrade the other.
 
@@ -530,9 +567,9 @@ Both problems share this paper's structural constraints, and we expect the condi
 
 The infinite-horizon diversity objective is easy to write, cheap to maintain, and largely beside the point. What determines whether a corpus can keep growing without collapsing into paraphrase is the dimension of the generator's conditional support relative to the manifold it lives in, and every practically important consequence follows from that one gap: saturation arrives at rate $n^{-1/m}$ rather than $n^{-1/d}$; a single prompt covers an $ε^{d-m}$ fraction of what the model could write; and only transverse prompt motion raises the ceiling.
 
-Given an embedding oracle and no inverse, the system cannot compute its way to the next item. It can only choose what to condition on. The axis-scoring rule — spread, transversality, independence, headroom — is our answer to that choice, and its most valuable output is not the ranking but the **refine** signal: the moment it reports that nothing available is transverse any more is the moment the horizon has actually been reached, and the only remaining move is to ask the generator to subdivide its own vocabulary of variation.
+Given an embedding oracle and no inverse, the system cannot compute its way to the next item. It can only choose what to condition on. The axis-scoring rule (spread, transversality, independence, headroom) is our answer to that choice, and its most valuable output is not the ranking but the **refine** signal: the moment it reports that nothing available is transverse any more is the moment the horizon has actually been reached, and the only remaining move is to ask the generator to subdivide its own vocabulary of variation.
 
-That recursion is the single mechanism we found that changes the asymptote rather than the constant. Everything else — better selection, more candidates, higher temperature — buys a constant factor against a problem that is asymptotic, and the loudest of them buys it by quietly breaking the generator.
+That recursion is the single mechanism we found that changes the asymptote rather than the constant. Everything else (better selection, more candidates, higher temperature) buys a constant factor against a problem that is asymptotic, and the loudest of them buys it by quietly breaking the generator.
 
 The measurements make the stakes concrete in a way the theory could not. A strong model, asked a perfectly reasonable question ten thousand times, returns the same item 1,637 times; the temperature knob barely moves that number and conditioning nearly erases it. Two diversity metrics computed on the same growing corpus point in opposite directions. And the text embeddings every method in this literature optimizes turn out to explain about two percent of the variance in whether the rendered images look alike. Each of those is a reason to distrust a single diversity number, and together they are the argument for the practice we ended up recommending: measure at the level of the artifact you are shipping, report the literal and the latent separately, publish the similarity distribution your kernel is operating on, and count your duplicates before you compute anything else.
 
@@ -562,7 +599,7 @@ exact optimum on all 10 enumerable instances; the empirical 95% error of the
 pool estimate sits inside the Hoeffding band at every pool size tested). We also measure a *reachability gap* — the 17.4
 points of coverage that no selection rule can recover because the proposal
 distribution cannot reach them, 92.5% of which recursive refinement does
-recover — which follows from having an embedding oracle but no inverse. The
+recover, which follows from having an embedding oracle but no inverse. The
 estimator is validated against analytically known answers, and evaluation is
 budget-matched on real gpt-5.6-luna corpora with a stratum-balanced reference
 and a scoring half held out from the selector. Coverage-greedy selection beats
@@ -577,7 +614,7 @@ On it, coverage-retrieval conditioning places first of twelve corpora at
 0.4441 against Alpaca's 0.3722, at one-twentieth of Alpaca's generation
 budget and with the highest precision in the field (0.973). The same data
 shows the covering/packing dissociation at full strength: k-center maximizes
-min-gap (0.696) and finishes last on coverage (0.096, a fifth of random), and
+min-gap (0.696), and finishes last on coverage (0.096, a fifth of random), and
 the two highest-Vendi selectors are the two worst covering ones. Naive
 psychometric prompting is 73.6% exact duplicates (one item repeated 2,726
 times in 10,000 generations), which high temperature barely dents (71.0%) and
@@ -593,7 +630,7 @@ direction — so both levels, and both centerings, need reporting.
 ### II.1 Introduction
 
 A team building an evaluation suite for a language model does not get an
-infinite horizon. They get a budget — ten thousand prompts, say — and a
+infinite horizon. They get a budget (ten thousand prompts, say), and a
 product requirement that is naturally a *coverage* requirement: the suite
 should contain an example near every qualitatively distinct behavior the
 system under test might encounter, because a suite that clusters into a few
@@ -619,12 +656,12 @@ truncation of the infinite one:
    construction far from everything. Coverage weights regions by how much
    probability mass they hold and fills the bulk first. The two objectives
    correspond to two different classical problems — k-center versus maximum
-   coverage / facility location — and their optima genuinely differ (§II.3.4,
+   coverage / facility location, and their optima genuinely differ (§II.3.4,
    §II.7.2).
 2. **A known n permits planning.** With an unbounded horizon there is nothing
    to allocate; with n = 10,000 known in advance one can ask how the budget
    should be split across cells of the behavior space — equally,
-   proportionally to measure, or adaptively — and the answer depends on the
+   proportionally to measure, or adaptively, and the answer depends on the
    radius ε at which coverage is demanded (§II.3.5, §II.7).
 3. **Coverage needs a denominator.** "We covered 62% " is meaningless without
    saying 62% *of what*. In the pipeline the
@@ -645,8 +682,8 @@ a scale-free coverage estimator against a held-out human-written reference no
 corpus was aimed at, which our method wins at matched evaluated *n* on a
 twentieth of the generation budget (§II.5). Second, a coverage adaptation of
 Part I's axis-scoring rule in which the four-factor product collapses to a
-single estimable scalar — the expected marginal ε-ball gain of conditioning on
-the axis — with an ablation isolating what score-guided conditioning buys
+single estimable scalar (the expected marginal ε-ball gain of conditioning on
+the axis) with an ablation isolating what score-guided conditioning buys
 (§II.4, §II.5). Third, a live pilot of the full method (elicited axes, score-guided
 focus, judge gate, ledger, refinement, coverage-greedy selection) on
 gpt-5.6-luna with local embeddings (§II.6). Fourth, a formalization of budgeted
@@ -657,7 +694,7 @@ direct measurement of the reachability gap they imply (§II.2, §II.7.6).
 
 ### II.2 Problem statement
 
-Fix an embedding map φ into R^D (we use unit-normalized 768-d embeddings) and a radius ε > 0. The generator, prompted in
+Fix an embedding map φ into R^D (we use unit-normalized 768-d embeddings), and a radius ε > 0. The generator, prompted in
 whatever ways the pipeline can reach, induces a *reachable distribution* μ
 over R^D: the pushforward of everything the generator can actually be made to
 produce. Given a budget n, choose a set S = {x_1, …, x_n} of generated items
@@ -672,7 +709,7 @@ budget allows. Three deliberate choices:
 - **Coverage of the reachable space, not of R^D.** Balls in empty space cover
   Lebesgue volume but no behavior. Measuring against μ makes the metric mean
   "fraction of what the generator can do that the corpus has an exemplar
-  of" — which is the product requirement for an eval suite. The denominator is
+  of", which is the product requirement for an eval suite. The denominator is
   therefore stated next to every coverage number; where corpora built by
   different methods are compared, it is a held-out human-written reference
   identical for all of them (§II.5).
@@ -688,7 +725,7 @@ budget allows. Three deliberate choices:
 have an embedding oracle E: text → R^D, and *no inverse*. There is no E⁻¹
 that decodes a target point back into text. We can compute exactly where in
 embedding space the next item should land — the largest uncovered region, the
-trailing eigenspace — but we cannot manufacture an item that lands there. The
+trailing eigenspace, but we cannot manufacture an item that lands there. The
 only handles a pipeline has are (a) language-valued latent conditioning that
 *steers* the generator's proposal distribution, and (b) selection among
 sampled candidates. This is why the architecture is propose–measure–select
@@ -730,9 +767,9 @@ optimize. Given a reference pool P = {p_1, …, p_P} of iid draws from μ,
 
   F̂(S) = (1/P) · #{ p ∈ P : dist(p, S) ≤ ε }
 
-is itself a finite coverage function — item x covers the fixed subset
-N_ε(x) = {p : ‖p − x‖ ≤ ε} of the pool, and F̂(S) = |⋃_{x∈S} N_ε(x)|/P — so
-F̂ is monotone submodular *exactly*, not merely in expectation. Our
+is itself a finite coverage function (item x covers the fixed subset
+N_ε(x) = {p : ‖p − x‖ ≤ ε} of the pool, and F̂(S) = |⋃_{x∈S} N_ε(x)|/P) so
+F̂ is monotone submodular exactly, at every sample of the pool. Our
 implementation check (§II.6.1) found 0 violations of either property in 5,000
 randomized nested-chain trials, as it must if the code is right.
 
@@ -754,13 +791,13 @@ structure.
 #### II.3.3 Sequential generation is streaming greedy
 
 A generation pipeline cannot pick from a precomputed ground set: candidates
-arrive a few at a time (K per step) and must be accepted or discarded
+arrive a few at a time (K per step), and must be accepted or discarded
 immediately. This is the streaming submodular maximization regime.
 Sieve-streaming (Badanidiyuru, Mirzasoleiman, Karbasi, Krause 2014)
 maintains geometric thresholds and accepts any arrival whose marginal gain
 clears one, achieving a (1/2 − δ) guarantee in one pass with O((k log k)/δ)
-memory, independent of stream length. Our per-step rule — take the best of K
-fresh candidates by marginal gain — is the natural best-of-K relaxation:
+memory, independent of stream length. Our per-step rule (take the best of K
+fresh candidates by marginal gain) is the natural best-of-K relaxation:
 weaker in the worst case (an adversarial stream can starve it) but
 stronger on exchangeable streams like ours, where each batch is iid from the
 current proposal distribution and thresholding would only discard budget.
@@ -773,7 +810,7 @@ with an incrementally maintained covered mask — O(1) in n.
 #### II.3.4 Coverage is not packing
 
 Max-min selection (choose the candidate farthest from the accepted set) is
-the greedy algorithm for the k-center / packing objective, and the sibling
+the greedy algorithm for the k-center / packing objective, and Part I
 paper shows it is the right *shape* of objective for an unbounded stream once
 a typicality anchor keeps it on-manifold. At a finite budget against a fixed
 μ the two objectives pull apart:
@@ -781,8 +818,8 @@ a typicality anchor keeps it on-manifold. At a finite budget against a fixed
 - k-center cares about the worst-covered *point of S itself*; its optima
   push to the boundary of the support and place points in regions of
   vanishing measure (an outlier is far from everything, so packing *rewards*
-  it — the novelty–junk conflation of Part I, now with a budget
-  price attached: every junk item is a ball spent covering ≈ 0 measure).
+  it), and under a fixed budget every such item is a ball spent covering
+  ≈ 0 measure.
 - Maximum coverage / facility-location-type objectives weight territory by
   measure: a second exemplar in a heavy mode can be worth more than a first
   exemplar of a negligible one, and junk is worth nothing because μ puts
@@ -790,7 +827,7 @@ a typicality anchor keeps it on-manifold. At a finite budget against a fixed
 
 §II.6.2 isolates the contrast with no generator in the loop: on one shared
 candidate set, greedy-coverage covered 0.528 of a held-out pool where
-farthest-point packing covered 0.143 — while packing's min-gap (1.44) beat
+farthest-point packing covered 0.143, while packing's min-gap (1.44) beat
 greedy's (0.577) by 2.5×. Neither is "better"; they optimize different
 functionals, and §II.7.2 shows the same double dissociation with the full
 generation loop in place.
@@ -848,15 +885,15 @@ the ambient dimension), and one slice ε-covers a vanishing ε^(d−m) fraction
 of the manifold. The budgeted consequence is a breadth-vs-depth rule whose
 correct form (their P3, corrected from its first statement) is: with *free*
 condition-switching the optimum is the boundary n\* = 1 — one sample per
-spec, then move — and an interior optimal depth exists only once switching
+spec, then move, and an interior optimal depth exists only once switching
 carries a real cost c (eliciting a spec, embedding levels, an occasional
 refinement call): their measured n\* rises from 1 (c = 0) to 10 (c = 3) to
 30 (c = 30). Optimal depth is set by the switch-cost-to-sample-cost ratio,
 not by ε alone. Our pipelines sit near the cheap-switching regime — in the live pilot we
 measure c ≈ 0.10 generation-equivalents (§II.6: 5 axis-elicitation, refinement and
 ledger-mining calls amortized over 50 steps, against 3 generations per
-step) — which is why every policy here draws its K candidates from K *fresh*
-specs rather than sampling any spec deeply. At that switch cost the sibling's
+step), which is why every policy here draws its K candidates from K *fresh*
+specs rather than sampling any spec deeply. At that switch cost Part I's
 sweep puts the optimum at or adjacent to n\* = 1, which is what we do.
 
 ### II.4 Method
@@ -870,8 +907,8 @@ cheap, unconditioned samples from the generator and embed them. This pool
 *is* the Monte-Carlo measure: coverage means coverage of it. Live, the pool is 240 one-shot prompts. Cost
 is O(P) once, amortized over the whole run.
 
-**Elicited axes and specs.** The generator is asked — before generating any
-items — to name the latent axes along which items in this domain can differ,
+**Elicited axes and specs.** The generator is asked (before generating any
+items) to name the latent axes along which items in this domain can differ,
 each with discrete language-valued levels (live: 6 axes for evaluation
 prompts, e.g. persona pressure, trap construction, response obligation). A
 spec is one level per applicable axis; K specs are sampled per step and one
@@ -887,8 +924,8 @@ axes already in use, never against rival candidates — scoring candidates
 against each other makes duplicates zero each other out), and headroom (an
 entropy deficit over the axis's sampled levels). Under a *coverage* objective
 this product collapses, and the collapse is itself a packing-vs-covering
-result. Packing has no per-axis marginal decomposition — min-gap is a global
-property — so the axis scoring must approximate "will this axis move the slice
+result. Packing has no per-axis marginal decomposition (min-gap is a global
+property), so the axis scoring must approximate "will this axis move the slice
 somewhere new" from four separate geometric proxies. Submodular coverage has
 an exact marginal quantity: the **expected marginal ε-ball gain of
 conditioning on the axis**, E_{x∼axis}[F(S ∪ {x}) − F(S)]. That one scalar
@@ -901,9 +938,9 @@ by hand, executed here by the objective itself) or whose region is
 already covered (no headroom) all have small expected marginal gain, and the
 headroom that remains is *measure-weighted* by construction — a large
 under-sampled region beats a small one because it holds more uncovered pool
-mass. We keep the sibling's embedding-based spread and
+mass. We keep Part I's embedding-based spread and
 transversality (level-description embeddings against the accepted corpus's
-occupied eigenspace) and replace its entropy headroom with the
+occupied eigenspace), and replace its entropy headroom with the
 measure-weighted estimate (per-level mean observed marginal gain, optimistic
 for unused levels); the top-two axes by this promise become the step's
 dominant design pressures, with their most-different levels chosen by
@@ -912,7 +949,7 @@ the surrogate inverse of Proposition 2.
 
 **Coverage-greedy selection.** Each step: embed the K candidates, compute
 each one's marginal gain — the number of not-yet-covered pool points within
-ε_sel — and accept the gated candidate of maximum gain (ties broken by judge
+ε_sel, and accept the gated candidate of maximum gain (ties broken by judge
 score). The covered mask is updated incrementally; per-step cost is
 O(K · P + P) regardless of n.
 
@@ -922,8 +959,7 @@ ineligible regardless of gain. The gate is negative supervision only: if every c
 fails, the step falls back to best-judged rather than emitting nothing, and
 the rejection is logged.
 
-**Attractor ledger.** Every 20 accepted items (50 in the sibling
-paper), the accepted corpus is shown to the model with the question "what do
+**Attractor ledger.** Every 20 accepted items (50 in Part I), the accepted corpus is shown to the model with the question "what do
 these have in common?"; the mined attractors are appended to a JSONL ledger,
 and a bounded top-K slice becomes explicit negative constraints in subsequent
 generation prompts. The ledger is append-only; its influence on any single
@@ -933,7 +969,7 @@ prompt is fixed-size.
 gains saturate (the region's balls mostly re-cover covered ground), the
 responsible region of spec-space is described back to the generator, which
 either splits an axis level into finer sub-levels or mints a new axis
-meaningful inside that cell — conditional axes forming a tree, exactly as in
+that applies inside that cell — conditional axes forming a tree, exactly as in
 Part I. The budgeted setting adds one obligation the
 infinite-horizon setting does not have: refinement changes the reachable
 distribution, so the reference pool must be refreshed with draws from the
@@ -950,11 +986,9 @@ Human-written reference: databricks-dolly-15k, split into two disjoint 3,000-ite
 
 #### II.5.2 Method
 
-The submitted configuration (v4) is coverage-retrieval conditioning with every render kept:
-
-1. **Aim by retrieval.** Sample an uncovered reference region (density-weighted, ∝ 1/r²) and retrieve the nearest texts we already own — seed tasks plus our own corpus — as the few-shot exemplars. The reference enters as embeddings on the steering side only; retrieval over owned text substitutes for the missing inverse oracle.
+1. **Aim by retrieval.** Sample an uncovered reference region (density-weighted, ∝ 1/r²), and retrieve the nearest texts we already own (seed tasks plus our own corpus) as the few-shot exemplars. The reference enters as embeddings on the steering side only; retrieval over owned text substitutes for the missing inverse oracle.
 2. **Radius-adaptive mode.** The target's own k-NN radius selects the prompt mode: tight radius (dense region) -> imitate the local task family closely; wide radius (sparse region) -> full diversification, with the nearest own outputs shown as explicit in-prompt negatives.
-3. **Literal-channel spread.** Level-usage balancing across the elicited axis lattice (the headroom term applied at conditioning time) and a terse-register mandate.
+3. **Literal-channel spread.** Level-usage balancing across the elicited axis lattice (the headroom term applied at conditioning time), and a terse-register mandate.
 4. **Keep everything.** Coverage is monotone in items; at a generation-matched budget, every discard is a permanent loss.
 
 #### II.5.3 Results
@@ -994,15 +1028,15 @@ Budget-matched ablation (full corpora, 2,400 generator calls each, same evaluati
 | orthogonalized conditioning | 1,152 | 0.2941 | 0.718 | 0.873 | 0.101 |
 | selective (1-of-8) | 304 | 0.2591 | 1.009 | 0.928 | 0.099 |
 
-The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2–4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09–0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6) and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything — consistent with §III of the companion analysis: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
+The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2–4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09–0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6), and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything — consistent with Part III: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
 
 #### II.5.4 Notes
 
-**Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability — coverage is always coverage *of* something, and a method that may specify the something should — but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
+**Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability (coverage is always coverage *of* something, and a method that may specify the something should), but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
 
-**Coverage and internal diversity are different objectives.** The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
+Coverage and internal diversity are different objectives. The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
 
-All arm logs, the seed file, both reference halves, and the evaluation harness are in the repository; every number carries a provenance tag.
+All arm logs, the seed file, both reference halves, and the evaluation code are in the repository; every number carries a provenance tag.
 
 ### II.6 Live pilot
 
@@ -1018,14 +1052,14 @@ gpt-5.6-luna via OpenRouter for generation, judging, attractor mining and
 axis elicitation; local `nomic-embed-text` (768-d, unit-normalized) for
 embeddings. Severity is deliberately mild — the items are benign user
 messages that probe whether an assistant adds disclaimers, resists
-sycophancy and leading questions, and stays calibrated — and the judge scores
+sycophancy and leading questions, and stays calibrated, and the judge scores
 a `benign` dimension that hard-gates acceptance. All state is append-only and
 checkpointed, so a run is resumable after an interruption.
 
 The run reached its full target: **50/50 accepted items** in 50 steps
 (K = 3 candidates each), against a **50-item naive baseline** and a
 **360-item reference pool**. The pool has two strata — 240 unconditioned
-one-shot draws and 120 axis-conditioned but *unselected* draws — because a
+one-shot draws and 120 axis-conditioned but *unselected* draws, because a
 reference pool must be drawn from the same proposal process the policy uses,
 including every conditioning mechanism. A pool of unconditioned draws alone
 sits outside the region axis conditioning reaches (median distance 0.88, against
@@ -1056,29 +1090,29 @@ in **opposite directions**.
 | 40 | 0.312 | 0.772 | 30.55 | 11.87 |
 | 50 | 0.295 | 0.770 | 37.06 | 13.54 |
 
-Literal diversity falls monotonically (distinct-2 0.944 → 0.770) while latent
+Literal diversity falls monotonically (distinct-2 0.944 → 0.770), while latent
 diversity rises monotonically (centered Vendi 3.98 → 37.06). Reporting either
 alone supports an opposite conclusion about the same corpus. The mechanism is
 plain enough — a growing corpus reuses vocabulary and sentence frames while
-still spreading in meaning-space — but it means "diversity" must be qualified
+still spreading in meaning-space, but it means "diversity" must be qualified
 by level, and a coverage objective defined on embeddings is silent about
 literal repetition. (Against the naive baseline the method is slightly *less*
 literally diverse at distinct-1, 0.295 vs 0.341, and slightly more diverse
 latently, centered Vendi 37.06 vs 30.34, with markedly lower self-repetition,
 max 3-gram Jaccard 0.036 vs 0.083.)
 
-**The uncentered Vendi is a kernel artifact.** Same-domain embeddings share a
+The uncentered Vendi is a kernel artifact. Same-domain embeddings share a
 mean direction, and an uncentered linear kernel measures that shared cone as
 if it were content. On this data the two readings differ by 2.7× (13.54 vs
 37.06) and, worse, they order the growth curve differently in slope. We
 report both everywhere and treat only *relative* comparisons at fixed n as
-meaningful for the uncentered form.
+defined for the uncentered form.
 
-**Is ε measuring the cone or the content?** This is the question the caveat
+Is ε measuring the cone or the content?. This is the question the caveat
 raises for every coverage number computed with cosine distances, so we
 measured it. Our pool's mean
-pairwise cosine is **0.444** (p05 0.330, p95 0.591) — a wide cone, not the
-~0.9 concentration seen in some same-domain embedding sets — with mean
+pairwise cosine is **0.444** (p05 0.330, p95 0.591) (a wide cone, not the
+~0.9 concentration seen in some same-domain embedding sets) with mean
 direction norm 0.667. Our ε_sel = 0.770 corresponds to cosine similarity
 0.704, which sits at the **1.8th percentile** of pairwise distances: an
 ε-ball at this radius captures genuine near-duplicates, not the bulk of the
@@ -1091,7 +1125,7 @@ should publish this check.
 
 <!--FIG:fig_live_pilot.png|Figure 6. Live pilot on gpt-5.6-luna (n = 50). Left: coverage growth of the method run versus the naive baseline at three radii on the pooled denominator, where naive leads. Center: per-item marginal gains, showing the plateau from item ~35 and the recovery after the refinement at step 48. Right: the same runs split by pool stratum -- each policy covers its own proposal distribution, which is what the pooled number obscures.-->
 
-<!--FIG:fig_literal_vs_latent.png|Figure 7. Left: literal (n-gram) and latent (embedding) diversity move in opposite directions as the corpus grows. Right: uncentered versus mean-centered Vendi on the same sets -- the shared mean direction compresses the uncentered score by roughly 2.7x, so only relative comparisons at fixed n are trustworthy.-->
+<!--FIG:fig_literal_vs_latent.png|Figure 7. Left: literal (n-gram), and latent (embedding) diversity move in opposite directions as the corpus grows. Right: uncentered versus mean-centered Vendi on the same sets -- the shared mean direction compresses the uncentered score by roughly 2.7x, so only relative comparisons at fixed n are trustworthy.-->
 
 ### II.7 Numerical verification of the theory
 
@@ -1111,7 +1145,7 @@ of 2,000 candidates, budget k = 300, ε = 1.0, held-out 20k pool:
 | random | 0.420 | 0.53 |
 | max-min (Gonzalez) | 0.143 | 1.44 |
 
-Packing is catastrophic *as a coverage algorithm* (below random by 3×) while
+Packing is catastrophic *as a coverage algorithm* (below random by 3×), while
 being unbeatable at its own metric — the pure-form double dissociation.
 Stream greedy with K = 4 keeps 92% of full greedy's coverage.
 
@@ -1142,7 +1176,7 @@ Three regimes, as §II.3.6 predicts. At large ε every rule saturates (all
 ≈ 0.992 — the remaining 0.8% is junk measure no allocation can reach). At the
 greedy-optimized radius, greedy beats the best closed form by 7 points:
 water-filling in the wild. At small ε, proportional wins among closed forms
-(near-linear per-cell returns favor measure-weighting) — and greedy at
+(near-linear per-cell returns favor measure-weighting), and greedy at
 ε = 1.0 is *terrible* (0.004), for an instructive reason: greedy saturated
 its ε = 1.0 pool after roughly half the budget, its marginal signal went
 identically to zero, and argmax tie-breaking silently dumped 5,083 of 10,000
@@ -1158,16 +1192,15 @@ gains vanish.
 **II.7.6 The reachability gap (Proposition 1, measured).** Identical greedy
 selection (ε = 1.0, k = 300, |ground| = 2,000), three proposal
 distributions, one held-out full-mixture pool. An *oracle* ground set drawn
-from the full latent mixture — the best a selector could do if conditioning
-could reach everything — covers 0.387. A *proposal-limited* ground set drawn
+from the full latent mixture (the best a selector could do if conditioning
+could reach everything) covers 0.387. A *proposal-limited* ground set drawn
 from the base specs (which reach 25 of 60 modes) covers 0.212: a
 reachability gap of 17.4 points that no selection algorithm can close,
 because the deficit is in what the generator can be made to emit, not in how
 candidates are chosen. A *refined-proposal* ground set (one spec per mode —
 the target recursive refinement works toward) covers 0.374, recovering 92.5%
 of the gap. This is Proposition 1 made quantitative: the (1 − 1/e) guarantee
-binds relative to the proposal support, and conditioning — not selection —
-is where the missing coverage lives.
+binds relative to the proposal support, and conditioning (not selection) is where the missing coverage lives.
 
 **II.7.7 Lattice size is not reachable dimension.** Using Part I's
 slice-structured world, in which specs compose level directions additively,
@@ -1202,7 +1235,7 @@ damning comparison is local-vs-far, and "split the saturated cell into
 tighter sub-levels" is only worth its cost if the children actually move;
 (ii) guidance beats unguided displacement, but by little *here*, because
 this corpus occupies only a thin span (6 of 64 dimensions at the 95% energy
-level) and a random direction is already 82% transverse to it — guidance
+level), and a random direction is already 82% transverse to it — guidance
 matters most when the corpus has already spread, which is exactly the
 late-run regime where refinement fires.
 
@@ -1218,13 +1251,13 @@ submodular objectives is Nemhauser, Wolsey & Fisher (1978); hardness of
 beating it for max-coverage is Feige (1998). Lazy greedy (Minoux 1978) and
 stochastic greedy (Mirzasoleiman et al. 2015) make greedy cheap;
 sieve-streaming (Badanidiyuru et al. 2014) gives the single-pass regime our
-sequential setting approximates. Facility location — of which our pool
-objective is the thresholded special case — is the standard submodular model
+sequential setting approximates. Facility location (of which our pool
+objective is the thresholded special case) is the standard submodular model
 of "representativeness" in data summarization (Lin & Bilmes 2011).
 
 **Packing vs covering, k-center vs k-median.** Farthest-point traversal
-(Gonzalez 1985) 2-approximates k-center — the packing objective the sibling
-paper streams — while k-median/facility-location minimizes *average*
+(Gonzalez 1985) 2-approximates k-center — the packing objective Part I
+paper streams, while k-median/facility-location minimizes *average*
 service distance and behaves like our coverage objective (measure-weighted,
 bulk-first, outlier-indifferent). Coreset constructions (Har-Peled &
 Mazumdar 2004) make the same distinction: an ε-coreset for k-median weights
@@ -1270,7 +1303,7 @@ latent-axis conditioning, differing in that its catalogue is mined at scale
 and flat, where our axes are elicited from the generator and refined into a
 tree. AttrPrompt (Yu et al. 2023) similarly conditions on attribute
 dimensions. We compare against the released artifacts of the first three
-(§II.5) rather than against reimplementations, since a reimplementation can be
+(§II.5), rather than against reimplementations, since a reimplementation can be
 weak in ways that flatter us. On the selection side our baselines are the
 standard ones for diverse subset choice: SemDeDup (Abbas et al. 2023),
 farthest-point traversal (Gonzalez 1985), and greedy MAP inference for DPPs
@@ -1281,51 +1314,50 @@ farthest-point traversal (Gonzalez 1985), and greedy MAP inference for DPPs
 The two papers are a packing/covering dual pair, and the duality is the
 k-center/k-median one:
 
-| | infinite horizon (sibling) | finite budget (this paper) |
+| | infinite horizon (Part I) | finite budget (Part II) |
 |---|---|---|
 | horizon | unbounded stream | known n = 10,000 |
 | objective | max-min gap + typicality anchor | ε-ball covered measure of μ |
 | classical problem | k-center / packing | max coverage / facility location |
 | optimum's habitat | boundary, extremes | bulk, measure-weighted |
-| junk incentive | attracted (needs gate badly) | indifferent (gate still needed for quality) |
+| where the optimum sits | boundary and extremes | wherever the measure is |
 | planning | impossible (no n) | allocation across cells (§II.3.6) |
 | guarantee | none exact (packing is 2-approx streaming) | (1 − 1/e), ½ streaming |
-| refinement's role | capacity so the stream never exhausts | reach — and a denominator liability |
+| refinement's role | capacity, so the stream never exhausts | reach, at the cost of a moving denominator |
 
-The method stack transfers almost unchanged — elicited axes, judge gate,
-ledger, recursive refinement are all objective-agnostic scaffolding for
-steering a generator; only the selection rule and its state differ (running
+The method stack transfers almost unchanged. Elicited axes, judge gate,
+ledger and recursive refinement are objective-agnostic scaffolding for
+steering a generator, and only the selection rule and its state differ (running
 second-moment matrix and min-gap scales there; reference pool and covered
-mask here). The sibling's slice-world results are directly load-bearing for
-this side of the duality. At an identical budget of 10,000 generations, its
-measured policy ladder runs from fixed-prompt (Vendi 1.06, reachable
-dimension 13) through random-spec (6.70) and score-guided specs (7.93) to
-axis scoring plus transversality-guided refinement (Vendi 11.23, reachable
-dimension 24) — a 10.6× diversity gain from conditioning and refinement
-alone, with refinement raising the reachable dimension from 13 to 24
-(transversality theorem P4 in action). Two of its negative results transfer
-with particular force here. First, *naive refinement hurt*: children split
-isotropically near their saturated parents concentrated probability mass
-exactly where the corpus already sat; refinement pays only when the new
-directions are transverse to the occupied span — our §II.7.8 reproduces this
-under the coverage objective (density, not reach). Second, its
-*inability-to-be-novel* metric was best (−0.104) for the fixed-prompt policy
-precisely because that policy covered almost nothing and so consumed no
-headroom. The coverage-side analogue of that trap: a method that concentrates
-every ε-ball in one small region leaves the rest of the space "available",
-which flatters any residual- or headroom-based metric. This is why every
-table in §II.5 reports covered-fraction *jointly* with a within-corpus
-diversity measure (Vendi) and why coverage is always measured against the
-reachable manifold's measure, never against what happens to be left over.
-Its junk-conflation measurement is also starker than ours and worth quoting
-for eval-suite builders: in a hard-floor novelty bank with no typicality
-gate, the junk fraction of accepted items rose from 7.9% in the first half
-of the run to 48.2% in the second — once legitimate space saturates, the
-only candidates still clearing a novelty constraint are the incoherent ones.
-A red-team suite or persona corpus built that way looks maximally diverse by
-every embedding metric and is half garbage, silently.
+mask here). Part I's measurements carry over to this side of the duality.
+Its psychometric corpus is 72.3% exact duplicates under naive prompting and
+0.0% under axis conditioning at the same budget; its poetry pilot moves median
+nearest-neighbour distance from 0.089 to 0.239 while cutting 4-gram
+self-repetition by a factor of 37. Whatever the objective, those numbers are
+about the proposal distribution rather than about the selection rule, and a
+coverage pipeline drawing from the unconditioned distribution inherits the same
+ceiling.
 
-The deepest difference is epistemic: the infinite-horizon paper
+Two of its findings bear on coverage directly. Refinement pays only when the
+children move transverse to the occupied span; children displaced isotropically
+near a saturated parent concentrate mass where the corpus already sits, and
+§II.7.8 reproduces that under the coverage objective, where the same move buys
+density instead of reach. And a metric that rewards unspent headroom rewards a
+policy that covered nothing, since a corpus concentrated in one small region
+leaves the whole rest of the space available. Every table in §II.5 therefore
+reports covered fraction jointly with a within-corpus diversity measure, and
+coverage is measured against the reachable manifold's measure rather than
+against whatever happens to be left over.
+
+The reverse direction has a caution of its own. Part I's steered image corpus
+remains fonder of tiled grids than a human art director would be, because a
+packing objective says only that items should sit far apart and says nothing
+about where in the space they ought to sit. Coverage carries a reference
+measure and so inherits a pull toward where real examples are. That is the term
+packing lacks, and the reason the two objectives need each other more than
+either needs a better optimizer.
+
+The remaining difference is epistemic. The infinite-horizon side
 never has to say what fraction of anything it achieved, while a coverage
 claim is *always* a ratio, which is why the denominator has to be named
 only on this side of the duality. Conversely, the budgeted side gets
@@ -1368,9 +1400,9 @@ At a finite budget, corpus construction is a covering problem, and treating
 it as one pays: the coverage functional is exactly submodular in its
 Monte-Carlo form, greedy selection is near-optimal in theory and measurement,
 and the resulting suites blanket the reachable space instead of decorating
-its boundary. Packing — the right shape for an unbounded stream — is
+its boundary. Packing (the right shape for an unbounded stream) is
 measurably the wrong one here, sacrificing 2–4× covered fraction to win a
-min-gap metric no budgeted product requirement asks for. The sibling stack's
+min-gap metric no budgeted product requirement asks for. Part I's stack
 scaffolding (elicited axes, gates, ledger, recursive refinement) transfers
 whole; what does not transfer is innocence about denominators: a method that
 grows the space it is covering must say so when it reports how much of that
@@ -1384,8 +1416,8 @@ space it covered.
 
 Everything above was two papers sharing a theory section. This part is the reason
 to publish them together: run both objectives on the same generator, the same
-embedder and the same budget, and they do not merely differ in emphasis — they
-rank methods almost oppositely.
+embedder and the same budget, and they rank methods almost
+oppositely.
 
 ## III.1 The dissociation, measured
 
@@ -1443,11 +1475,11 @@ covering algorithm, and greedy k-center 2-approximates the covering **radius**.
 **Where they are not.** That duality concerns the worst-case radius: the distance
 from the least-covered point to its nearest center. The coverage that matters
 for synthetic data is **measure-weighted** — what fraction of the reference
-distribution lies within reach — and the two come apart exactly when the measure
+distribution lies within reach, and the two come apart exactly when the measure
 is non-uniform, which it always is. k-center is driven by outliers: every
 isolated point sets the max and so commands a center. Measure-weighted coverage
 is driven by mass: an outlier is worth its own measure and no more. At a budget
-far below what the space needs, the prescriptions are opposite — and that is the
+far below what the space needs, the prescriptions are opposite, and that is the
 entire content of our k-center result (first on min-gap, last on coverage). The
 true dual of measure-weighted coverage is fractional set cover, whose primal is
 submodular; max-min is not.
@@ -1471,8 +1503,8 @@ reference by the union of *all* candidates the generator produced, and
 efficiency is the fraction of that ceiling the selector captured. A low ceiling
 with high efficiency says the axes are too narrow and more search is wasted —
 only support expansion (recursive refinement) can help; the reverse says the
-selector is the problem. Without the split, "we lost on coverage" is not
-actionable.
+selector is the problem. Without the split, "we lost on coverage" gives no
+indication of what to change.
 
 ## III.2c The comparison that proves the fork
 
@@ -1506,7 +1538,7 @@ Part I §I.3. Both need the same typicality constraint to be well-posed, since a
 novelty-seeking score can otherwise be satisfied by output that has left the
 manifold altogether. And both are measured through an embedder whose
 geometry can invert the result: we report a cross-corpus coverage comparison in
-which our worst corpus by every other measure — 19.8% exact duplicates — scores
+which our worst corpus by every other measure (19.8% exact duplicates) scores
 the **highest** coverage, 50× a published corpus's, because at an ε in the 2nd
 percentile of reference distances the metric rewards centrality rather than
 spread.
