@@ -1,5 +1,5 @@
-=== 2026-08-31T16:38:03Z ===
-runs complete: 33
+=== 2026-08-31T16:43:05Z ===
+runs complete: 34
 
 arm                   items seeds     superni_macro   (tokens)
 coverage-selected       300     2  0.2942 ±0.0012      20929
@@ -8,7 +8,7 @@ coverage-selected      1200     2  0.2967 ±0.0035      86562
 random                  300     2  0.2950 ±0.0024      23608
 random                  600     2  0.3033 ±0.0035      45014
 random                 1200     2  0.2992 ±0.0012      90934
-full Alpaca pool        300     6  0.2740 ±0.0346      22513
+full Alpaca pool        300     7  0.2773 ±0.0327      22513
 full Alpaca pool       2398     7  0.2895 ±0.0118     180427
 full Alpaca pool       5000     1  0.3033 ±0.0000     376007
 
@@ -18,7 +18,7 @@ ceiling (best full-pool point): 0.3033
 
 chart: figures/sweep.png
 --- generation ---
-alpaca_tokmatch    alpaca_tokmatch: 23600/25923  calls=23607 tok_out=4455644
-personahub         personahub: 8200/14000  calls=8204 tok_out=5545388
+alpaca_tokmatch    alpaca_tokmatch: 25200/25923  calls=25220 tok_out=4761939
+personahub         personahub: 8800/14000  calls=8802 tok_out=5948980
 wizardlm           running spend: 8000 calls, 1457187 in / 4277804 out tokens
 faithful         TOTAL: 7200 calls, 1426855 in / 1659551 out
