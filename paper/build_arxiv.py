@@ -87,9 +87,15 @@ def fix_superscripts(md: str) -> str:
 
 def renumber(md: str, prefix: str) -> str:
     """Prefix section numbers so the two parts don't both call themselves §3."""
-    return re.sub(r"^(#{2,6})\s+(\d+)(\.\d+)?\.?\s+",
-                  lambda m: f"{m.group(1)} {prefix}{m.group(2)}{m.group(3) or ''} ",
-                  md, flags=re.M)
+    md = re.sub(r"^(#{2,6})\s+(\d+)(\.\d+)?\.?\s+",
+                lambda m: f"{m.group(1)} {prefix}{m.group(2)}{m.group(3) or ''} ",
+                md, flags=re.M)
+    # inline cross-references belong to the part that wrote them
+    md = re.sub(r"§(\d+(?:\.\d+)*)", lambda m: f"\u00a7{prefix}{m.group(1)}", md)
+    # bolded subsection labels inside a run-in section (e.g. **7.1 Submodularity**)
+    md = re.sub(r"\*\*(\d+\.\d+)( [A-Z])",
+                lambda m: f"**{prefix}{m.group(1)}{m.group(2)}", md)
+    return md
 
 
 HEAD = r"""# Coverage and Max-Min Diversity in Synthetic Data Generation
