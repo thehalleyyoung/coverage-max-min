@@ -13,16 +13,16 @@ HERE = Path(__file__).resolve().parent
 FIG = HERE / "figures"
 
 plt.rcParams.update({
-    "figure.dpi": 150, "savefig.dpi": 150, "font.size": 9,
+    "figure.dpi": 220, "savefig.dpi": 220, "font.size": 9,
     "axes.spines.top": False, "axes.spines.right": False,
     "axes.grid": True, "grid.alpha": 0.25, "legend.frameon": False,
 })
 
 STYLE = {
     "dalle_naive": ("#888888", "DALL-E instr., naive"),
-    "dalle_ihd": ("#1f77b4", "DALL-E instr., IHD"),
+    "dalle_ihd": ("#1f77b4", "DALL-E instr., RAC"),
     "psychometric_naive": ("#c49a3a", "psychometric, naive"),
-    "psychometric_ihd": ("#2ca02c", "psychometric, IHD"),
+    "psychometric_ihd": ("#2ca02c", "psychometric, RAC"),
 }
 
 
@@ -105,11 +105,16 @@ def fig_vision():
     from metrics import embed_vendi, embed_vendi_centered, nn_stats, load_run
     run = "dalle_naive"
     d = HERE / "real" / run
-    if not (d / "clip_image_emb.npy").exists():
+    # prefer the high-quality render tier
+    emb_p = d / "clip_image_emb_high.npy"
+    idx_p = d / "clip_index_high.json"
+    if not emb_p.exists():
+        emb_p, idx_p = d / "clip_image_emb.npy", d / "clip_index.json"
+    if not emb_p.exists():
         print("no CLIP embeddings yet; skipping fig12")
         return
-    Ei = np.load(d / "clip_image_emb.npy")
-    idx = json.load(open(d / "clip_index.json"))
+    Ei = np.load(emb_p)
+    idx = json.load(open(idx_p))
     texts, Et = load_run(*run.rsplit("_", 1))
     Et = Et[np.array(idx)]
 
@@ -173,28 +178,35 @@ def fig_vision():
                    "image_median_nn": rows[-1]["image_nn"]}, f, indent=2)
 
 
-def fig_contact_sheet(k: int = 48):
+def fig_contact_sheet(k: int = 32):
     """A contact sheet of rendered artworks -- the qualitative evidence."""
     from PIL import Image
-    d = HERE / "real" / "dalle_naive" / "images"
+    d = HERE / "real" / "dalle_naive" / "images_high"
+    if not d.exists():
+        d = HERE / "real" / "dalle_naive" / "images"
     files = sorted(d.glob("*.png"))[:k]
     if not files:
         return
     cols = 8
     rows = (len(files) + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.35, rows * 1.35))
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.15, rows * 1.15))
     for ax, f in zip(np.array(axes).ravel(), files):
-        ax.imshow(Image.open(f).convert("RGB").resize((128, 128)))
+        ax.imshow(Image.open(f).convert("RGB").resize((176, 176)))
         ax.axis("off")
     for ax in np.array(axes).ravel()[len(files):]:
         ax.axis("off")
     fig.suptitle(f"First {len(files)} rendered instructions "
-                 f"(naive prompting, gpt-image-1-mini)", y=1.005, fontsize=10)
+                 f"(naive prompting, gpt-image-1-mini, high quality)", y=1.005, fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "fig13_contact_sheet.png", bbox_inches="tight")
     plt.close(fig)
 
 
+
+
+ARM_LABEL = {"naive": "naive", "high_temp": "high temp.",
+             "evol_instruct": "Evol-Instruct", "self_instruct": "Self-Instruct",
+             "persona": "persona", "ihd": "RAC", "vision": "RAC + vision"}
 
 
 def fig_arms():
@@ -222,7 +234,7 @@ def fig_arms():
             ax.barh(np.arange(len(present)), vals,
                     color=[cols[a] for a in present])
             ax.set_yticks(np.arange(len(present)))
-            ax.set_yticklabels([a.replace("_", "-") for a in present], fontsize=7)
+            ax.set_yticklabels([ARM_LABEL[a] for a in present], fontsize=7)
             ax.invert_yaxis()
             ax.set_xlabel(lab, fontsize=7.5)
             if c == 0:

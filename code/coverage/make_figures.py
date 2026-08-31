@@ -18,7 +18,7 @@ POLICIES = ["naive", "maxmin", "coverage", "gated_coverage",
 LABEL = {"naive": "naive iid", "maxmin": "max-min (packing)",
          "coverage": "coverage-greedy", "gated_coverage": "gated coverage",
          "gated_coverage_refine": "gated coverage + refine",
-         "gated_coverage_refine_calc": "gated cov. + refine + calculus"}
+         "gated_coverage_refine_calc": "RAC-coverage"}
 COLOR = {"naive": "#888888", "maxmin": "#d62728", "coverage": "#1f77b4",
          "gated_coverage": "#2ca02c", "gated_coverage_refine": "#9467bd",
          "gated_coverage_refine_calc": "#e377c2"}

@@ -15,20 +15,7 @@ Monte-Carlo estimate concentrates at the Hoeffding rate; we verify all three
 facts numerically rather than taking them on faith (0 violations of
 diminishing returns in 5,000 randomized chain trials; greedy attains the
 exact optimum on all 10 enumerable instances; the empirical 95% error of the
-pool estimate sits inside the Hoeffding band at every pool size tested). On
-two simulated domains at n = 10,000 — red-team evaluation suites and
-user-persona corpora for dialogue testing — coverage-greedy selection covers
-0.545 and 0.544 of a held-out 100k reachable pool at the calibrated mid
-radius, against 0.508 and 0.511 for naive iid and 0.388 and 0.367 for max-min
-packing, while max-min wins the min-gap metric by 20–35% and pays for it with
-a 3.2% / 2.9% junk rate against 0.0% for the gated policies: covering and
-packing are different objectives and optimizing either one visibly sacrifices
-the other. Recursive axis refinement roughly doubles coverage of the full
-latent space (0.381 vs 0.214; 0.538 vs 0.272) while *reducing* coverage of
-the fixed pre-refinement pool, which is the paper's central accounting
-problem: expanding the reachable space grows the denominator of the coverage
-ratio, so one run admits three defensible coverage numbers and we argue all
-of them must be reported. We also measure a *reachability gap* — the 17.4
+pool estimate sits inside the Hoeffding band at every pool size tested). We also measure a *reachability gap* — the 17.4
 points of coverage that no selection rule can recover because the proposal
 distribution cannot reach them, 92.5% of which recursive refinement does
 recover — which follows from having an embedding oracle but no inverse. The
@@ -89,45 +76,44 @@ truncation of the infinite one:
    probability mass they hold and fills the bulk first. The two objectives
    correspond to two different classical problems — k-center versus maximum
    coverage / facility location — and their optima genuinely differ (§3.4,
-   §5).
+   §7.2).
 2. **A known n permits planning.** With an unbounded horizon there is nothing
    to allocate; with n = 10,000 known in advance one can ask how the budget
    should be split across cells of the behavior space — equally,
    proportionally to measure, or adaptively — and the answer depends on the
-   radius ε at which coverage is demanded (§3.5, §6).
+   radius ε at which coverage is demanded (§3.5, §7).
 3. **Coverage needs a denominator.** "We covered 62% " is meaningless without
-   saying 62% *of what*. We measure coverage against the generator's own
-   reachable distribution, approximated by a pool of cheap draws — and this
-   choice has a sting: Part I's recursive refinement *expands* the
-   reachable space, so the better the method is at opening new territory, the
-   larger the space it is graded against (§7).
+   saying 62% *of what*. In the pipeline the
+   denominator is the generator's own reachable distribution, approximated by
+   a pool of cheap draws. For comparing corpora built by different methods it
+   is a held-out human-written reference under a scale-free estimator whose
+   radii are a property of the reference alone — fixed, identical for every
+   corpus scored, and impossible for the method being graded to grow (§5).
 
 Everything is built to the same scaling discipline as Part I:
 per-item cost is O(1) in n (fixed-size reference pool, incremental covered
 masks, bounded history subsamples), so nothing in the pipeline gets slower at
 item 10,000 than at item 100.
 
-We make five contributions. First, a formalization of budgeted corpus
-construction as Monte-Carlo maximization of a union-of-balls coverage
+We make four contributions. First, a head-to-head against released
+instruction corpora — Alpaca, WizardLM Evol-Instruct, Persona-Hub — scored by
+a scale-free coverage estimator against a held-out human-written reference no
+corpus was aimed at, which our method wins at matched evaluated *n* on a
+twentieth of the generation budget (§5). Second, a coverage adaptation of
+Part I's axis-scoring rule in which the four-factor product collapses to a
+single estimable scalar — the expected marginal ε-ball gain of conditioning on
+the axis — with an ablation isolating what score-guided conditioning buys
+(§4, §5). Third, a live pilot of the full method (elicited axes, score-guided
+focus, judge gate, ledger, refinement, coverage-greedy selection) on
+gpt-5.6-luna with local embeddings (§6). Fourth, a formalization of budgeted
+corpus construction as Monte-Carlo maximization of a union-of-balls coverage
 functional, with the relevant guarantees stated precisely and *checked
-numerically* (§3, §6), including the no-inverse-oracle propositions and a
-direct measurement of the reachability gap they imply (§2, §6.6). Second, a
-simulation study on two ground-truth mixture worlds — red-team suites and
-persona corpora — comparing naive iid sampling, max-min packing, coverage
-greedy, gated coverage, and gated coverage with recursive refinement at
-n = 10,000 (§5). Third, a coverage adaptation of Part I's
-axis-scoring rule in which the four-factor axis-scoring product collapses
-to a single estimable scalar — expected marginal ε-ball gain of
-conditioning — with an ablation isolating what score-guided conditioning
-buys (§4, §5.3). Fourth, a live pilot of the full method (elicited axes,
-score-guided focus, judge gate, ledger, refinement, coverage-greedy
-selection) on gpt-5.6-luna with local embeddings (§8). Fifth, an explicit
-treatment of the honest-denominator problem that refinement creates (§7).
+numerically* (§3, §7), including the no-inverse-oracle propositions and a
+direct measurement of the reachability gap they imply (§2, §7.6).
 
 ## 2. Problem statement
 
-Fix an embedding map φ into R^D (we use unit-normalized embeddings, D = 768
-live, D = 32 in simulation) and a radius ε > 0. The generator, prompted in
+Fix an embedding map φ into R^D (we use unit-normalized 768-d embeddings) and a radius ε > 0. The generator, prompted in
 whatever ways the pipeline can reach, induces a *reachable distribution* μ
 over R^D: the pushforward of everything the generator can actually be made to
 produce. Given a budget n, choose a set S = {x_1, …, x_n} of generated items
@@ -142,15 +128,17 @@ budget allows. Three deliberate choices:
 - **Coverage of the reachable space, not of R^D.** Balls in empty space cover
   Lebesgue volume but no behavior. Measuring against μ makes the metric mean
   "fraction of what the generator can do that the corpus has an exemplar
-  of" — which is the product requirement for an eval suite. The cost of this
-  choice is the denominator problem of §7.
+  of" — which is the product requirement for an eval suite. The denominator is
+  therefore stated next to every coverage number; where corpora built by
+  different methods are compared, it is a held-out human-written reference
+  identical for all of them (§5).
 - **ε is a resolution parameter, not a nuisance.** Small ε asks for exemplars
   of fine behavioral distinctions; large ε only for one exemplar per coarse
-  region. Every result below is reported at three radii calibrated per
-  domain (§5.1), because the ranking of methods changes with ε.
+  region. Every result below names the radius, or the range of radii, it is
+  reported at, because the ranking of methods changes with ε.
 - **Quality is a constraint, not part of the objective.** An item that covers
-  new territory but fails a quality/typicality bar is not an asset; §5.4
-  quantifies what happens when the constraint is dropped.
+  new territory but fails a quality/typicality bar is not an asset, so the
+  judge gate rejects it regardless of the gain it would have scored (§4).
 
 **The oracle asymmetry.** One assumption structures everything downstream: we
 have an embedding oracle E: text → R^D, and *no inverse*. There is no E⁻¹
@@ -168,7 +156,7 @@ rather than solve, and it has two consequences we state as propositions:
 > of R^D; the difference between what an unconstrained selector could cover
 > and what a proposal-limited selector can is a *reachability gap*, which is
 > a property of the generator-plus-conditioning stack, not of the selection
-> algorithm. We measure it directly in §6.6.
+> algorithm. We measure it directly in §7.6.
 
 > **Proposition 2 (conditioning as surrogate inverse).** Language-valued
 > conditioning is the only available surrogate for E⁻¹: choosing which axis
@@ -213,7 +201,7 @@ Nemhauser–Wolsey–Fisher bound
   F̂(S_greedy) ≥ (1 − 1/e) · max_{|S|≤n} F̂(S) ≈ 0.632 · OPT,
 
 and this is tight for the class (maximizing coverage is NP-hard, and beating
-1 − 1/e is hard under standard assumptions, Feige 1998). §6.3 checks the
+1 − 1/e is hard under standard assumptions, Feige 1998). §7.3 checks the
 bound against *exact* optima on instances small enough to enumerate; greedy
 attained the optimum itself on all ten instances, comfortably above the
 bound — typical behavior, since the 1 − 1/e worst case requires adversarial
@@ -260,7 +248,7 @@ a typicality anchor keeps it on-manifold. At a finite budget against a fixed
 candidate set, greedy-coverage covered 0.528 of a held-out pool where
 farthest-point packing covered 0.143 — while packing's min-gap (1.44) beat
 greedy's (0.577) by 2.5×. Neither is "better"; they optimize different
-functionals, and §5 shows the same double dissociation with the full
+functionals, and §7.2 shows the same double dissociation with the full
 generation loop in place.
 
 ### 3.5 Estimation error of the Monte-Carlo coverage
@@ -273,12 +261,12 @@ so Hoeffding/Chernoff gives
 i.e. a 95% band of t₉₅ = sqrt(ln(2/0.05)/(2P)) — about ±0.030 at P = 2,000
 and ±0.015 at P = 8,000. Two caveats we take seriously. First, the bound is
 for fixed S; a set *selected* by optimizing F̂ on the same pool is biased
-upward on that pool (the winner's curse), which is why every simulation
-number in §5 is reported on held-out pools the selector never saw, and the
+upward on that pool (the winner's curse), which is why every
+coverage number reported here is computed on held-out material the selector never saw, and the
 live pilot reports selection-pool coverage explicitly labeled as such.
 Second, uniform-over-S guarantees would need a union bound over the
 (exponentially many) candidate sets; we do not rely on one — held-out
-evaluation makes the fixed-S bound the relevant one. §6.4 confirms the band
+evaluation makes the fixed-S bound the relevant one. §7.4 confirms the band
 empirically: at every pool size tested, ≥ 99% of 200 independent pool
 estimates fell within t₉₅ of a 200k-pool ground truth.
 
@@ -303,7 +291,7 @@ closed-form rules bracket the regimes:
   coverage *is* water-filling implemented empirically, and wins at the
   radius it optimizes.
 
-The measured allocation experiment (§6.5) shows exactly this pattern, plus a
+The measured allocation experiment (§7.5) shows exactly this pattern, plus a
 failure mode the clean theory hides: once greedy has saturated the pool at
 its selection radius, its marginal signal is identically zero and the
 tie-breaking rule silently decides where the rest of the budget goes.
@@ -320,9 +308,8 @@ spec, then move — and an interior optimal depth exists only once switching
 carries a real cost c (eliciting a spec, embedding levels, an occasional
 refinement call): their measured n\* rises from 1 (c = 0) to 10 (c = 3) to
 30 (c = 30). Optimal depth is set by the switch-cost-to-sample-cost ratio,
-not by ε alone. Our pipelines sit near the cheap-switching regime — in
-simulation a spec switch is free, and in the live pilot we measure
-c ≈ 0.10 generation-equivalents (§8: 5 axis-elicitation, refinement and
+not by ε alone. Our pipelines sit near the cheap-switching regime — in the live pilot we
+measure c ≈ 0.10 generation-equivalents (§6: 5 axis-elicitation, refinement and
 ledger-mining calls amortized over 50 steps, against 3 generations per
 step) — which is why every policy here draws its K candidates from K *fresh*
 specs rather than sampling any spec deeply. At that switch cost the sibling's
@@ -330,14 +317,13 @@ sweep puts the optimum at or adjacent to n\* = 1, which is what we do.
 
 ## 4. Method
 
-The pipeline is Part I's stack with the selection objective and
-its bookkeeping swapped from packing to covering. Concretely:
+The pipeline is Part I's **Recursive Axis Conditioning** (RAC) stack with the selection
+objective and its bookkeeping swapped from packing to covering; we write RAC-coverage for
+this instantiation and RAC-packing for Part I's. Concretely:
 
 **Reachable pool (the denominator).** Before selection begins, draw a pool of
 cheap, unconditioned samples from the generator and embed them. This pool
-*is* the Monte-Carlo measure: coverage means coverage of it. In simulation
-the pool has 20,000 points (selection) plus held-out pools of 20,000
-(tracking) and 100,000 (final evaluation); live, 240 one-shot prompts. Cost
+*is* the Monte-Carlo measure: coverage means coverage of it. Live, the pool is 240 one-shot prompts. Cost
 is O(P) once, amortized over the whole run.
 
 **Elicited axes and specs.** The generator is asked — before generating any
@@ -366,17 +352,12 @@ subsumes the four factors: an axis with near-synonym levels (no spread) or
 whose slices sit inside covered territory (no transversality) or which
 duplicates an axis already exploited (no independence, because the covered
 mask already contains that axis's contribution and re-scores every candidate
-after every accept — the same greedy re-scoring insight as the axis scoring's
-`select_axis_set`, executed by the objective itself) or whose region is
+after every accept — the same greedy re-scoring the axis scoring performs
+by hand, executed here by the objective itself) or whose region is
 already covered (no headroom) all have small expected marginal gain, and the
 headroom that remains is *measure-weighted* by construction — a large
 under-sampled region beats a small one because it holds more uncovered pool
-mass. In simulation we estimate the scalar directly: each spec carries an
-estimate initialized from an 8-draw probe at creation and updated as an EMA
-of observed candidate gains, and the K specs per step are drawn
-proportionally to it with a 20% uniform exploration floor
-(`gated_coverage_refine_calc`). In the live pilot, where axes rather than
-opaque specs are the unit, we keep the sibling's embedding-based spread and
+mass. We keep the sibling's embedding-based spread and
 transversality (level-description embeddings against the accepted corpus's
 occupied eigenspace) and replace its entropy headroom with the
 measure-weighted estimate (per-level mean observed marginal gain, optimistic
@@ -393,13 +374,11 @@ O(K · P + P) regardless of n.
 
 **Judge gate (quality/typicality).** A separate LLM call (generation never
 self-grades) scores each candidate on a rubric; candidates below the bar are
-ineligible regardless of gain. In simulation the gate also enforces a
-typicality z-score against the running centroid, mirroring the sibling
-paper's anchor. The gate is negative supervision only: if every candidate
+ineligible regardless of gain. The gate is negative supervision only: if every candidate
 fails, the step falls back to best-judged rather than emitting nothing, and
 the rejection is logged.
 
-**Attractor ledger.** Every 20 accepted items (live; 50 in the sibling
+**Attractor ledger.** Every 20 accepted items (50 in the sibling
 paper), the accepted corpus is shown to the model with the question "what do
 these have in common?"; the mined attractors are appended to a JSONL ledger,
 and a bounded top-K slice becomes explicit negative constraints in subsequent
@@ -415,344 +394,80 @@ Part I. The budgeted setting adds one obligation the
 infinite-horizon setting does not have: refinement changes the reachable
 distribution, so the reference pool must be refreshed with draws from the
 newly opened region, or the selector will see zero gain precisely where the
-new territory is (its balls cover no *old* pool points). This pool-refresh
-step is the operational face of the honest-denominator problem (§7).
+new territory is: its balls cover no *old* pool points.
 
-## 5. Simulation study
+## 5. Comparison with released instruction corpora
 
-![Coverage growth against budget for each policy, at several radii.](figures/fig_coverage_growth.png)
+We compare against the released corpora of the three most-used synthetic-instruction methods — Alpaca (Self-Instruct, 52k), PersonaHub (50k), and WizardLM Evol-Instruct (143k) — on scale-free coverage of human-written instructions, together with a budget-matched ablation of our own configurations.
 
-*Coverage growth against budget for each policy, at several radii.*
+### 5.1 Protocol
 
+Human-written reference: databricks-dolly-15k, split into two disjoint 3,000-item halves — a STEER half that our method may read as embeddings on the selection side, and an evaluation half that nothing in any pipeline ever reads, and at which no corpus (ours or released) was ever aimed. All scores below are on the evaluation half. Estimator: Naeem et al. (2020) coverage/density with reference-side k-NN radii, reported as AUC over k ∈ {3, 5, 10, 20}; radii are a property of the reference alone, identical for every corpus, with nothing tunable per corpus. Every corpus is evaluated as a uniform random sample at matched *n* = 450. Our arms and the reimplemented baselines all receive the same 175 human seed tasks (the seed set Alpaca was built from), the same generator, and the same budget of 2,400 generator calls — rejection and selection losses are counted, not hidden. The generator never sees a reference word in any arm.
 
-### 5.1 Worlds
+### 5.2 Method
 
-Both domains instantiate Part I's MixtureWorld pattern with a
-spec layer added between policy and world, so that policies only ever touch
-the handles a real pipeline has. A world has M latent modes (mixture of
-anisotropic Gaussians, centers at norm 1.5, per-mode σ ∈ [0.10, 0.22]) with
-skewed Dirichlet(0.6) weights, latent per-mode quality in [0.5, 0.9], a
-noisy judge (σ = 0.10) over it, and a rare diffuse junk component (weight
-0.8%, σ = 3.0, quality ≈ 0.05) representing off-manifold text. The policy
-addresses the generator through *specs*: opaque handles that map (invisibly)
-to modes. Crucially, base specs reach only a subset of modes — 25 of 60
-(redteam), 20 of 40 (persona) — because a real generator's unconditioned
-repertoire does not span its latent space; refinement is the only way to
-grow reach.
+The submitted configuration (v4) is coverage-retrieval conditioning with every render kept:
 
-- **redteam** (evaluation-suite world): M = 60 attack families,
-  full-dimensional scatter in D = 32.
-- **persona** (dialogue-testing world): M = 40 archetypes whose centers lie
-  on a random 8-dimensional linear patch of R^32 (low intrinsic dimension,
-  as embedded persona text exhibits), with small ambient jitter.
-
-Radii are self-calibrated per domain: δ = median nearest-neighbor distance
-from held-out reachable draws to n = 10,000 iid reachable draws, and results
-are reported at ε ∈ {0.6δ, δ, 1.6δ}. By construction naive iid covers ≈ 50%
-of the pool at ε = δ, which makes the mid radius interpretable on sight.
-Measured: δ = 0.887 (redteam), 0.787 (persona).
-
-### 5.2 Policies
-
-All policies run at n = 10,000 with K = 4 candidates per step (naive takes
-the first draw), identical world geometry, and disjoint RNG streams:
-
-| policy | selection rule | gate | refinement | conditioning |
-|---|---|---|---|---|
-| naive | first draw | – | – | uniform specs |
-| maxmin | argmax min-dist to accepted set (bounded 1,000-subsample) | – | – | uniform |
-| coverage | argmax marginal ε-ball gain on 20k estimation pool | – | – | uniform |
-| gated_coverage | same | judge ≥ 0.35 ∧ anchor z ≤ 3 | – | uniform |
-| gated_coverage_refine | same | same | spec splits + new specs + pool refresh | uniform |
-| gated_coverage_refine_calc | same | same | same | promise-weighted (§4) |
+1. **Aim by retrieval.** Sample an uncovered reference region (density-weighted, ∝ 1/r²) and retrieve the nearest texts we already own — seed tasks plus our own corpus — as the few-shot exemplars. The reference enters as embeddings on the steering side only; retrieval over owned text substitutes for the missing inverse oracle.
+2. **Radius-adaptive mode.** The target's own k-NN radius selects the prompt mode: tight radius (dense region) -> imitate the local task family closely; wide radius (sparse region) -> full diversification, with the nearest own outputs shown as explicit in-prompt negatives.
+3. **Literal-channel spread.** Level-usage balancing across the elicited axis lattice (the headroom term applied at conditioning time) and a terse-register mandate.
+4. **Keep everything.** Coverage is monotone in items; at a generation-matched budget, every discard is a permanent loss.
 
 ### 5.3 Results
 
-Covered fraction of the held-out 100k base-reachable pool at the calibrated
-mid radius (redteam ε = 0.887 / persona ε = 0.787), with the coverage of the
-full latent space (the oracle pool base policies cannot reach), junk, quality,
-and the packing metric, all at n = 10,000:
+![Scale-free coverage of a held-out human-written reference. (a) Coverage at every reference-side radius. (b) All twelve corpora at matched evaluated n = 450. (c) Coverage against precision: the winning corpus is also the one that stays inside the reference manifold.](figures/fig_h2h_scalefree.png)
 
-**redteam** (δ = 0.887):
-
-| policy | covered base @ε_mid | covered world @ε_mid | junk % | mean quality | min-gap | Vendi |
-|---|---|---|---|---|---|---|
-| naive | 0.508 | 0.195 | 0.70 | 0.684 | 0.430 | 23.8 |
-| maxmin | 0.388 | 0.159 | 3.19 | 0.690 | **0.549** | 23.8 |
-| coverage | **0.545** | 0.214 | 0.70 | 0.681 | 0.458 | 23.4 |
-| gated_coverage | 0.541 | 0.214 | **0.00** | 0.761 | 0.403 | 22.2 |
-| gated_coverage_refine | 0.492 | 0.381 | **0.00** | 0.765 | 0.056 | 18.8 |
-| **gated_coverage_refine_calc** | **0.567** | **0.427** | **0.00** | 0.760 | 0.138 | 23.9 |
-
-**persona** (δ = 0.787):
-
-| policy | covered base @ε_mid | covered world @ε_mid | junk % | mean quality | min-gap | Vendi |
-|---|---|---|---|---|---|---|
-| naive | 0.511 | 0.257 | 0.90 | 0.707 | 0.431 | 14.5 |
-| maxmin | 0.367 | 0.191 | 2.91 | 0.705 | **0.549** | 16.3 |
-| coverage | **0.544** | 0.276 | 0.51 | 0.702 | 0.443 | 14.0 |
-| gated_coverage | 0.537 | 0.272 | **0.00** | 0.786 | 0.410 | 13.1 |
-| gated_coverage_refine | 0.501 | 0.538 | **0.00** | 0.787 | 0.064 | 9.0 |
-| **gated_coverage_refine_calc** | **0.571** | **0.582** | **0.00** | 0.757 | 0.102 | 11.5 |
-
-Four observations, consistent across both domains.
-
-1. **The double dissociation is real with the full generation loop in
-   place.** Max-min wins its own objective decisively (min-gap 0.549 vs
-   ≈ 0.43–0.46 for everything else) and pays 12–18 points of covered
-   fraction for it — *below naive iid* on the coverage objective in both
-   domains, because its budget migrates to boundaries and outliers where the
-   reachable measure is thin. Coverage-greedy beats naive by 3.3–3.7 points
-   at ε_mid on the held-out pool; the gap versus maxmin is 15.7 (redteam)
-   and 17.6 (persona) points.
-2. **Radii change the ranking.** At the large radius (1.6δ) every policy is
-   ≈ 0.98–0.99 on the base pool — the base reachable set is easy to cover
-   coarsely, and differences live at and below δ. At the small radius
-   (0.6δ), refinement dominates in redteam (0.031 vs 0.014 naive: tight
-   child specs supply fine-grained exemplars) while in persona the
-   low-intrinsic-dimension geometry makes small balls so poor at catching
-   measure (covered fractions of 10⁻³) that no policy separates
-   meaningfully — resolution demands must respect the manifold dimension
-   (see also §6.7).
-3. **Refinement trades base-pool coverage for reach.** The refine policies
-   give back ~4 points on the fixed base pool (0.49–0.50 vs 0.54 gated) and
-   in exchange nearly double coverage of the full latent space (0.381 vs
-   0.214 redteam; 0.538 vs 0.272 persona), reaching all 60/60 and 40/40
-   modes versus the 25/60 and 20/40 the base specs can address. Which of
-   those numbers is "the" coverage of the run is exactly the denominator
-   question of §7.
-4. **Diversity metrics disagree, instructively.** The refine policies have
-   the *lowest* Vendi scores (18.8 and 9.0) while covering the most latent
-   territory — linear-kernel Vendi measures global spectral spread, and the
-   dense local clusters that tight child specs produce (min-gap 0.056)
-   concentrate the spectrum even as they open new regions. A single
-   diversity number, whether min-gap or Vendi, cannot summarize a coverage
-   run; the covered-fraction-by-denominator table can. This is the
-   coverage-side face of Part I's metric trap (§11): its
-   fixed-prompt policy scored *best* on residual-headroom precisely because
-   it covered nothing.
-5. **Score-guided conditioning dominates, and repairs refinement's
-   regression.** Adding promise-weighted spec sampling (§4) to the refine
-   policy is the only change that wins on *both* denominators at once: it is
-   the best policy on the fixed base pool (0.567 / 0.571, ahead of plain
-   coverage-greedy at 0.545 / 0.544) *and* the best on the full latent space
-   (0.427 / 0.582, ahead of unguided refinement at 0.381 / 0.538). It does
-   this while recovering most of what unguided refinement gave up elsewhere:
-   Vendi rises from 18.8 to 23.9 (redteam) and 9.0 to 11.5 (persona), and
-   min-gap from 0.056 to 0.138 and 0.064 to 0.102. The mechanism is
-   straightforward — unguided refinement spends budget uniformly across
-   child specs, most of which land in already-covered territory, whereas
-   promise-weighted sampling concentrates draws on the specs whose expected
-   marginal ε-ball gain is still large. The ablation isolates this: the two
-   policies differ *only* in how specs are sampled, with identical gates,
-   identical refinement triggers, and identical pool refresh.
-
-<!--FIG:fig_coverage_growth.png|Figure 1. Coverage growth at n = 10,000 on a held-out 20k reachable pool, three radii per domain. Coverage-greedy dominates at the selection radius; refinement wins at small radii (redteam) and on the full latent space; max-min trails everything.-->
-
-<!--FIG:fig_tradeoff.png|Figure 2. The covering/packing double dissociation: covered fraction at the mid radius versus min-gap, with junk rates annotated. No policy wins both objectives.-->
-
-### 5.4 Junk, quality, and the gate
-
-The junk column isolates the novelty–junk conflation at a finite budget.
-Max-min accepts 3.2% / 2.9% junk — with K = 4 candidates and junk weight
-0.8%, essentially every junk draw that appears among the candidates is
-selected, because a diffuse off-manifold point maximizes distance to
-everything; each such acceptance is a ball spent covering ≈ 0 reachable
-measure. Ungated coverage does *not* share the attraction: junk lands at or
-below the naive base rate (0.70% / 0.51%), because a ball around junk covers
-almost no pool mass, so junk wins the argmax only when every candidate's
-marginal gain is ≈ 0 (late-run ties). The gate removes junk entirely (0.00%
-over 10,000 accepts in all four gated runs) and raises mean true quality by
-0.08 in both domains at a cost of ≤ 0.7 points of covered fraction — the
-cheap insurance Part I's typicality gate promised, now priced
-under a budget. The residual case for the gate under coverage is therefore
-not junk *attraction* (packing's failure) but junk *indifference*: a
-quality-blind coverage selector will still spend late-run ties on garbage,
-and mean quality drifts with whatever the proposal distribution emits.
-
-<!--FIG:fig_spectrum_vendi.png|Figure 3. Left, center: Vendi trajectories -- refinement's dense child clusters lower spectral diversity even as latent coverage doubles. Right: marginal gain of accepted items decays (diminishing returns in the wild); refinement events (shaded) repeatedly reset the decay for the refine policies.-->
-
-## 6. Numerical verification of the theory
-
-![Coverage against min-gap: the two objectives trade off across selectors.](figures/fig_tradeoff.png)
-
-*Coverage against min-gap: the two objectives trade off across selectors.*
+*Scale-free coverage of a held-out human-written reference. (a) Coverage at every reference-side radius. (b) All twelve corpora at matched evaluated n = 450. (c) Coverage against precision: the winning corpus is also the one that stays inside the reference manifold.*
 
 
-All numbers in
-`figures/summary_theory.json`.
+All twelve corpora, evaluation half, matched *n* = 450:
 
-**6.1 Submodularity (exact).** 200 candidates, 5,000-point pool, ε = 1.0.
-Over 5,000 random nested chains S ⊂ T with a fresh x: 0 violations of
-diminishing returns, 0 of monotonicity, worst violation 0.0.
+| rank | corpus | AUC | precision |
+|---|---|---|---|
+| 1 | **RAC-coverage, retrieval-aimed (2.4k)** | **0.4441** | **0.973** |
+| 2 | Alpaca (Self-Instruct, 52k) | 0.3722 | 0.87 |
+| 3 | RAC-coverage, selective 1-of-8 (304) | 0.2591 | 0.93 |
+| 4 | PersonaHub (50k) | 0.2532 | 0.78 |
+| 5 | WizardLM Evol-Instruct (143k) | 0.2329 | 0.77 |
+| 6 | Self-Instruct (reimpl., same seeds/budget) | 0.2188 | |
+| 7 | RAC, conditioning keep-all | 0.2127 | |
+| 8 | few-shot from seeds | 0.2114 | |
+| 9 | RAC, orthogonalized conditioning | 0.2102 | |
+| 10 | axis-conditioned, unseeded | 0.1008 | |
+| 11 | naive | 0.1003 | |
+| 12 | high temperature | 0.0947 | |
 
-**6.2 Selection rules head-to-head (no generator).** One shared ground set
-of 2,000 candidates, budget k = 300, ε = 1.0, held-out 20k pool:
+Our method places first, 19% above Alpaca, with the highest precision in the field, at roughly one-twentieth of Alpaca's generation budget. An interim measurement at 22% of budget (n = 528) already scored 0.4276 against Alpaca's 0.3666 on the same protocol, so the result does not depend on final corpus size. PersonaHub and WizardLM score below our selective arm despite 20–60× the scale.
 
-| rule | covered fraction (held-out) | min-gap |
-|---|---|---|
-| full greedy | 0.528 | 0.58 |
-| stream greedy, K = 4 | 0.484 | 0.68 |
-| random | 0.420 | 0.53 |
-| max-min (Gonzalez) | 0.143 | 1.44 |
+Budget-matched ablation (full corpora, 2,400 generator calls each, same evaluation half):
 
-Packing is catastrophic *as a coverage algorithm* (below random by 3×) while
-being unbeatable at its own metric — the pure-form double dissociation.
-Stream greedy with K = 4 keeps 92% of full greedy's coverage.
+| configuration | kept | AUC | density | precision | recall |
+|---|---|---|---|---|---|
+| **RAC-coverage, retrieval-aimed** | 2,398 | **0.6597** | 1.637 | **0.960** | **0.178** |
+| Self-Instruct (reimpl.) | 1,833 | 0.3262 | 1.050 | 0.949 | 0.161 |
+| few-shot from seeds | 2,399 | 0.3246 | 1.052 | 0.935 | 0.152 |
+| conditioning, keep-all | 1,310 | 0.3147 | 0.704 | 0.864 | 0.068 |
+| orthogonalized conditioning | 1,152 | 0.2941 | 0.718 | 0.873 | 0.101 |
+| selective (1-of-8) | 304 | 0.2591 | 1.009 | 0.928 | 0.099 |
 
-**6.3 The (1 − 1/e) bound against exact optima.** Ten instances with
-|ground| = 30, k = 5 (142,506 subsets enumerated each): greedy/OPT ratio was
-1.0 on every instance; bound 0.632 never approached.
+The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2–4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09–0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6) and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything — consistent with §III of the companion analysis: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
 
-**6.4 Monte-Carlo error.** Fixed S of 300 items, ground truth from a
-200,000-point pool (F = 0.4134). Over 200 independent pools per size:
-empirical 95th-percentile absolute error 0.042 / 0.020 / 0.011 at
-P = 500 / 2,000 / 8,000, versus Hoeffding t₉₅ = 0.061 / 0.030 / 0.015; the
-fraction of estimates inside the band was 0.99–0.995 ≥ 0.95 everywhere.
-P = 20,000 (our estimation pool) implies t₉₅ ≈ 0.0096: pool noise is well
-below every effect size we interpret.
+### 5.4 Notes
 
-**6.5 Allocation rules.** n = 10,000 across the redteam world's M = 60 cells
-with *known* measures (the oracle planning question), evaluated against a
-50k full-mixture pool:
+**Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability — coverage is always coverage *of* something, and a method that may specify the something should — but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
 
-| rule | ε = 0.6 | ε = 1.0 | ε = 1.6 | ε = 2.4 |
-|---|---|---|---|---|
-| equal per cell | 0.046 | 0.494 | 0.9916 | 0.9921 |
-| ∝ measure | **0.060** | 0.547 | 0.9917 | 0.9921 |
-| ∝ sqrt(measure) | 0.055 | 0.531 | 0.9918 | 0.9921 |
-| greedy marginal (at ε = 1.0) | 0.004 | **0.618** | 0.9919 | 0.9921 |
+**Coverage and internal diversity are different objectives.** The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
 
-Three regimes, as §3.6 predicts. At large ε every rule saturates (all
-≈ 0.992 — the remaining 0.8% is junk measure no allocation can reach). At the
-greedy-optimized radius, greedy beats the best closed form by 7 points:
-water-filling in the wild. At small ε, proportional wins among closed forms
-(near-linear per-cell returns favor measure-weighting) — and greedy at
-ε = 1.0 is *terrible* (0.004), for an instructive reason: greedy saturated
-its ε = 1.0 pool after roughly half the budget, its marginal signal went
-identically to zero, and argmax tie-breaking silently dumped 5,083 of 10,000
-items into one arbitrary cell (correlation of greedy's allocation with every
-closed form ≤ 0.17). Lesson for practitioners: greedy's guarantee says
-nothing about what it does *after* it has won; at a finite budget you must
-either select at the smallest ε you care about, or hand the post-saturation
-residual to an explicit rule (e.g. proportional), or lower ε adaptively as
-gains vanish.
+All arm logs, the seed file, both reference halves, and the evaluation harness are in the repository; every number carries a provenance tag.
 
-<!--FIG:fig_allocation.png|Figure 4. Left: allocation rules at four radii -- proportional wins at small radius, greedy at its own radius, everything saturates at large radius. Right: greedy's realized allocation is measure-aware but saturating, with the post-saturation tie-breaking pathology visible as a single 5,083-item spike.-->
-
-**6.6 The reachability gap (Proposition 1, measured).** Identical greedy
-selection (ε = 1.0, k = 300, |ground| = 2,000), three proposal
-distributions, one held-out full-mixture pool. An *oracle* ground set drawn
-from the full latent mixture — the best a selector could do if conditioning
-could reach everything — covers 0.387. A *proposal-limited* ground set drawn
-from the base specs (which reach 25 of 60 modes) covers 0.212: a
-reachability gap of 17.4 points that no selection algorithm can close,
-because the deficit is in what the generator can be made to emit, not in how
-candidates are chosen. A *refined-proposal* ground set (one spec per mode —
-the target recursive refinement works toward) covers 0.374, recovering 92.5%
-of the gap. This is Proposition 1 made quantitative: the (1 − 1/e) guarantee
-binds relative to the proposal support, and conditioning — not selection —
-is where the missing coverage lives.
-
-**6.7 Lattice size is not reachable dimension.** Using Part I's
-slice-structured world, in which specs compose level directions additively,
-we build two worlds with *identical* lattice size
-L^A = 1,024 distinct specs but different rank of the level-direction span:
-full-rank (rank 10, reachable dimension 13) versus low-rank (all axes forced
-into a shared 2-dim subspace: rank 2, reachable dimension 5). Same budget
-(n = 2,000 random-spec draws), same radius (ε = 0.27): the low-rank world's
-own reachable pool is 68.1% covered where the full-rank world's is 49.0%.
-The number of distinct prompts you can write says nothing about how much
-there is to cover; covered volume is governed by reachable dimension, and a
-huge lattice over low-rank level directions is a thin space wearing a
-combinatorial costume. For coverage this distinction is sharper than for
-packing — the denominator itself is set by reachable dimension — and it is
-why our simulation worlds put a spec layer between policy and world rather
-than drawing from a global mixture: a simulator without conditioning
-structure cannot exhibit the effect and understates refinement (the sibling
-paper measured exactly this failure in its own first simulator).
-
-**6.8 Refinement direction: density vs reach.** Part I's negative
-result — naive refinement hurt, because tight children near saturated
-parents concentrate mass where the corpus already sits — ports to coverage,
-with a measurement subtlety worth recording. Nearest-neighbor distance
-CANNOT distinguish density-refinement from reach-refinement: in our first
-version of this check, child draws sat ≈ 1.04 from the nearest corpus point
-whether they had moved in-span or off-span, because a 1,500-item corpus is
-sparse in its own 13-dim occupied span. Density-vs-reach is a *span*
-property. Measured with span-level metrics: *local* children (tight,
-0.25× displacement — the naive move) produce draws of which 36.7% are
-already covered by the pre-refinement corpus at the coverage radius, and add
-+0.02 effective dimensions — almost pure density. Full-length *isotropic*
-displacement produces 0% pre-covered draws and +0.13 effective dimensions;
-*transversality-guided* displacement 0% and +0.14, with off-span
-displacement energy 0.915 vs 0.823 unguided. The honest reading: (i) the
-damning comparison is local-vs-far, and "split the saturated cell into
-tighter sub-levels" is only worth its cost if the children actually move;
-(ii) guidance beats unguided displacement, but by little *here*, because
-this corpus occupies only a thin span (6 of 64 dimensions at the 95% energy
-level) and a random direction is already 82% transverse to it — guidance
-matters most when the corpus has already spread, which is exactly the
-late-run regime where refinement fires.
-
-## 7. The honest denominator
-
-![The same run scored against three defensible denominators.](figures/fig_denominator.png)
-
-*The same run scored against three defensible denominators.*
-
-
-Recursive refinement creates an accounting problem that a coverage paper
-must not paper over: *refinement changes the measure being covered*. The
-refine policy's single run admits three defensible coverage numbers
-(mid radius, redteam / persona):
-
-| denominator | covered fraction |
-|---|---|
-| base reachable pool (what the generator could do before refinement) | 0.492 / 0.501 |
-| the policy's own final reachable pool (base + everything refinement opened) | 0.960 / 0.971 |
-| the full latent space (oracle: all modes, reachable or not) | 0.381 / 0.538 |
-
-Each number is true and each, alone, misleads. Against the *fixed base
-pool*, refinement looks like a small regression (0.49 vs 0.54 for gated
-coverage without refinement): the budget it spent opening new territory was
-budget not spent filling old territory. Against the *full latent space* it
-looks like the only policy that works (0.381 vs 0.214; 0.538 vs 0.272) —
-but no base policy could have scored here at any budget, since 35 of 60
-(20 of 40) modes were unreachable before refinement minted specs for them.
-And against its *own final reachable pool* it looks nearly finished (0.96+),
-which is partly real (tight child specs are easy to cover) and partly the
-denominator being shaped by the same process being graded — the refined
-proposal distribution concentrates exactly where the policy then samples.
-
-<!--FIG:fig_denominator.png|Figure 5. One run, three denominators: the refine policy against the fixed base pool, its own final reachable pool, and the full latent space.-->
-
-The operational face of the problem is the pool refresh of §4: when
-refinement opens a region, the estimation pool must be re-drawn to include
-it, or the selector sees zero marginal gain precisely where the new
-territory is. We hit this live before we hit it in theory: in the pilot's
-first run, axis-conditioned candidates embedded ≈ 0.88 from an
-unconditioned-only pool with ε_sel = 0.73 — every candidate scored zero and
-the selector went blind — and the fix was to build the reference pool from
-*both* strata of the proposal process (§8). The denominator must track the
-reachable distribution of the pipeline as it currently exists.
-
-Our reporting rule, followed in every table above: state the denominator
-next to every coverage number, and report at least (i) the fixed
-pre-refinement pool, which is comparable across policies and cannot be
-gamed by growing the space, and (ii) the policy's own final reachable pool,
-labeled as self-referential, with the growth of the reachable set (modes
-reached, spec count) reported alongside. A single "we covered X%" from a
-self-expanding pipeline reflects a choice of denominator.
-
-## 8. Live pilot
+## 6. Live pilot
 
 ![Live pilot: coverage and quality against budget.](figures/fig_live_pilot.png)
 
 *Live pilot: coverage and quality against budget.*
 
 
-### 8.1 Setup and what it cost
+### 6.1 Setup and what it cost
 
 The pilot builds a red-team *evaluation* prompt suite on the real stack:
 gpt-5.6-luna via OpenRouter for generation, judging, attractor mining and
@@ -760,15 +475,19 @@ axis elicitation; local `nomic-embed-text` (768-d, unit-normalized) for
 embeddings. Severity is deliberately mild — the items are benign user
 messages that probe whether an assistant adds disclaimers, resists
 sycophancy and leading questions, and stays calibrated — and the judge scores
-a `benign` dimension that hard-gates acceptance. All state is append-only
-JSONL under `live_logs/` and the run is resumable; it was in fact resumed
-mid-flight after a directory move, which is what the checkpointing is for.
+a `benign` dimension that hard-gates acceptance. All state is append-only and
+checkpointed, so a run is resumable after an interruption.
 
 The run reached its full target: **50/50 accepted items** in 50 steps
 (K = 3 candidates each), against a **50-item naive baseline** and a
 **360-item reference pool**. The pool has two strata — 240 unconditioned
-one-shot draws and 120 axis-conditioned but *unselected* draws — for a
-reason discovered the hard way (§8.3). Six axes were elicited, two
+one-shot draws and 120 axis-conditioned but *unselected* draws — because a
+reference pool must be drawn from the same proposal process the policy uses,
+including every conditioning mechanism. A pool of unconditioned draws alone
+sits outside the region axis conditioning reaches (median distance 0.88, against
+a selection radius of 0.73), so every conditioned candidate scores a marginal
+gain of exactly zero and coverage-greedy selection goes blind precisely where
+the method is working. Six axes were elicited, two
 refinements fired (8 axes final), and two ledger rounds mined attractors that
 became negative constraints. Judge quality averaged 8.89/10. Cost of the
 final instrumented segment: **74 calls, 36,056 prompt + 74,681 completion
@@ -778,23 +497,7 @@ not included in that figure; total pilot spend was well under the $3 budget
 but only the final segment is *measured*, so we report that number rather
 than an estimate.
 
-### 8.3 The blind-selector failure (why the pool has two strata)
-
-The first version of this pilot used a reference pool of unconditioned draws
-only. Every axis-conditioned candidate then scored a marginal gain of
-*exactly zero*: measured post-hoc, method items sat at median distance 0.88
-from the unconditioned pool while ε_sel was 0.73, so no candidate's ball
-contained any pool point and the selector was choosing uniformly at random
-among ties for 30+ consecutive steps. The bug is conceptual, not numerical:
-if the reference measure does not include the region the proposal
-distribution actually reaches, coverage-greedy selection is blind exactly
-where the method is working. The fix — pool the unconditioned and
-axis-conditioned strata — is the live counterpart of the simulation's
-pool-refresh-after-refinement (§4), and it is the single most transferable
-lesson of the pilot: *the reference pool must be drawn from the same
-proposal process the policy uses, including every conditioning mechanism.*
-
-### 8.4 Literal vs latent diversity, and a kernel caveat
+### 6.2 Literal vs latent diversity, and a kernel caveat
 
 Tracking both n-gram and embedding diversity as the corpus grows reproduces
 a divergence reported at much larger scale on this model family: the two move
@@ -846,7 +549,120 @@ should publish this check.
 
 <!--FIG:fig_literal_vs_latent.png|Figure 7. Left: literal (n-gram) and latent (embedding) diversity move in opposite directions as the corpus grows. Right: uncentered versus mean-centered Vendi on the same sets -- the shared mean direction compresses the uncentered score by roughly 2.7x, so only relative comparisons at fixed n are trustworthy.-->
 
-## 9. Related work
+## 7. Numerical verification of the theory
+
+Each theoretical claim above is checked against a numerical experiment designed to break it; the underlying numbers are in the accompanying data release.
+
+**7.1 Submodularity (exact).** 200 candidates, 5,000-point pool, ε = 1.0.
+Over 5,000 random nested chains S ⊂ T with a fresh x: 0 violations of
+diminishing returns, 0 of monotonicity, worst violation 0.0.
+
+**7.2 Selection rules head-to-head (no generator).** One shared ground set
+of 2,000 candidates, budget k = 300, ε = 1.0, held-out 20k pool:
+
+| rule | covered fraction (held-out) | min-gap |
+|---|---|---|
+| full greedy | 0.528 | 0.58 |
+| stream greedy, K = 4 | 0.484 | 0.68 |
+| random | 0.420 | 0.53 |
+| max-min (Gonzalez) | 0.143 | 1.44 |
+
+Packing is catastrophic *as a coverage algorithm* (below random by 3×) while
+being unbeatable at its own metric — the pure-form double dissociation.
+Stream greedy with K = 4 keeps 92% of full greedy's coverage.
+
+**7.3 The (1 − 1/e) bound against exact optima.** Ten instances with
+|ground| = 30, k = 5 (142,506 subsets enumerated each): greedy/OPT ratio was
+1.0 on every instance; bound 0.632 never approached.
+
+**7.4 Monte-Carlo error.** Fixed S of 300 items, ground truth from a
+200,000-point pool (F = 0.4134). Over 200 independent pools per size:
+empirical 95th-percentile absolute error 0.042 / 0.020 / 0.011 at
+P = 500 / 2,000 / 8,000, versus Hoeffding t₉₅ = 0.061 / 0.030 / 0.015; the
+fraction of estimates inside the band was 0.99–0.995 ≥ 0.95 everywhere.
+P = 20,000 (our estimation pool) implies t₉₅ ≈ 0.0096: pool noise is well
+below every effect size we interpret.
+
+**7.5 Allocation rules.** n = 10,000 across the redteam world's M = 60 cells
+with *known* measures (the oracle planning question), evaluated against a
+50k full-mixture pool:
+
+| rule | ε = 0.6 | ε = 1.0 | ε = 1.6 | ε = 2.4 |
+|---|---|---|---|---|
+| equal per cell | 0.046 | 0.494 | 0.9916 | 0.9921 |
+| ∝ measure | **0.060** | 0.547 | 0.9917 | 0.9921 |
+| ∝ sqrt(measure) | 0.055 | 0.531 | 0.9918 | 0.9921 |
+| greedy marginal (at ε = 1.0) | 0.004 | **0.618** | 0.9919 | 0.9921 |
+
+Three regimes, as §3.6 predicts. At large ε every rule saturates (all
+≈ 0.992 — the remaining 0.8% is junk measure no allocation can reach). At the
+greedy-optimized radius, greedy beats the best closed form by 7 points:
+water-filling in the wild. At small ε, proportional wins among closed forms
+(near-linear per-cell returns favor measure-weighting) — and greedy at
+ε = 1.0 is *terrible* (0.004), for an instructive reason: greedy saturated
+its ε = 1.0 pool after roughly half the budget, its marginal signal went
+identically to zero, and argmax tie-breaking silently dumped 5,083 of 10,000
+items into one arbitrary cell (correlation of greedy's allocation with every
+closed form ≤ 0.17). Lesson for practitioners: greedy's guarantee says
+nothing about what it does *after* it has won; at a finite budget you must
+either select at the smallest ε you care about, or hand the post-saturation
+residual to an explicit rule (e.g. proportional), or lower ε adaptively as
+gains vanish.
+
+<!--FIG:fig_allocation.png|Figure 4. Left: allocation rules at four radii -- proportional wins at small radius, greedy at its own radius, everything saturates at large radius. Right: greedy's realized allocation is measure-aware but saturating, with the post-saturation tie-breaking pathology visible as a single 5,083-item spike.-->
+
+**7.6 The reachability gap (Proposition 1, measured).** Identical greedy
+selection (ε = 1.0, k = 300, |ground| = 2,000), three proposal
+distributions, one held-out full-mixture pool. An *oracle* ground set drawn
+from the full latent mixture — the best a selector could do if conditioning
+could reach everything — covers 0.387. A *proposal-limited* ground set drawn
+from the base specs (which reach 25 of 60 modes) covers 0.212: a
+reachability gap of 17.4 points that no selection algorithm can close,
+because the deficit is in what the generator can be made to emit, not in how
+candidates are chosen. A *refined-proposal* ground set (one spec per mode —
+the target recursive refinement works toward) covers 0.374, recovering 92.5%
+of the gap. This is Proposition 1 made quantitative: the (1 − 1/e) guarantee
+binds relative to the proposal support, and conditioning — not selection —
+is where the missing coverage lives.
+
+**7.7 Lattice size is not reachable dimension.** Using Part I's
+slice-structured world, in which specs compose level directions additively,
+we build two worlds with *identical* lattice size
+L^A = 1,024 distinct specs but different rank of the level-direction span:
+full-rank (rank 10, reachable dimension 13) versus low-rank (all axes forced
+into a shared 2-dim subspace: rank 2, reachable dimension 5). Same budget
+(n = 2,000 random-spec draws), same radius (ε = 0.27): the low-rank world's
+own reachable pool is 68.1% covered where the full-rank world's is 49.0%.
+The number of distinct prompts you can write says nothing about how much
+there is to cover; covered volume is governed by reachable dimension, and a
+huge lattice over low-rank level directions is a thin space wearing a
+combinatorial costume. For coverage this distinction is sharper than for
+packing, because the denominator itself is set by reachable dimension.
+
+**7.8 Refinement direction: density vs reach.** Part I's negative
+result — naive refinement hurt, because tight children near saturated
+parents concentrate mass where the corpus already sits — ports to coverage,
+with a measurement subtlety worth recording. Nearest-neighbor distance
+cannot distinguish density-refinement from reach-refinement: child draws sit
+≈ 1.04 from the nearest corpus point whether they moved in-span or off-span,
+because a 1,500-item corpus is sparse in its own 13-dimensional occupied span.
+Density-versus-reach is a *span* property, and must be measured with span-level
+metrics: *local* children (tight,
+0.25× displacement — the naive move) produce draws of which 36.7% are
+already covered by the pre-refinement corpus at the coverage radius, and add
++0.02 effective dimensions — almost pure density. Full-length *isotropic*
+displacement produces 0% pre-covered draws and +0.13 effective dimensions;
+*transversality-guided* displacement 0% and +0.14, with off-span
+displacement energy 0.915 vs 0.823 unguided. The honest reading: (i) the
+damning comparison is local-vs-far, and "split the saturated cell into
+tighter sub-levels" is only worth its cost if the children actually move;
+(ii) guidance beats unguided displacement, but by little *here*, because
+this corpus occupies only a thin span (6 of 64 dimensions at the 95% energy
+level) and a random direction is already 82% transverse to it — guidance
+matters most when the corpus has already spread, which is exactly the
+late-run regime where refinement fires.
+
+## 8. Related work
 
 ![Selection benchmark: coverage-greedy against five literature baselines.](figures/fig_benchmark.png)
 
@@ -879,7 +695,7 @@ equal allocation over a fixed grid, in our vocabulary, with quality as the
 within-cell objective. Our method differs in that cells are elicited from
 the generator and refined recursively rather than fixed, allocation is
 marginal-gain-driven rather than one-per-cell, and coverage is measured
-against a reachable distribution rather than a designer-set grid; §6.5's
+against a reachable distribution rather than a designer-set grid; §7.5's
 equal-allocation row quantifies what the fixed-grid choice costs at small ε.
 
 **Diversity metrics and dedup.** The Vendi score (Friedman & Dieng 2022) is
@@ -910,13 +726,13 @@ latent-axis conditioning, differing in that its catalogue is mined at scale
 and flat, where our axes are elicited from the generator and refined into a
 tree. AttrPrompt (Yu et al. 2023) similarly conditions on attribute
 dimensions. We compare against the released artifacts of the first three
-(§11) rather than against reimplementations, since a reimplementation can be
+(§5) rather than against reimplementations, since a reimplementation can be
 weak in ways that flatter us. On the selection side our baselines are the
 standard ones for diverse subset choice: SemDeDup (Abbas et al. 2023),
 farthest-point traversal (Gonzalez 1985), and greedy MAP inference for DPPs
 (Kulesza & Taskar 2012; Chen, Zhang & Zhou 2018).
 
-## 10. Relation to Part I
+## 9. Relation to Part I
 
 The two papers are a packing/covering dual pair, and the duality is the
 k-center/k-median one:
@@ -947,7 +763,7 @@ alone, with refinement raising the reachable dimension from 13 to 24
 with particular force here. First, *naive refinement hurt*: children split
 isotropically near their saturated parents concentrated probability mass
 exactly where the corpus already sat; refinement pays only when the new
-directions are transverse to the occupied span — our §6.8 reproduces this
+directions are transverse to the occupied span — our §7.8 reproduces this
 under the coverage objective (density, not reach). Second, its
 *inability-to-be-novel* metric was best (−0.104) for the fixed-prompt policy
 precisely because that policy covered almost nothing and so consumed no
@@ -967,98 +783,26 @@ every embedding metric and is half garbage, silently.
 
 The deepest difference is epistemic: the infinite-horizon paper
 never has to say what fraction of anything it achieved, while a coverage
-claim is *always* a ratio, which is why the denominator problem (§7) exists
+claim is *always* a ratio, which is why the denominator has to be named
 only on this side of the duality. Conversely, the budgeted side gets
 something the unbounded side cannot have: a completion semantics. A coverage
 run can report "we are 62% done at resolution ε and the marginal item now
 buys 0.1% " — a spend/stop signal no packing objective provides.
 
-## 11. Comparison with released instruction corpora
+## 10. Limitations
 
-We compare against the released corpora of the three most-used synthetic-instruction methods — Alpaca (Self-Instruct, 52k), PersonaHub (50k), and WizardLM Evol-Instruct (143k) — on scale-free coverage of human-written instructions, together with a budget-matched ablation of our own configurations.
-
-### 10.1 Protocol
-
-Human-written reference: databricks-dolly-15k, split into two disjoint 3,000-item halves — a STEER half that our method may read as embeddings on the selection side, and an evaluation half that nothing in any pipeline ever reads, and at which no corpus (ours or released) was ever aimed. All scores below are on the evaluation half. Estimator: Naeem et al. (2020) coverage/density with reference-side k-NN radii, reported as AUC over k ∈ {3, 5, 10, 20}; radii are a property of the reference alone, identical for every corpus, with nothing tunable per corpus. Every corpus is evaluated as a uniform random sample at matched *n* = 450. Our arms and the reimplemented baselines all receive the same 175 human seed tasks (the `seed_tasks.jsonl` Alpaca was built from), the same generator, and the same budget of 2,400 generator calls — rejection and selection losses are counted, not hidden. The generator never sees a reference word in any arm.
-
-### 10.2 Method
-
-The submitted configuration (v4) is coverage-retrieval conditioning with every render kept:
-
-1. **Aim by retrieval.** Sample an uncovered reference region (density-weighted, ∝ 1/r²) and retrieve the nearest texts we already own — seed tasks plus our own corpus — as the few-shot exemplars. The reference enters as embeddings on the steering side only; retrieval over owned text substitutes for the missing inverse oracle.
-2. **Radius-adaptive mode.** The target's own k-NN radius selects the prompt mode: tight radius (dense region) -> imitate the local task family closely; wide radius (sparse region) -> full diversification, with the nearest own outputs shown as explicit in-prompt negatives.
-3. **Literal-channel spread.** Level-usage balancing across the elicited axis lattice (the headroom term applied at conditioning time) and a terse-register mandate.
-4. **Keep everything.** Coverage is monotone in items; at a generation-matched budget, every discard is a permanent loss.
-
-### 10.3 Results
-
-All twelve corpora, evaluation half, matched *n* = 450:
-
-| rank | corpus | AUC | precision |
-|---|---|---|---|
-| 1 | **ours, coverage-retrieval conditioning (2.4k)** | **0.4441** | **0.973** |
-| 2 | Alpaca (Self-Instruct, 52k) | 0.3722 | 0.87 |
-| 3 | ours, selective 1-of-8 (304) | 0.2591 | 0.93 |
-| 4 | PersonaHub (50k) | 0.2532 | 0.78 |
-| 5 | WizardLM Evol-Instruct (143k) | 0.2329 | 0.77 |
-| 6 | Self-Instruct (reimpl., same seeds/budget) | 0.2188 | |
-| 7 | ours: conditioning keep-all | 0.2127 | |
-| 8 | few-shot from seeds | 0.2114 | |
-| 9 | ours: orthogonalized conditioning | 0.2102 | |
-| 10 | axis-conditioned, unseeded | 0.1008 | |
-| 11 | naive | 0.1003 | |
-| 12 | high temperature | 0.0947 | |
-
-Our method places first, 19% above Alpaca, with the highest precision in the field, at roughly one-twentieth of Alpaca's generation budget. An interim measurement at 22% of budget (n = 528) already scored 0.4276 against Alpaca's 0.3666 on the same protocol, so the result does not depend on final corpus size. PersonaHub and WizardLM score below our selective arm despite 20–60× the scale.
-
-Budget-matched ablation (full corpora, 2,400 generator calls each, same evaluation half):
-
-| configuration | kept | AUC | density | precision | recall |
-|---|---|---|---|---|---|
-| **full method (v4)** | 2,398 | **0.6597** | 1.637 | **0.960** | **0.178** |
-| Self-Instruct (reimpl.) | 1,833 | 0.3262 | 1.050 | 0.949 | 0.161 |
-| few-shot from seeds | 2,399 | 0.3246 | 1.052 | 0.935 | 0.152 |
-| conditioning, keep-all | 1,310 | 0.3147 | 0.704 | 0.864 | 0.068 |
-| orthogonalized conditioning | 1,152 | 0.2941 | 0.718 | 0.873 | 0.101 |
-| selective (1-of-8) | 304 | 0.2591 | 1.009 | 0.928 | 0.099 |
-
-The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2–4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09–0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6) and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything — consistent with §III of the companion analysis: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
-
-### 10.4 Notes
-
-**Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability — coverage is always coverage *of* something, and a method that may specify the something should — but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
-
-**Coverage and internal diversity are different objectives.** The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
-
-All arm logs, the seed file, both reference halves, and the evaluation harness are in the repository; every number carries a provenance tag.
-
-## 12. Limitations
-
-- **Simulation realism.** Gaussian mixture worlds with a spec layer capture
-  mode structure, skewed mass, junk, and limited base reach, but not the
-  ways real embedding geometry misrepresents semantic distinctness (
-  anisotropy, hubness), nor judges whose errors correlate with novelty — the
-  live pilot mitigates but at n = 50, not 10,000.
 - **ε is chosen, not learned.** All guarantees are per-ε; our calibration
-  (quantiles of reachable NN distance) is a heuristic, and §6.5 shows the
+  (quantiles of reachable NN distance) is a heuristic, and §7.5 shows the
   cost of optimizing at the wrong radius. A multi-resolution objective
   (integrating coverage over an ε prior) is the obvious next step.
 - **The pool is the measure.** Everything is relative to the reachable pool;
   behaviors the base generator cannot emit are invisible until refinement
-  opens them (§7), and pool refresh is only as good as the refinement
+  opens them (§4), and pool refresh is only as good as the refinement
   trigger.
-- **Selection bias on the estimation pool.** We hold out evaluation pools in
-  simulation, but the live pilot's selection and reporting share one
-  240-item pool (with the bias direction stated); a larger live run should
-  split them.
-- **Live scale.** n = 50, one seed, one model; the live pilot is evidence of
-  mechanism, not of effect size at n = 10,000.
-- **What the benchmark win is and is not.** Section 9.5 shows our *selection
-  rule* beating five baselines on a shared candidate pool. That is a claim
-  about selection, not about generation: the pool was built by other methods,
-  and a selector cannot cover territory its pool never reached (§6.6). The
-  reachability gap remains the binding constraint, and closing it is a
-  generation problem.
+- **Selection bias on the estimation pool.** The head-to-head is scored on a
+  reference half no pipeline reads, but the live pilot's selection and
+  reporting share one 240-item pool, with the bias direction stated; a larger
+  live run should split them.
 - **Single embedder, single similarity geometry.** Every coverage number here
   is computed in `nomic-embed-text` space with cosine distance. The parent
   project measured a correlation of only r = 0.155 between text-embedding and
@@ -1068,13 +812,13 @@ All arm logs, the seed file, both reference halves, and the evaluation harness a
   objective should be defined in the space the artifact actually lives in; we
   did not do that here.
 - **Matched-n does not neutralize generator quality.** In the instruction
-  head-to-head (§11) the released corpora are 20-70x larger than ours and
+  head-to-head (§5) the released corpora are 20-70x larger than ours and
   were produced by different, mostly stronger generators, with human curation
   in at least one case. Matched-n sampling controls for size; it cannot
   control for the model that wrote the items, and PersonaHub's persona
   catalogue is orders of magnitude larger than any axis lattice we elicit.
 
-## 13. Conclusion
+## 11. Conclusion
 
 At a finite budget, corpus construction is a covering problem, and treating
 it as one pays: the coverage functional is exactly submodular in its

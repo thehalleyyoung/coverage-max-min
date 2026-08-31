@@ -27,8 +27,8 @@ LABEL = {
     "self_instruct": "Self-Instruct (few-shot + ROUGE filter)",
     "evol_instruct": "Evol-Instruct (WizardLM operators)",
     "persona": "persona/attribute conditioning",
-    "ihd": "IHD (ours)",
-    "vision": "IHD + vision steering (ours)",
+    "ihd": "RAC (ours)",
+    "vision": "RAC + vision steering (ours)",
 }
 
 

@@ -251,10 +251,10 @@ actionable.
 
 ## III.2c The comparison that proves the fork
 
-Part II's §11 compares our coverage method with the released Alpaca, PersonaHub
+Part II's §II.5 compares RAC-coverage with the released Alpaca, PersonaHub
 and WizardLM corpora under a controlled protocol (same 175 human seeds, same
 generator, budget matched in generator calls, evaluation on a reference half
-nothing ever read). Ours places first of twelve — 0.4441 against Alpaca's
+nothing ever read). RAC-coverage places first of twelve — 0.4441 against Alpaca's
 0.3722, at one-twentieth of Alpaca's budget, with the field's highest
 precision. Two rows of its ablation matter to this joint paper beyond the
 ranking.
@@ -277,9 +277,9 @@ number; there are two objectives.
 Both are limited by the same thing, and neither optimizer can fix it. Coverage of
 a reachable manifold and packing within one are both bounded by the reachable
 manifold's dimension, which is set by how far the prompt can move the generator —
-Part I §3. Both are vulnerable to the same failure, in which a novelty-seeking
-score is satisfied by off-manifold output, and both need the same typicality
-constraint to be well-posed. And both are measured through an embedder whose
+Part I §I.3. Both need the same typicality constraint to be well-posed, since a
+novelty-seeking score can otherwise be satisfied by output that has left the
+manifold altogether. And both are measured through an embedder whose
 geometry can invert the result: we report a cross-corpus coverage comparison in
 which our worst corpus by every other measure — 19.8% exact duplicates — scores
 the **highest** coverage, 50× a published corpus's, because at an ε in the 2nd
