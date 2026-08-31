@@ -12,7 +12,17 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 HERE = Path(__file__).resolve().parent
 
-SHARED, SHARED_E = "#e9eff7", "#33507a"
+SHARED, SHARED_E = "#e9eff7", "#33507a"        # spine arrows and the recursion rail
+# one colour per shared step, so the text can name a step by its colour
+STEP = [
+    ("#ede7f6", "#5b3fa0"),   # 1 elicit        violet
+    ("#e0ecfa", "#2f5d9e"),   # 2 score         blue
+    ("#e0f1f5", "#1f6f7a"),   # 3 spec          teal
+    ("#fdf3dd", "#8a6a12"),   # 4 gate          amber
+    ("#fae5e5", "#9e2a2b"),   # 5 select        crimson
+    ("#efefef", "#5a5a5a"),   # 6 append        grey
+    ("#fbe6f0", "#9c2f66"),   # 7 mine/refine   magenta
+]
 MAXMIN, MAXMIN_E = "#fdeae1", "#b9502f"
 COVER,  COVER_E  = "#e4f1e9", "#26714b"
 BAND,   BAND_E   = "#f4f4f4", "#8a8a8a"
@@ -79,6 +89,8 @@ def main():
             "\"What do these have in common?\" → ledger.\nAn axis with nothing transverse left is\nsplit into conditional sub-axes",
             SHARED, SHARED_E),
     ]
+    for b, (fc, ec) in zip(spine, STEP):
+        b.fc, b.ec = fc, ec
     y = 0.0
     for b in reversed(spine):          # lay out bottom-up, then read top-down
         b.y = y

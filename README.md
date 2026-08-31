@@ -5,9 +5,11 @@ Two objectives share one budget of *n* generations and pull in opposite directio
 - **Coverage** — *in n turns, reach as much of the space as possible.*
 - **Max-min** — *in n turns, make no two items resemble each other.*
 
-They are not two phrasings of one goal. Coverage will happily place two items near
+They pull in different directions. Coverage will happily place two items near
 each other if between them they reach a large region; max-min will happily leave
-most of the space empty as long as nothing collides. We measure both on the same
+most of the space empty as long as nothing collides. One method, **Recursive Axis
+Conditioning** (RAC), serves both, and the objective enters it at only two points:
+how a candidate axis is scored, and how one of K candidates is selected. We measure both on the same
 generator, the same embedders and the same budget, and we find they disagree
 sharply: **greedy k-center wins min-gap and finishes last on coverage** — a sixth
 of random — while the highest-Vendi selectors are among the worst covering ones.
@@ -19,8 +21,8 @@ The site: **https://thehalleyyoung.github.io/coverage-max-min/**
 ## What's here
 
 ```
-paper/      the arXiv submission (LaTeX source, PDF, and Markdown)
-site/       the GitHub Pages site — both papers, figures embedded
+paper/      the paper: assembler, Markdown, LaTeX source and PDF
+index.html  the GitHub Pages site — the paper with figures embedded
 code/       every script needed to reproduce the numbers
 figures/    generated figures
 data/       result JSONs, provenance registry, mined ledgers
