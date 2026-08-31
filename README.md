@@ -1,7 +1,5 @@
 # Recursive Axis Conditioning for Diverse Synthetic Data Generation
 
-*Eliciting latent axes from the generator itself, and pointing one loop at the measure that matters*
-
 A synthetic corpus is judged by a measure, and the measure is chosen before the corpus
 is. Duplicate rate, distinct-*n*, mean-centered Vendi, nearest-neighbour distance and
 coverage against a reference disagree often enough that a corpus one calls healthy

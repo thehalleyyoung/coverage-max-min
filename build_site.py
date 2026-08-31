@@ -5,8 +5,6 @@ HERE = pathlib.Path(__file__).resolve().parent
 LAND = """
 # Recursive Axis Conditioning for Diverse Synthetic Data Generation
 
-**Eliciting latent axes from the generator itself, and pointing one loop at the measure that matters**
-
 ---
 """
 
