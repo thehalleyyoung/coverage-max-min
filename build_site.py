@@ -3,9 +3,9 @@ import base64, pathlib, re, subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
 LAND = """
-# Improving Diversity Metrics in Synthetic Data Generation
+# Recursive Axis Conditioning for Diverse Synthetic Data Generation
 
-**One conditioning method, the metrics it can be pointed at, and the conditional dimension that limits all of them**
+**Eliciting latent axes from the generator itself, and pointing one loop at the measure that matters**
 
 ---
 """
@@ -117,7 +117,7 @@ def main():
     (HERE / "index.html").write_text(
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-        '<title>Improving Diversity Metrics in Synthetic Data Generation</title>\n'
+        '<title>Recursive Axis Conditioning for Diverse Synthetic Data Generation</title>\n'
         f'<style>{css}{NAV_CSS}</style>\n</head>\n<body>\n'
         f'<div class="layout">\n{toc}\n<main>\n{banner}\n{body}\n</main>\n</div>\n'
         f'{NAV_JS}</body>\n</html>\n')

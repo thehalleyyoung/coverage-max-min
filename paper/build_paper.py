@@ -20,9 +20,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 SRC = REPO.parent / "research" / "infinite_horizon_diversity"
 
-TITLE = "Improving Diversity Metrics in Synthetic Data Generation"
-SUBTITLE = ("One conditioning method, the metrics it can be pointed at, and "
-            "the conditional dimension that limits all of them")
+TITLE = "Recursive Axis Conditioning for Diverse Synthetic Data Generation"
+SUBTITLE = ("Eliciting latent axes from the generator itself, and pointing "
+            "one loop at the measure that matters")
 
 PREAMBLE = r"""
 % ICLR-style page: 5.5in text block on US letter, Times, 10pt

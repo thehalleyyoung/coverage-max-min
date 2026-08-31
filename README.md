@@ -1,6 +1,6 @@
-# Improving Diversity Metrics in Synthetic Data Generation
+# Recursive Axis Conditioning for Diverse Synthetic Data Generation
 
-*One conditioning method, the metrics it can be pointed at, and the conditional dimension that limits all of them*
+*Eliciting latent axes from the generator itself, and pointing one loop at the measure that matters*
 
 A synthetic corpus is judged by a measure, and the measure is chosen before the corpus
 is. Duplicate rate, distinct-*n*, mean-centered Vendi, nearest-neighbour distance and
