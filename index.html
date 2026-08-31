@@ -35,9 +35,67 @@ hr{border:none;border-top:1px solid var(--rule);margin:2.4rem 0}
 .banner{background:var(--code);border:1px solid var(--rule);border-radius:8px;
 padding:1rem 1.2rem;margin:1.5rem 0 2rem}
 .banner a{font-weight:600}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
 </style>
 </head>
 <body>
+<div class="layout">
+<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol><li class=""><a class="sec" href="#1-results">1. Results</a></li><li class=""><a class="sec" href="#2-introduction">2. Introduction</a></li><li class="sub"><a class="" href="#21-the-oracle-asymmetry">2.1 The oracle asymmetry</a></li><li class="sub"><a class="" href="#22-contributions">2.2 Contributions</a></li><li class=""><a class="sec" href="#3-related-work">3. Related work</a></li><li class=""><a class="sec" href="#4-two-objectives-and-how-they-relate">4. Two objectives, and how they relate</a></li><li class="sub"><a class="" href="#41-the-packing-objective">4.1 The packing objective</a></li><li class="sub"><a class="" href="#42-the-covering-objective">4.2 The covering objective</a></li><li class="sub"><a class="" href="#43-where-they-coincide">4.3 Where they coincide</a></li><li class="sub"><a class="" href="#44-coverage-is-not-packing">4.4 Coverage is not packing</a></li><li class="sub"><a class="" href="#45-where-they-part-measured">4.5 Where they part, measured</a></li><li class="sub"><a class="" href="#46-why-the-scoring-rule-has-to-fork">4.6 Why the scoring rule has to fork</a></li><li class="sub"><a class="" href="#47-the-comparison-that-shows-the-fork">4.7 The comparison that shows the fork</a></li><li class="sub"><a class="" href="#48-what-both-objectives-share">4.8 What both objectives share</a></li><li class="sub"><a class="" href="#49-practical-guidance">4.9 Practical guidance</a></li><li class=""><a class="sec" href="#5-theory-what-limits-both">5. Theory: what limits both</a></li><li class="sub"><a class="" href="#51-saturation-at-a-fixed-prompt">5.1 Saturation at a fixed prompt</a></li><li class="sub"><a class="" href="#52-the-slice-deficit">5.2 The slice deficit</a></li><li class="sub"><a class="" href="#53-transversality-which-prompt-motion-helps">5.3 Transversality: which prompt motion helps</a></li><li class="sub"><a class="" href="#54-breadth-versus-depth">5.4 Breadth versus depth</a></li><li class="sub"><a class="" href="#55-what-this-means-for-the-packing-objective">5.5 What this means for the packing objective</a></li><li class="sub"><a class="" href="#56-the-coverage-functional-is-monotone-submodular">5.6 The coverage functional is monotone submodular</a></li><li class="sub"><a class="" href="#57-greedy-and-its-guarantee">5.7 Greedy and its guarantee</a></li><li class="sub"><a class="" href="#58-sequential-generation-is-streaming-greedy">5.8 Sequential generation is streaming greedy</a></li><li class="sub"><a class="" href="#59-estimation-error-of-the-monte-carlo-coverage">5.9 Estimation error of the Monte-Carlo coverage</a></li><li class="sub"><a class="" href="#510-allocation-under-a-known-budget">5.10 Allocation under a known budget</a></li><li class="sub"><a class="" href="#511-numerical-verification">5.11 Numerical verification</a></li><li class=""><a class="sec" href="#6-method-recursive-axis-conditioning">6. Method: Recursive Axis Conditioning</a></li><li class="sub"><a class="" href="#61-the-stack">6.1 The stack</a></li><li class="sub"><a class="" href="#62-scoring-candidate-axes">6.2 Scoring candidate axes</a></li><li class="sub"><a class="" href="#63-the-four-factors">6.3 The four factors</a></li><li class="sub"><a class="" href="#64-choosing-values-and-recursing">6.4 Choosing values, and recursing</a></li><li class="sub"><a class="" href="#65-eliciting-and-refining-latent-behaviors">6.5 Eliciting and refining latent behaviors</a></li><li class="sub"><a class="" href="#66-the-covering-instantiation">6.6 The covering instantiation</a></li><li class="sub"><a class="" href="#67-why-orthogonalize-not-randomize">6.7 Why "orthogonalize", not "randomize"</a></li><li class=""><a class="sec" href="#7-experiments">7. Experiments</a></li><li class="sub"><a class="" href="#71-domains">7.1 Domains</a></li><li class="sub"><a class="" href="#72-methods-compared">7.2 Methods compared</a></li><li class="sub"><a class="" href="#73-duplication-under-repeated-sampling">7.3 Duplication under repeated sampling</a></li><li class="sub"><a class="" href="#74-literal-and-latent-diversity-move-in-opposite-directions">7.4 Literal and latent diversity move in opposite directions</a></li><li class="sub"><a class="" href="#75-competitive-comparison-at-matched-n">7.5 Competitive comparison at matched n</a></li><li class="sub"><a class="" href="#76-head-to-head-against-released-instruction-corpora">7.6 Head-to-head against released instruction corpora</a></li><li class="sub"><a class="" href="#77-protocol">7.7 Protocol</a></li><li class="sub"><a class="" href="#78-the-configuration">7.8 The configuration</a></li><li class="sub"><a class="" href="#79-results">7.9 Results</a></li><li class="sub"><a class="" href="#710-notes">7.10 Notes</a></li><li class="sub"><a class="" href="#711-a-live-coverage-pilot">7.11 A live coverage pilot</a></li><li class="sub"><a class="" href="#712-setup-and-what-it-cost">7.12 Setup and what it cost</a></li><li class="sub"><a class="" href="#713-literal-versus-latent-diversity-and-a-kernel-caveat">7.13 Literal versus latent diversity, and a kernel caveat</a></li><li class="sub"><a class="" href="#715-attractor-mining-works-and-is-legible">7.15 Attractor mining works, and is legible</a></li><li class="sub"><a class="" href="#716-the-exam-bank-a-judged-enemy-item-radius">7.16 The exam bank: a judged enemy-item radius</a></li><li class="sub"><a class="" href="#717-head-to-head-against-a-human-written-exam-bank">7.17 Head-to-head against a human-written exam bank</a></li><li class="sub"><a class="" href="#718-which-metrics-are-independent-of-the-objective">7.18 Which metrics are independent of the objective</a></li><li class="sub"><a class="" href="#721-scale-and-cost">7.21 Scale and cost</a></li><li class=""><a class="sec" href="#8-limitations">8. Limitations</a></li><li class=""><a class="sec" href="#9-conclusion">9. Conclusion</a></li></ol></nav>
 <main>
 <div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; <a href="paper/paper.tex">LaTeX</a> &middot; <a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data</a></div>
 <h1
@@ -2973,5 +3031,29 @@ denominator, and count your duplicates before computing anything
 else.</p>
 
 </main>
+</div>
+
+<script>
+(function () {
+  var links = [].slice.call(document.querySelectorAll('.toc a'));
+  var targets = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i] && targets[i].getBoundingClientRect().top <= 90) best = i;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+  var tick = false;
+  addEventListener('scroll', function () {
+    if (tick) return;
+    tick = true;
+    requestAnimationFrame(function () { mark(); tick = false; });
+  }, {passive: true});
+  mark();
+})();
+</script>
 </body>
 </html>

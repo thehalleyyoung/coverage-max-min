@@ -10,6 +10,79 @@ LAND = """
 ---
 """
 
+
+NAV_CSS = """
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
+"""
+
+
+NAV_JS = """
+<script>
+(function () {
+  var links = [].slice.call(document.querySelectorAll('.toc a'));
+  var targets = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+  function mark() {
+    var best = 0;
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i] && targets[i].getBoundingClientRect().top <= 90) best = i;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+  }
+  var tick = false;
+  addEventListener('scroll', function () {
+    if (tick) return;
+    tick = true;
+    requestAnimationFrame(function () { mark(); tick = false; });
+  }, {passive: true});
+  mark();
+})();
+</script>
+"""
+
+
+def build_toc(body: str) -> str:
+    """A contents rail from the rendered headings: sections, and their parts."""
+    items = re.findall(r'<h([23]) id="([^"]+)"[^>]*>(.*?)</h[23]>', body, re.S)
+    rows = []
+    for level, hid, raw in items:
+        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", raw)).strip()
+        if text.lower() == "abstract":
+            continue
+        cls = "sec" if level == "2" else ""
+        li = "" if level == "2" else "sub"
+        rows.append(f'<li class="{li}"><a class="{cls}" href="#{hid}">{text}</a></li>')
+    return ('<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol>'
+            + "".join(rows) + "</ol></nav>")
+
+
 def main():
     css = re.search(r"<style>(.*?)</style>", (HERE / "index.html").read_text(), re.S).group(1)
     tmp = HERE / ".site.md"
@@ -33,11 +106,14 @@ def main():
     banner = ('<div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; '
               '<a href="paper/paper.tex">LaTeX</a> &middot; '
               '<a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data</a></div>')
+    toc = build_toc(body)
     (HERE / "index.html").write_text(
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
         '<title>Coverage and Max-Min Diversity in Synthetic Data Generation</title>\n'
-        f'<style>{css}</style>\n</head>\n<body>\n<main>\n{banner}\n{body}\n</main>\n</body>\n</html>\n')
+        f'<style>{css}{NAV_CSS}</style>\n</head>\n<body>\n'
+        f'<div class="layout">\n{toc}\n<main>\n{banner}\n{body}\n</main>\n</div>\n'
+        f'{NAV_JS}</body>\n</html>\n')
     tmp.unlink()
     n = (HERE / "index.html").read_text().count("data:image/png;base64,")
     print(f"index.html written ({n} figures embedded)")
