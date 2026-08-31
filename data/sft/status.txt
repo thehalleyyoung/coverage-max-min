@@ -1,4 +1,4 @@
-=== 2026-08-31T17:53:29Z ===
+=== 2026-08-31T17:58:29Z ===
 ==============================================================================
 SFT EXPERIMENT BOARD    base model, no SFT: 0.1419
 ==============================================================================
@@ -6,13 +6,15 @@ SFT EXPERIMENT BOARD    base model, no SFT: 0.1419
 LEARNING-RATE SWEEP on a baseline arm  (0/8)
    (no results yet)
 
-CROSS-CORPUS (as generated, markdown intact)  (6 runs)
+CROSS-CORPUS (as generated, markdown intact)  (8 runs)
    arm                   rougeL      ±    sem  len   vs base                        
    ours_keepall          0.1679 0.0000    nan   83   +0.0260  ███████████···········  ours
    fs_self_instruct      0.1612 0.0000    nan   65   +0.0193  █████████·············
    ours_v3               0.1590 0.0000    nan   80   +0.0171  █████████·············  ours
+   alpaca_tokmatch       0.1568 0.0000    nan   92   +0.0149  ████████··············
    ours_v4               0.1554 0.0000    nan   86   +0.0135  ████████··············  ours
    fs_evol_instruct      0.1416 0.0000    nan   60   -0.0003  █████·················
+   personahub            0.1398 0.0000    nan  104   -0.0021  ████··················
    fs_persona_hub        0.1312 0.0000    nan   78   -0.0107  ██····················
 
 CROSS-CORPUS (prose-normalized)  (0 runs)
