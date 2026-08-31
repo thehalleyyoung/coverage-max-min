@@ -107,8 +107,11 @@ field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC'
 
 The score is worth what it buys, and three measurements say what that is.
 **Four hundred RAC items cover more of a held-out human reference than all
-52,002 items of Alpaca** — a ratio of 130 to 1 — and extending the policy to
-13,978 items reaches 2.2× Alpaca's coverage from 27% of the items. At matched
+52,002 items of Alpaca** — a ratio of 130 to 1 — and a completed 24,000-call
+run reaches 0.8501, 2.3× Alpaca's coverage, for $4.64. That run also shows
+the ceiling arriving: marginal coverage per thousand items collapses fortyfold
+and the generator's duplicate rate climbs to 0.544, so more than half the
+budget ends up buying text it has already produced. At matched
 pool size, **7.3× as many held-out queries have a usable nearest neighbour** as
 under plain conditioning. And prompting a base model with retrieved
 demonstrations, the advantage *grows with every slot retrieved* — 1.04×, 1.17×,

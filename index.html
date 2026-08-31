@@ -455,6 +455,34 @@ h2,h3{scroll-margin-top:1.5rem}
   .toc li.sub{display:none}
 }
 @media print{.toc{display:none}.layout{display:block}}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
 </style>
 </head>
 <body>
@@ -479,10 +507,13 @@ precision in the field (0.973). PersonaHub (50k items) and WizardLM
 <p>The score is worth what it buys, and three measurements say what that
 is. <strong>Four hundred RAC items cover more of a held-out human
 reference than all 52,002 items of Alpaca</strong> — a ratio of 130 to 1
-— and extending the policy to 13,978 items reaches 2.2× Alpaca's
-coverage from 27% of the items. At matched pool size, <strong>7.3× as
-many held-out queries have a usable nearest neighbour</strong> as under
-plain conditioning. And prompting a base model with retrieved
+— and a completed 24,000-call run reaches 0.8501, 2.3× Alpaca's
+coverage, for $4.64. That run also shows the ceiling arriving: marginal
+coverage per thousand items collapses fortyfold and the generator's
+duplicate rate climbs to 0.544, so more than half the budget ends up
+buying text it has already produced. At matched pool size, <strong>7.3×
+as many held-out queries have a usable nearest neighbour</strong> as
+under plain conditioning. And prompting a base model with retrieved
 demonstrations, the advantage <em>grows with every slot retrieved</em> —
 1.04×, 1.17×, 1.48×, 2.38× over plain conditioning at k = 1, 2, 4, 8 —
 until at eight demonstrations the corpus leads the field outright,
@@ -2887,6 +2918,7 @@ generator calls and measuring coverage as the corpus grows:</p>
 <th></th>
 <th>RAC items</th>
 <th>coverage AUC</th>
+<th>Δ per 1,000</th>
 </tr>
 </thead>
 <tbody>
@@ -2896,6 +2928,7 @@ generator calls and measuring coverage as the corpus grows:</p>
 <td></td>
 <td>1,000</td>
 <td>0.5394</td>
+<td>—</td>
 </tr>
 <tr>
 <td>250</td>
@@ -2903,6 +2936,7 @@ generator calls and measuring coverage as the corpus grows:</p>
 <td></td>
 <td>2,000</td>
 <td>0.6323</td>
+<td>+0.093</td>
 </tr>
 <tr>
 <td><strong>400</strong></td>
@@ -2910,6 +2944,7 @@ generator calls and measuring coverage as the corpus grows:</p>
 <td></td>
 <td>5,000</td>
 <td>0.7552</td>
+<td>+0.026</td>
 </tr>
 <tr>
 <td>500</td>
@@ -2917,23 +2952,80 @@ generator calls and measuring coverage as the corpus grows:</p>
 <td></td>
 <td>10,000</td>
 <td>0.8107</td>
+<td>+0.008</td>
 </tr>
 <tr>
 <td>750</td>
 <td>0.5014</td>
 <td></td>
-<td>13,978</td>
-<td>0.8256</td>
+<td>23,993</td>
+<td><strong>0.8501</strong></td>
+<td>+0.002</td>
 </tr>
 </tbody>
 </table></div>
 <p>Alpaca's full 52,002 items score 0.3722. <strong>Four hundred items
 of this corpus cover more of the reference than all of Alpaca</strong>,
-a ratio of 130 to 1, and at 13,978 items the corpus reaches 0.8256 —
-2.2× Alpaca's coverage from 27% of the items. The per-thousand-item gain
-decays smoothly from 0.539 to 0.059, which is the reachable support
-asserting itself exactly as §5 predicts: the policy keeps finding new
-territory and keeps paying more for each parcel.</p>
+a ratio of 130 to 1. The completed run of 24,000 generator calls reaches
+<strong>0.8501</strong>, 2.3× Alpaca's coverage, for $4.64 and 130
+minutes.</p>
+<p>The right-hand column is the more consequential half. Each additional
+thousand items buys 0.093, then 0.026, then 0.008, then 0.002: a
+fortyfold collapse in marginal return across one run, and per thousand
+<em>calls</em> the budget-matched table shows efficiency falling from
+0.275 to 0.035 over the same span.</p>
+<p><strong>What exhaustion looks like from outside.</strong> This policy
+discards nothing, so every repetition the generator emits is recorded,
+and the duplicate rate reads out how much it has left to say:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>generator calls</th>
+<th>distinct items</th>
+<th>duplicate rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2,400</td>
+<td>1,840</td>
+<td>0.233</td>
+</tr>
+<tr>
+<td>5,000</td>
+<td>3,568</td>
+<td>0.286</td>
+</tr>
+<tr>
+<td>10,000</td>
+<td>6,061</td>
+<td>0.394</td>
+</tr>
+<tr>
+<td>15,000</td>
+<td>8,012</td>
+<td>0.466</td>
+</tr>
+<tr>
+<td>20,000</td>
+<td>9,716</td>
+<td>0.514</td>
+</tr>
+<tr>
+<td>23,993</td>
+<td>10,935</td>
+<td><strong>0.544</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Past roughly five thousand calls the budget goes increasingly on text
+already produced, and by the end more than half of it does. The 0.8501
+corpus rests on 10,935 distinct instructions bought with 13,058 wasted
+calls. This is the conditional-dimension result of §5 measured on the
+generation process rather than inferred from a coverage curve: the
+ceiling arrives because a fixed conditional support runs out of distinct
+things to emit, and refinement of the conditioning is the only move
+shown to raise it.</p>
 <p><strong>2. Seven times as many queries have a usable
 neighbour.</strong> Take each held-out instruction's nearest neighbour
 in a 950-item pool from each corpus:</p>

@@ -169,17 +169,21 @@ selective arm.
 The score is worth what it buys, and three measurements say what that
 is. \textbf{Four hundred RAC items cover more of a held-out human
 reference than all 52,002 items of Alpaca} --- a ratio of 130 to 1 ---
-and extending the policy to 13,978 items reaches 2.2×
-Alpaca\textquotesingle s coverage from 27\% of the items. At matched
-pool size, \textbf{7.3× as many held-out queries have a usable nearest
-neighbour} as under plain conditioning. And prompting a base model with
-retrieved demonstrations, the advantage \emph{grows with every slot
-retrieved} --- 1.04×, 1.17×, 1.48×, 2.38× over plain conditioning at k =
-1, 2, 4, 8 --- until at eight demonstrations the corpus leads the field
-outright, Alpaca included, while low-coverage pools collapse to a third
-of their one-shot score. A clustered pool runs out of distinct relevant
-demonstrations; a covering one does not. Coverage predicts retrieval
-quality at \emph{r} = 0.97 and in-context score at \emph{r} = 0.82.
+and a completed 24,000-call run reaches 0.8501, 2.3×
+Alpaca\textquotesingle s coverage, for \$4.64. That run also shows the
+ceiling arriving: marginal coverage per thousand items collapses
+fortyfold and the generator\textquotesingle s duplicate rate climbs to
+0.544, so more than half the budget ends up buying text it has already
+produced. At matched pool size, \textbf{7.3× as many held-out queries
+have a usable nearest neighbour} as under plain conditioning. And
+prompting a base model with retrieved demonstrations, the advantage
+\emph{grows with every slot retrieved} --- 1.04×, 1.17×, 1.48×, 2.38×
+over plain conditioning at k = 1, 2, 4, 8 --- until at eight
+demonstrations the corpus leads the field outright, Alpaca included,
+while low-coverage pools collapse to a third of their one-shot score. A
+clustered pool runs out of distinct relevant demonstrations; a covering
+one does not. Coverage predicts retrieval quality at \emph{r} = 0.97 and
+in-context score at \emph{r} = 0.82.
 
 Two limits deserve the same clarity. Fine-tuning does not follow
 (\emph{r} = −0.17): the retrieval-aimed corpus yields the best model on
@@ -2379,28 +2383,60 @@ Extending the retrieval-aimed policy to 24,000 generator calls and
 measuring coverage as the corpus grows:
 
 {\footnotesize
-\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.4174\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1990\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.0514\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1542\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1780\linewidth-2\tabcolsep\relax}@{}}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.3504\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1670\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.0431\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1294\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1670\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1430\linewidth-2\tabcolsep\relax}@{}}
 \toprule\noalign{}
-RAC items & coverage AUC & & RAC items & coverage AUC \\
+RAC items & coverage AUC & & RAC items & coverage AUC & Δ per 1,000 \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-100 & 0.1878 & & 1,000 & 0.5394 \\
-250 & 0.3023 & & 2,000 & 0.6323 \\
-\textbf{400} & \textbf{0.3938} & & 5,000 & 0.7552 \\
-500 & 0.4286 & & 10,000 & 0.8107 \\
-750 & 0.5014 & & 13,978 & 0.8256 \\
+100 & 0.1878 & & 1,000 & 0.5394 & --- \\
+250 & 0.3023 & & 2,000 & 0.6323 & +0.093 \\
+\textbf{400} & \textbf{0.3938} & & 5,000 & 0.7552 & +0.026 \\
+500 & 0.4286 & & 10,000 & 0.8107 & +0.008 \\
+750 & 0.5014 & & 23,993 & \textbf{0.8501} & +0.002 \\
 \end{longtable}}
 
 Alpaca\textquotesingle s full 52,002 items score 0.3722. \textbf{Four
 hundred items of this corpus cover more of the reference than all of
-Alpaca}, a ratio of 130 to 1, and at 13,978 items the corpus reaches
-0.8256 --- 2.2× Alpaca\textquotesingle s coverage from 27\% of the
-items. The per-thousand-item gain decays smoothly from 0.539 to 0.059,
-which is the reachable support asserting itself exactly as §5 predicts:
-the policy keeps finding new territory and keeps paying more for each
-parcel.
+Alpaca}, a ratio of 130 to 1. The completed run of 24,000 generator
+calls reaches \textbf{0.8501}, 2.3× Alpaca\textquotesingle s coverage,
+for \$4.64 and 130 minutes.
+
+The right-hand column is the more consequential half. Each additional
+thousand items buys 0.093, then 0.026, then 0.008, then 0.002: a
+fortyfold collapse in marginal return across one run, and per thousand
+\emph{calls} the budget-matched table shows efficiency falling from
+0.275 to 0.035 over the same span.
+
+\textbf{What exhaustion looks like from outside.} This policy discards
+nothing, so every repetition the generator emits is recorded, and the
+duplicate rate reads out how much it has left to say:
+
+{\footnotesize
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.5243\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2379\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2379\linewidth-2\tabcolsep\relax}@{}}
+\toprule\noalign{}
+generator calls & distinct items & duplicate rate \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+2,400 & 1,840 & 0.233 \\
+5,000 & 3,568 & 0.286 \\
+10,000 & 6,061 & 0.394 \\
+15,000 & 8,012 & 0.466 \\
+20,000 & 9,716 & 0.514 \\
+23,993 & 10,935 & \textbf{0.544} \\
+\end{longtable}}
+
+Past roughly five thousand calls the budget goes increasingly on text
+already produced, and by the end more than half of it does. The 0.8501
+corpus rests on 10,935 distinct instructions bought with 13,058 wasted
+calls. This is the conditional-dimension result of §5 measured on the
+generation process rather than inferred from a coverage curve: the
+ceiling arrives because a fixed conditional support runs out of distinct
+things to emit, and refinement of the conditioning is the only move
+shown to raise it.
 
 \textbf{2. Seven times as many queries have a usable neighbour.} Take
 each held-out instruction\textquotesingle s nearest neighbour in a

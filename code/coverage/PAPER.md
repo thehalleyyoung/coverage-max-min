@@ -463,20 +463,44 @@ against held-out human instructions no corpus was aimed at.
 retrieval-aimed policy to 24,000 generator calls and measuring coverage as the
 corpus grows:
 
-| RAC items | coverage AUC | | RAC items | coverage AUC |
-|---|---|---|---|---|
-| 100 | 0.1878 | | 1,000 | 0.5394 |
-| 250 | 0.3023 | | 2,000 | 0.6323 |
-| **400** | **0.3938** | | 5,000 | 0.7552 |
-| 500 | 0.4286 | | 10,000 | 0.8107 |
-| 750 | 0.5014 | | 13,978 | 0.8256 |
+| RAC items | coverage AUC | | RAC items | coverage AUC | Δ per 1,000 |
+|---|---|---|---|---|---|
+| 100 | 0.1878 | | 1,000 | 0.5394 | — |
+| 250 | 0.3023 | | 2,000 | 0.6323 | +0.093 |
+| **400** | **0.3938** | | 5,000 | 0.7552 | +0.026 |
+| 500 | 0.4286 | | 10,000 | 0.8107 | +0.008 |
+| 750 | 0.5014 | | 23,993 | **0.8501** | +0.002 |
 
 Alpaca's full 52,002 items score 0.3722. **Four hundred items of this corpus
-cover more of the reference than all of Alpaca**, a ratio of 130 to 1, and at
-13,978 items the corpus reaches 0.8256 — 2.2× Alpaca's coverage from 27% of the
-items. The per-thousand-item gain decays smoothly from 0.539 to 0.059, which is
-the reachable support asserting itself exactly as §3 predicts: the policy keeps
-finding new territory and keeps paying more for each parcel.
+cover more of the reference than all of Alpaca**, a ratio of 130 to 1. The
+completed run of 24,000 generator calls reaches **0.8501**, 2.3× Alpaca's
+coverage, for $4.64 and 130 minutes.
+
+The right-hand column is the more consequential half. Each additional thousand
+items buys 0.093, then 0.026, then 0.008, then 0.002: a fortyfold collapse in
+marginal return across one run, and per thousand *calls* the budget-matched
+table shows efficiency falling from 0.275 to 0.035 over the same span.
+
+**What exhaustion looks like from outside.** This policy discards nothing, so
+every repetition the generator emits is recorded, and the duplicate rate reads
+out how much it has left to say:
+
+| generator calls | distinct items | duplicate rate |
+|---|---|---|
+| 2,400 | 1,840 | 0.233 |
+| 5,000 | 3,568 | 0.286 |
+| 10,000 | 6,061 | 0.394 |
+| 15,000 | 8,012 | 0.466 |
+| 20,000 | 9,716 | 0.514 |
+| 23,993 | 10,935 | **0.544** |
+
+Past roughly five thousand calls the budget goes increasingly on text already
+produced, and by the end more than half of it does. The 0.8501 corpus rests on
+10,935 distinct instructions bought with 13,058 wasted calls. This is the
+conditional-dimension result of §3 measured on the generation process rather
+than inferred from a coverage curve: the ceiling arrives because a fixed
+conditional support runs out of distinct things to emit, and refinement of the
+conditioning is the only move shown to raise it.
 
 **2. Seven times as many queries have a usable neighbour.** Take each held-out
 instruction's nearest neighbour in a 950-item pool from each corpus:
