@@ -41,17 +41,11 @@ padding:1rem 1.2rem;margin:1.5rem 0 2rem}
 <main>
 <div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; <a href="paper/paper.tex">LaTeX</a> &middot; <a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data</a></div>
 <h1
-id="coverage-and-max-min-diversity-in-synthetic-data-generation-the-numbers">Coverage
-and max-min diversity in synthetic data generation: the numbers</h1>
-<p>~50,000 real generations across instructions, exam items, image
-prompts and music prompts; hundreds rendered to actual images and audio;
-diversity measured at the literal, latent, and rendered-artifact levels.
-The findings that change practice:</p>
-<h3 id="coverage-of-human-written-instructions-twelve-corpora">Coverage
-of human-written instructions, twelve corpora</h3>
+id="coverage-and-max-min-diversity-in-synthetic-data-generation">Coverage
+and max-min diversity in synthetic data generation</h1>
 <p>Scale-free coverage (Naeem et al. estimator, reference-side k-NN
 radii, AUC over k) of a held-out human-written reference, matched
-evaluated-n:</p>
+evaluated-n, twelve corpora:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -98,42 +92,12 @@ evaluated-n:</p>
 </tr>
 </tbody>
 </table></div>
-<p>First place at one-twentieth of Alpaca's generation budget, highest
-precision in the field (0.973). The method: aim conditioning at
-uncovered reference mass by retrieving owned text; let each target's
-local density choose imitate-vs-diversify; balance axis-level usage;
-keep every render. In the same ablation, selection and orthogonalized
-conditioning each score below keeping everything — the packing tools
-reduce coverage — and the winning corpus has the lowest internal Vendi
-of its cohort: coverage and internal diversity are different
-objectives.</p>
-<h3 id="duplication">Duplication</h3>
-<p>Naive repeated prompting for psychometric items: <strong>72.3%
-byte-identical duplicates</strong> (one item ×1,637 in 5,878).
-Temperature 1.6: 61.6%. Latent conditioning: <strong>0.2%</strong>. The
-identical pipeline on image prompts: 0.0%. Few-shot instruction
-generation: <strong>80.2%</strong> of items carry a near-twin at
-&lt;0.15 cosine (Alpaca: 0.9%; the human reference: 1.3%).</p>
-<h3 id="proxy-gaps">Proxy gaps</h3>
-<p>Text-embedding similarity predicts rendered-image similarity at
-<strong><em>r</em> = 0.155</strong>. For music, pre-render steerability
-is embedder-dependent: MuQ-MuLan aligns prompt-space to track-space at
-<strong>0.68/0.47</strong> (naive/conditioned); CLAP-fused at 0.50/0.21;
-music-CLAP at 0.18/0.06. Cross-embedder agreement spans 0.22–0.84 — an
-audio-diversity number without its embedder named is not a number.</p>
-<h3 id="the-two-objectives">The two objectives</h3>
-<p>Same machinery, same budget, objectives swapped: the max-min arm wins
-min-gap (0.248 vs 0.210) and loses reference coverage (0.175 vs 0.206);
-the coverage arm the reverse. Greedy k-center wins min-gap in both text
-domains and comes last on coverage at a sixth of random. Structural
-(literal-space) repulsion added to image steering halves palette twins
-(0.78 → 0.35) and lifts reference coverage 21%.</p>
-<p>Every number is tagged with the procedure that produced it
-(<code>data/maxmin/provenance.json</code>). The full paper follows.</p>
+<p>First place at one-twentieth of Alpaca's generation budget, with the
+highest precision in the field (0.973).</p>
 <hr />
 <hr />
 <h1
-id="coverage-and-max-min-diversity-in-synthetic-data-generation">Coverage
+id="coverage-and-max-min-diversity-in-synthetic-data-generation-1">Coverage
 and Max-Min Diversity in Synthetic Data Generation</h1>
 <p><strong>Two objectives, one budget, and the conditional dimension
 that limits both</strong></p>
