@@ -95,50 +95,63 @@ PREAMBLE = r"""
 """
 
 ABSTRACT = """
-A synthetic corpus is built to be good at something measurable, and the measure
-is chosen before the corpus is. **Coverage** asks the corpus to reach as much of
-the space as possible in *n* generator calls. **Max-min** asks that no two of the
-*n* items resemble each other. Duplicate rate, mean-centered Vendi, precision
-against a reference and worst-case nearest-neighbour distance are all in use, and
-a corpus that scores well on one can score badly on another. This paper is about
-how to build a generator loop that improves such a measure, and about how much of
-that loop has to change when the measure does.
+**Recursive Axis Conditioning** (RAC) generates synthetic corpora that beat the
+released state of the art at a twentieth of its budget. Against Alpaca,
+PersonaHub and WizardLM Evol-Instruct, scored on coverage of a held-out
+human-written reference that no corpus was aimed at, RAC places **first of twelve
+corpora — 0.4441 against Alpaca's 0.3722** at matched evaluated *n*, from 2,400
+generator calls against Alpaca's 52,000, and with the highest precision in the
+field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC's
+304-item selective arm.
 
-The method is **Recursive Axis Conditioning** (RAC). We assume an embedding oracle
-and, critically, **no inverse**: we can compute exactly where the next item ought
-to land and have no way to decode that point into text. Every architectural choice
-follows. RAC asks the generator to name the axes along which its own outputs can
-differ, ranks those axes, selects their most-different values, and splits an axis
-with nothing new left to offer into finer sub-axes that apply only inside the
-region that exhausted it. We study two measures in depth, coverage and max-min,
-and find that the loop is shared and the measure enters at two points: how a
-candidate axis is scored, and how one of K candidates is selected. Those two
-points are enough to reverse the ranking of methods, so a measure has to be named
-before a diversity number means anything.
+In automatic item generation for psychometrics the margin is larger and the
+result is new. Asked a reasonable question ten thousand times, a strong model
+returns a bank that is **73.6% exact duplicates**, one question repeated 2,726
+times, and deduplication does not rescue it: the next three most frequent items
+are that same question with one word changed, with its options reshuffled, and on
+different numbers. We replace the assumed enemy-item radius with a measured one,
+adjudicating 236 item pairs blind to distance and provenance and fitting the
+crossing at δ = 0.0354, then apply it to real banks. A naively generated bank of
+2,500 items yields **382 that can coexist on one form, 15.3% of nominal
+capacity**, against 94.9% for human-written MMLU. RAC's bank contains **no enemy
+pair at all**, 100% usable, and against every synthetic baseline it wins every
+literal and latent measure at matched *n* — mean-centered Vendi 124.8 against
+persona conditioning's 99.7 and naive prompting's 7.1, with a 0.000 exact-duplicate
+rate against 0.668. Against MMLU itself, written by many authors over years with
+editorial review, RAC's items reuse *less* language: it wins exact duplication,
+4-gram self-repetition and *n*-gram Vendi, and reaches 69% of the human bank's
+semantic spread.
 
-No measure here is limited by its own optimizer. All of them are limited by the
-**support**: conditioned on a fixed prompt, a language model's output concentrates
-on a submanifold of dimension *m* far below the dimension *d* of the space it
-could reach. Fifteen numerical checks establish the consequences. Novelty at fixed
-prompt decays as $n^{-1/m}$, not $n^{-1/d}$; one prompt ε-covers a vanishing
-$ε^{d-m}$ fraction; only prompt motion *transverse* to the already-occupied span
-raises the ceiling; and the optimal number of samples per prompt is set by the
-ratio of prompt-switching cost to sampling cost.
+The second result is a reversal we did not expect. Corpus objectives divide into
+two classes — covering the space, and packing it so no two items collide — and
+the machinery that is load-bearing for one is actively harmful to the other, in
+both directions. Greedy k-center, the classical packing algorithm, wins min-gap in
+both of our domains and finishes **last on coverage, at a sixth of random**.
+Orthogonalized conditioning, which is what makes RAC work under max-min, scores
+**0.2941 on coverage against plain conditioning's 0.3147**, because steering away
+from the occupied span steers away from where the reference measure is densest.
+The two highest-Vendi selectors are the two worst covering ones. A diversity
+number therefore carries no information until its objective is named, and the
+same generator loop must be pointed deliberately: in RAC the objective enters at
+exactly two places, how a candidate axis is scored and how one of K candidates is
+selected, and everything else is shared.
 
-On ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered images and
-~200 rendered instrumentals, RAC places first among twelve corpora against the
-released Alpaca, PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722 at
-matched evaluated-*n* on a human-written reference no corpus was aimed at, on one
-twentieth of Alpaca's generation budget — and wins every literal and latent
-measure against five published methods under the max-min objective. Along the way:
-a psychometric corpus that is 73.6% exact duplicates with one item repeated 2,726
-times, which temperature barely dents (71.0%) and conditioning nearly eliminates
-(0.0%); literal and latent diversity moving in opposite directions as *n* grows;
-and text-embedding similarity predicting rendered-image similarity at only
-***r* = 0.170**. The two measures also resist being served by one tool: applying
-the max-min side's orthogonalized conditioning to the coverage objective scores
-below plain conditioning, because steering away from the occupied span steers away
-from where the reference measure is densest.
+Underneath both results is one limit. We assume an embedding oracle and no
+inverse — we can compute where the next item ought to land and cannot decode that
+point into text — so RAC steers in language, asking the generator to name the axes
+along which its own outputs differ, ranking them, taking their most-different
+values, and splitting an exhausted axis into finer sub-axes that apply only inside
+the region that exhausted it. That recursion is the only mechanism we found that
+moves the asymptote rather than the constant, because no selection rule can exceed
+what the conditional support offers: fifteen numerical checks confirm that novelty
+at a fixed prompt decays as $n^{-1/m}$ in the conditional dimension rather than
+$n^{-1/d}$ in the ambient one, that a single prompt ε-covers a vanishing
+$ε^{d-m}$ fraction, and that only prompt motion transverse to the occupied span
+raises the ceiling. Evidence: ~46,000 real generations, ~700 rendered images and
+~200 rendered instrumentals, with text-embedding similarity predicting
+rendered-image similarity at only ***r* = 0.170**, so every text-side method in
+this literature is optimizing a proxy that explains about 3% of what the reader
+receives.
 """
 
 

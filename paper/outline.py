@@ -66,14 +66,14 @@ transverse any more is the moment the horizon has been reached, and the only
 remaining move is to ask the generator to subdivide its own vocabulary of
 variation.
 
-Pointing the loop at a different measure changes exactly two things, how an axis
-is scored and how a candidate is chosen, and those two differences are enough to
-reverse the ranking of methods. Greedy k-center wins min-gap in both
-domains and finishes last on coverage; orthogonalized conditioning, which is
-load-bearing under max-min, scores below plain conditioning under coverage. A
-corpus is not diverse or undiverse in the abstract. It is diverse with respect
-to an objective, and the objective has to be named before the number means
-anything.
+The reversal between the two classes is the finding we would keep if we could
+keep only one. Each objective's characteristic tool costs the other measurably:
+greedy k-center wins min-gap in both domains and finishes last on coverage, and
+orthogonalized conditioning, load-bearing under max-min, scores below doing
+nothing at all under coverage. Pointing the loop changes exactly two things, how
+an axis is scored and how a candidate is chosen, and those two are enough to
+invert which method looks best. A corpus is diverse with respect to an objective,
+and the objective has to be named before the number means anything.
 
 The measurements make the stakes concrete in a way the theory could not. A
 strong model asked a reasonable question ten thousand times returns the same
@@ -97,47 +97,50 @@ Any fixed conditional distribution behaves this way under repeated sampling,
 whatever model supplies it: the distribution has a shape, and sampling traces
 that shape ever more densely rather than expanding it.
 
-The practical version of this is now everywhere. Synthetic training data is
-worth what it adds to the training set. An evaluation suite that clusters in a
-few families gives false assurance. Test-item banks, red-team prompt sets,
-persona corpora and augmentation pipelines all consume generated text in bulk,
-and all of them degrade in a way that standard quality metrics do not detect:
-every individual item is fine, and the collection is redundant.
+The practical version of this is now everywhere. Synthetic training data is worth
+what it adds to the training set. An evaluation suite that clusters in a few
+families gives false assurance. Test-item banks, red-team prompt sets, persona
+corpora and augmentation pipelines all consume generated text in bulk, and all of
+them degrade in a way that per-item quality checks do not detect: every item is
+fine, and the collection is redundant. The failure is a property of the
+collection, and the corpora shipped today have it badly. Asked a reasonable
+psychometric question ten thousand times, a strong model returns a bank that is
+73.6% byte-identical duplicates, and of a 2,500-item sample only 382 items can
+legally coexist on one exam form.
 
-Because the failure is a property of the collection rather than of any item,
-catching it requires a measure over collections, and here the problem begins. A
-practitioner has many to choose from. Exact-duplicate rate is unambiguous and
-blind to paraphrase. Distinct-*n* and self-repetition read the surface and say
-nothing about meaning. The Vendi Score summarises an embedding spectrum and is
-close to insensitive to whether every item opens with the same clause. Median
-nearest-neighbour distance registers exactly that and says nothing about the
-shape of the whole. Precision, recall, density and coverage against a reference
-corpus say how a corpus sits relative to real examples, and need a reference to
-be defined at all. Worst-case nearest-neighbour distance, the packing radius, is
-the only one that treats a single collision as a defect.
+This paper presents **Recursive Axis Conditioning** (RAC), a generation loop
+that fixes this well enough to beat the released state of the art at a twentieth
+of its budget, and reports two results from building it.
 
-These do not agree. Section 4.1 shows corpora that one of them calls healthy and
-another calls collapsed, including a poetry corpus with a 0.000 duplicate rate
-in which eight of eight sampled openings are the same sentence with two slots
-filled, and a corpus whose mean-centered Vendi barely moves across the change
-that triples its nearest-neighbour distance. This paper takes that seriously
-rather than picking a favourite. **The measure is chosen before the corpus is,
-and it determines what the generator loop should do.**
+The first is that the loop works, and by margins that do not depend on scale.
+Against Alpaca, PersonaHub and WizardLM Evol-Instruct on coverage of a held-out
+human reference, RAC places first of twelve corpora from 2,400 generator calls
+against Alpaca's 52,000. On psychometric item generation it produces a bank with
+no enemy pair at all at a judged radius, where the naive bank yields 15.3% of its
+nominal capacity and human-written MMLU yields 94.9%.
 
-What follows is a method for improving a chosen measure — Recursive Axis
-Conditioning — and an account of how much of it changes when the measure does.
-We take two measures furthest, because they sit at opposite ends of what
-practitioners ask for and because their optima genuinely conflict: coverage of
-the reachable space at a finite budget, and the max-min packing objective over an
-unbounded stream. The answer, in short, is that the loop is shared and the
-measure enters at two points, and that those two points are enough to reverse
-which method looks best.
+The second result was not what we set out to find. Corpus objectives fall into
+two classes: *covering* the reachable space, and *packing* it so that no two
+items collide. These are usually spoken of interchangeably, as two ways of asking
+for a diverse corpus. They are not interchangeable, and the machinery that is
+load-bearing for one is actively harmful to the other in both directions.
+Greedy k-center, the classical packing algorithm, wins the min-gap metric in both
+of our domains and finishes last on coverage, at a sixth of random.
+Orthogonalized conditioning, the component that makes RAC work under packing,
+*reduces* coverage below plain conditioning when carried across. The two
+highest-Vendi selectors we measure are the two worst covering ones. Section 4
+develops this, and it is the reason the same loop has to be pointed deliberately
+rather than tuned once and reused.
+
+Underneath both results is a single limit, which §5 makes precise: no selection
+rule can outrun the conditional support of the generator it is drawing from, so
+the only move that changes the asymptote is one that widens that support.
 """
 
 
 MEASURES = """
-Every number in this paper is one of the following, and they disagree often
-enough that the disagreements are themselves a result.
+Every number below is one of the following. We report several because they
+disagree, and a corpus that one of them calls healthy another calls collapsed.
 
 **Exact-duplicate rate.** The fraction of the corpus that is byte-identical to
 something else in it. Unambiguous, cheap, and the first thing to compute: a
@@ -293,21 +296,18 @@ CONTRIB = """
 """
 
 BRIDGE_REL = """
-Everything so far has been about improving *a* measure. Which one is not a detail
-that can be left until evaluation, because the measure changes the method. This
-section states the two we study, shows where they agree, and shows where a loop
-tuned for one is actively worse at the other.
+Covering and packing are routinely treated as two phrasings of one goal. On real
+corpora they rank methods almost oppositely, and each one's characteristic tool
+costs the other measurably. This section establishes that, then explains why it
+happens and what follows for the loop.
 
-The two are chosen because they sit at opposite ends of what practitioners
-actually ask for. Coverage is the right question when the corpus is an evaluation
-suite or a training set meant to represent a population: what fraction of the
-space has an exemplar? Max-min is the right question when any single collision is
-a defect, as in an exam bank where two items testing the same rule are a security
-failure whatever the rest of the bank looks like. Other measures sit between them
-— duplicate rate, mean-centered Vendi, precision against a reference, the
-worst-case nearest-neighbour distance — and the machinery below applies to those
-too, since what changes from one to the next is the scoring rule and the
-selection rule, not the loop that carries them.
+Both objectives are stated carefully first, since the reversal is easy to
+mistake for a tuning artifact. Coverage is the right question when the
+corpus stands for a population, as an evaluation suite or a training set does:
+what fraction of the space has an exemplar? Packing is the right question when a
+single collision is a defect on its own, as in an exam bank where two items
+testing the same rule are a security failure whatever the other items look like.
+Both are named below, and then measured against each other.
 """
 
 BRIDGE_THEORY = """
@@ -332,21 +332,20 @@ OUTLINE = [
         ("mm", "2"),
         ("cv", "8"),
     ]),
-    ("Which measure, and what changes with it", [
+    ("What helps one objective hurts the other", [
         ("text", BRIDGE_REL),
-        ("sub", "The measures in use", "text", MEASURES),
         ("sub", "Max-min, stated", "text", MAXMIN_DEF),
         ("sub", "The reachable manifold and the conditional slice", "mm", "3.1"),
         ("sub", "Coverage, stated", "cv", "2"),
         ("sub", "Where they coincide", "iii", "2b"),
         ("sub", "Coverage is not packing", "cv", "3.4"),
-        ("sub", "Where they part, measured", "iii", "1"),
+        ("sub", "The reversal, measured", "iii", "1"),
         ("sub", "Why the scoring rule has to fork", "iii", "2"),
-        ("sub", "The comparison that shows the fork", "iii", "2c"),
-        ("sub", "What every measure here shares", "iii", "3"),
+        ("sub", "The ablation that shows the fork", "iii", "2c"),
+        ("sub", "What both classes share", "iii", "3"),
         ("sub", "Practical guidance", "iii", "4"),
     ]),
-    ("Theory: what limits any of them", [
+    ("Theory: the limit both classes share", [
         ("text", BRIDGE_THEORY),
         ("sub", "Saturation at a fixed prompt", "mm", "3.2"),
         ("sub", "The slice deficit", "mm", "3.3"),
@@ -372,6 +371,7 @@ OUTLINE = [
     ]),
     ("Experiments", [
         ("mm", "6"),
+        ("sub", "What we measure, and what each measure misses", "text", MEASURES),
         ("sub", "Domains", "mm", "6.1"),
         ("sub", "Methods compared", "mm", "6.2"),
         ("sub", "Duplication under repeated sampling", "mm", "6.3"),
