@@ -1,11 +1,11 @@
-=== 2026-08-31T17:43:09Z ===
-runs complete: 42
+=== 2026-08-31T17:49:29Z ===
+runs complete: 48
 
 arm                   items seeds     superni_macro   (tokens)
-coverage-selected       300     2  0.2929 ±0.0006      20929
-coverage-selected       600     2  0.2925 ±0.0012      43762
-coverage-selected      1200     2  0.2975 ±0.0094      86562
-coverage-selected      2398     1  0.2975 ±0.0000     174421
+coverage-selected       300     3  0.2950 ±0.0036      20929
+coverage-selected       600     3  0.2922 ±0.0010      43762
+coverage-selected      1200     3  0.2986 ±0.0069      86562
+coverage-selected      2398     2  0.2996 ±0.0029     174421
 random                  300     2  0.2950 ±0.0024      23608
 random                  600     2  0.2992 ±0.0035      45014
 random                 1200     2  0.3067 ±0.0035      90934
@@ -13,12 +13,12 @@ random                 2398     1  0.3067 ±0.0000     177077
 full Alpaca pool        300     7  0.2773 ±0.0327      22513
 full Alpaca pool       2398     8  0.2918 ±0.0124     180427
 full Alpaca pool       5000     2  0.3042 ±0.0035     376007
-full Alpaca pool      12000     1  0.3108 ±0.0000     895716
+full Alpaca pool      12000     2  0.3104 ±0.0006     895716
 full Alpaca pool      25000     1  0.3083 ±0.0000    1864343
 
-ceiling (best full-pool point): 0.3108
-  coverage-selected    ITEMS to 95% of ceiling: 884
-  random               ITEMS to 95% of ceiling: 315
+ceiling (best full-pool point): 0.3104
+  coverage-selected    ITEMS to 95% of ceiling: 308
+  random               ITEMS to 95% of ceiling: not reached
 
 chart: figures/sweep.png
 --- generation ---
