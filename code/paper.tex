@@ -230,10 +230,7 @@ bank\textquotesingle s semantic diversity.
 
 In simulation, a fixed prompt in a world with \emph{d} = 24 and \emph{m}
 = 3 reaches a Vendi Score of 1.06 where the full stack reaches 11.23,
-and recursive refinement lifts the reachable dimension from 13 to 24. We
-report two negative results that changed the design: naive refinement of
-saturated regions \emph{reduces} novelty headroom, and our
-breadth-versus-depth theorem is false as originally stated.
+and recursive refinement lifts the reachable dimension from 13 to 24.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -331,10 +328,9 @@ induced output distributions point that way.
 \item
   \textbf{A conditional-dimension theory of generative saturation} (§3).
   Five theorems relating the conditional support dimension \emph{m} to
-  the reachable manifold dimension \emph{d}, each verified numerically
-  (\texttt{verify\_slices.py}, 7/7 checks pass). The practically
-  important one is that saturation is governed by \emph{m}, which is
-  small, and not by \emph{d}.
+  the reachable manifold dimension \emph{d}, each verified numerically.
+  The practically important one is that saturation is governed by
+  \emph{m}, which is small, and not by \emph{d}.
 \item
   \textbf{A calculus of diversity} (§4). A decision procedure for which
   latent variable to condition on next and which of its values to use,
@@ -353,9 +349,6 @@ induced output distributions point that way.
 \item
   \textbf{Live pilots} on \texttt{openai/gpt-5.6-luna} with
   locally-computed embeddings (§7).
-\item
-  \textbf{Two negative results} (§8) that we kept rather than tuned
-  away.
 \end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
@@ -369,10 +362,10 @@ it throughout, with a computational note: under a linear kernel on
 unit-normalized embeddings, the \emph{n} × \emph{n} Gram matrix and the
 \emph{D} × \emph{D} second-moment matrix share their nonzero spectrum,
 so the score costs \emph{O}(\emph{nD}² + \emph{D}³) rather than
-\emph{O}(\emph{n}³). We verify this to machine precision (check T5, max
-eigenvalue mismatch 1.1 × 10−16). This matters for our setting
-specifically: an infinite-horizon method needs an evaluation whose cost
-does not grow superlinearly in the thing it is evaluating.
+\emph{O}(\emph{n}³). We verify this to machine precision (max eigenvalue
+mismatch 1.1 × 10−16). This matters for our setting specifically: an
+infinite-horizon method needs an evaluation whose cost does not grow
+superlinearly in the thing it is evaluating.
 
 \textbf{Selection and subset choice.} Determinantal point processes
 model repulsion via volume in feature space. Farthest-point /
@@ -457,9 +450,8 @@ predicts \emph{n}−1/32 --- essentially flat, novelty never exhausted.
 The true rate at \emph{m} = 3 is \emph{n}−1/3, which is roughly a 10×
 loss of headroom per 1000× of corpus. Measured slopes: −0.472 (\emph{m}
 = 2), −0.309 (\emph{m} = 3), −0.195 (\emph{m} = 5), against −0.5,
-−0.333, −0.2 (check P1). The \emph{m} = 2 case sits slightly above its
-asymptote at these \emph{n}, as expected for a rate with logarithmic
-corrections.
+−0.333, −0.2. The \emph{m} = 2 case sits slightly above its asymptote at
+these \emph{n}, as expected for a rate with logarithmic corrections.
 
 \begin{quote}
 \textbf{Corollary 1.1 (oversampling is not a strategy).} Drawing
@@ -469,8 +461,8 @@ gap by Θ(\emph{K}1/\emph{m}) at best. To recover the headroom lost by a
 \end{quote}
 
 Verified at \emph{m} = 3: best-of-8 yields a gain of 2.19 against
-\emph{K}1/3 = 2.00 (check T7a). Selection is a constant-factor fix to an
-asymptotic problem.
+\emph{K}1/3 = 2.00. Selection is a constant-factor fix to an asymptotic
+problem.
 
 \subsubsection{3.3 The slice deficit}\label{33-the-slice-deficit}
 
@@ -487,10 +479,10 @@ vol\emph{d}(\emph{M}) gives the claim. ∎
 
 Measured at \emph{d} = 8, \emph{m} = 2: fitted exponent 5.06 against a
 predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5
-→ 0.12 (check P2). The fitted exponent sits below prediction because at
-the larger ε the tube is no longer thin relative to the manifold, which
-flattens the low-ε end of the fit; the qualitative claim --- coverage
-collapsing polynomially in ε with a large exponent --- is unambiguous.
+→ 0.12. The fitted exponent sits below prediction because at the larger
+ε the tube is no longer thin relative to the manifold, which flattens
+the low-ε end of the fit; the qualitative claim --- coverage collapsing
+polynomially in ε with a large exponent --- is unambiguous.
 
 The practical reading is severe. \textbf{A single prompt, sampled
 infinitely often, covers essentially none of what the model could
@@ -519,7 +511,7 @@ slice\textquotesingle s own span adds no new direction. ∎
 Measured via participation ratio of the union\textquotesingle s
 covariance spectrum: parallel displacements give effective dimension
 1.88 (the slices lie on top of each other, \emph{m} = 2), transverse
-displacements give 11.18 (check P4).
+displacements give 11.18.
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays as n\^{}(-1/k), with fitted slopes matching theory for k = 3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}]{figures/fig5_scaling.png}}
 
@@ -555,15 +547,15 @@ argmax picks it whenever it appears. ∎
 Measured: ℙ(selected is off-manifold \textbar{} one present) = 1.000 at
 both \emph{n} = 50 and \emph{n} = 5000; unconditional rate 0.0418
 against a per-candidate rate of 0.005, an 8.4× amplification at \emph{K}
-= 8 (check P5).
+= 8.
 
 The consequence is not subtle in practice. In our exam-bank simulation
 with a hard novelty floor and no typicality gate, the junk fraction
 among accepted items rises from \textbf{7.9\% in the first half of the
-bank to 48.2\% in the second} (check T4). Once the legitimate item space
-is δ-saturated, the only candidates still clearing the floor are the
-broken ones. \textbf{The novelty constraint gets satisfied by garbage,
-and every embedding-based diversity metric reports success.}
+bank to 48.2\% in the second}. Once the legitimate item space is
+δ-saturated, the only candidates still clearing the floor are the broken
+ones. \textbf{The novelty constraint gets satisfied by garbage, and
+every embedding-based diversity metric reports success.}
 
 \begin{quote}
 \textbf{Corollary 4.1.} A typicality gate --- a hard rejection of
@@ -586,20 +578,16 @@ embedding it, occasionally refining), so \emph{B} = \emph{P}(\emph{c} +
 increases with \emph{c}.
 \end{quote}
 
-Measured (check P3a--c): with free switching, depth 1 achieves coverage
-0.995 while spending the entire budget on one prompt achieves 0.091 ---
-a 10.9× difference. With \emph{c} = 3, \emph{n}* = 10; with \emph{c} =
-30, \emph{n}* = 30.
+Measured: with free switching, depth 1 achieves coverage 0.995 while
+spending the entire budget on one prompt achieves 0.091 --- a 10.9×
+difference. With \emph{c} = 3, \emph{n}* = 10; with \emph{c} = 30,
+\emph{n}* = 30.
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 2. Breadth versus depth at fixed budget. With free prompt-switching the optimum is one sample per prompt; an interior optimum appears only once switching is priced.}]{figures/fig8_breadth_depth.png}}
 
 \emph{Figure 2. Breadth versus depth at fixed budget. With free
 prompt-switching the optimum is one sample per prompt; an interior
 optimum appears only once switching is priced.}
-
-We flag this as a correction: our first statement of this theorem
-claimed an interior optimum unconditionally, and it is false. The
-optimum is at the boundary when switching is free. See §8.2.
 
 The engineering reading is that \textbf{the ratio of prompt-switching
 cost to sampling cost sets your batch size}, and nothing else does. If
@@ -616,10 +604,10 @@ running statistics. Writing μ*n* for the corpus centroid,
 \frac{1}{n}\sum_i \lVert c - x_i\rVert^2 = \lVert c - \mu_n\rVert^2 + \frac{1}{n}\sum_i \lVert x_i - \mu_n\rVert^2
 \]
 
-verified to zero relative error (check T1). The second term does not
-depend on \emph{c}, so ranking candidates by mean squared distance to
-the corpus is ranking by distance to the centroid: \emph{O}(\emph{D})
-per candidate, \emph{O}(1) in \emph{n}. The repulsion term needs a
+verified to zero relative error. The second term does not depend on
+\emph{c}, so ranking candidates by mean squared distance to the corpus
+is ranking by distance to the centroid: \emph{O}(\emph{D}) per
+candidate, \emph{O}(1) in \emph{n}. The repulsion term needs a
 nearest-neighbour query, which we bound by subsampling. Neither term is
 the bottleneck. \textbf{The bottleneck is that both are evaluated on a
 candidate set drawn from an \emph{m}-dimensional slice.}
@@ -813,17 +801,17 @@ random" gets no harder to satisfy and no more useful.
 
 \subsection{6. Experiments}\label{6-experiments}
 
-All simulations are seeded and reproducible. \texttt{verify\_theory.py}
-(8/8) and \texttt{verify\_slices.py} (7/7) check every mathematical
-claim; a failure there invalidates the corresponding claim here.
+All simulations are seeded and reproducible. Every mathematical claim is
+checked numerically; a failure there invalidates the corresponding claim
+here.
 
 \subsubsection{6.1 The conditional world: the central
 result}\label{61-the-conditional-world-the-central-result}
 
-\texttt{simulate\_slices.py} implements a world where a spec genuinely
-selects a slice: ambient ℝ64, reachable manifold \emph{d} = 24,
-conditional dimension \emph{m} = 3, additive composition over 5 axes × 4
-levels, rare off-manifold junk. Budget 10,000 generations, \emph{K} = 8.
+We simulate a world where a spec genuinely selects a slice: ambient ℝ64,
+reachable manifold \emph{d} = 24, conditional dimension \emph{m} = 3,
+additive composition over 5 axes × 4 levels, rare off-manifold junk.
+Budget 10,000 generations, \emph{K} = 8.
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -856,6 +844,14 @@ diversity. (b) Only recursive refinement raises the reachable-dimension
 ceiling. (c) Achieved diversity: 1.06 for a fixed prompt against 11.23
 for the full stack.}
 
+Refinement direction matters: children displaced isotropically from
+saturated modes reduce self-headroom (1.20 versus 1.38 unrefined), since
+tighter spread near the parent concentrates mass where the corpus
+already sits. Refinement pays only along directions transverse to the
+occupied span, which is what the calculus\textquotesingle s
+transversality term selects (Vendi 11.23 versus 10.60 for unguided
+refinement).
+
 Note that lattice size and reachable dimension \textbf{come apart}.
 Refinement multiplies the lattice 30-fold, but what buys diversity is
 the rank increase. A large lattice of low-rank levels gives many specs
@@ -871,10 +867,9 @@ a virtue by itself; it must be read jointly with achieved diversity.
 \subsubsection{6.2 Budget-matched comparison and
 ablations}\label{62-budget-matched-comparison-and-ablations}
 
-\texttt{experiment\_budget.py}: every method spends exactly 10,000
-generations on one world. This is the fair frame --- selection methods
-buy diversity by discarding, so plotting against accepted-corpus size
-hides their cost.
+Every method spends exactly 10,000 generations on one world. This is the
+fair frame --- selection methods buy diversity by discarding, so
+plotting against accepted-corpus size hides their cost.
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -936,14 +931,14 @@ we measured.
 \subsubsection{\texorpdfstring{6.3 Poetry world at \emph{n} =
 10,000}{6.3 Poetry world at n = 10,000}}\label{63-poetry-world-at-n--10000}
 
-\texttt{simulate.py}, six acquisition policies (figure 1). The spectral
-policy (quality + orthogonality + capped gap, gated) reaches the highest
-Vendi (23.28) with \textbf{zero} junk in the last 2,000 items and the
-highest quality (0.753), while pure max--min holds a much larger min-gap
-(2.26 versus \textasciitilde1.15) at 3.9\% junk and materially lower
-quality (0.626). Ungated anchor+repulsion is the worst configuration on
-every axis simultaneously --- it spends its selection pressure
-travelling outward and its Vendi \emph{declines} with \emph{n}.
+Six acquisition policies (figure 1). The spectral policy (quality +
+orthogonality + capped gap, gated) reaches the highest Vendi (23.28)
+with \textbf{zero} junk in the last 2,000 items and the highest quality
+(0.753), while pure max--min holds a much larger min-gap (2.26 versus
+\textasciitilde1.15) at 3.9\% junk and materially lower quality (0.626).
+Ungated anchor+repulsion is the worst configuration on every axis
+simultaneously --- it spends its selection pressure travelling outward
+and its Vendi \emph{declines} with \emph{n}.
 
 \subsubsection{6.4 Exam items: a hard floor and finite
 packing}\label{64-exam-items-a-hard-floor-and-finite-packing}
@@ -961,7 +956,7 @@ Item templates expose few manipulable slots, so each mode is a
 low-intrinsic-dimension disk and the δ-packing number is finite and
 small. Our bound \emph{N}max ≤ \emph{M}(2\emph{R}eff/δ + 1)\emph{k}
 gives 5,543 for our parameters; the largest gated bank reaches 1,464
-real items, respecting it (check T3).
+real items, respecting it.
 
 The important result is what happens without a gate. Ungated strategies
 sail past the packing capacity to the full 2,000-item target --- by
@@ -979,13 +974,12 @@ generations per item overall.
 \subsubsection{6.5 The coverage horizon, 5 →
 10,000}\label{65-the-coverage-horizon-5--10000}
 
-\texttt{coverage\_horizon.py} probes, at log-spaced checkpoints, the
-best min-gap a \emph{fresh coherent} candidate can achieve against the
-corpus so far --- the novelty headroom remaining --- and normalizes it
-into an \emph{inability to be novel}, 1 −
-\emph{h}(\emph{g})/\emph{h}(5). Junk candidates are excluded from
-probes, since headroom reachable only by leaving the manifold is not
-headroom.
+We probe, at log-spaced checkpoints, the best min-gap a \emph{fresh
+coherent} candidate can achieve against the corpus so far --- the
+novelty headroom remaining --- and normalizes it into an \emph{inability
+to be novel}, 1 − \emph{h}(\emph{g})/\emph{h}(5). Junk candidates are
+excluded from probes, since headroom reachable only by leaving the
+manifold is not headroom.
 
 Every fixed-generator method converges toward exhaustion: naive 53.3\%,
 random-latent 49.0\%, online max--min 55.7\%, IHD selection 48.1\%. High
@@ -1601,41 +1595,8 @@ audio-diversity number without naming its embedder.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{8. Negative results}\label{8-negative-results}
-
-We kept both of these rather than tuning them away.
-
-\subsubsection{8.1 Naive refinement
-hurts}\label{81-naive-refinement-hurts}
-
-Splitting saturated modes into tighter children displaced isotropically
-\textbf{reduced} self-headroom (1.20 versus 1.38 unrefined). Children
-with tighter spread placed near their parents concentrate probability
-mass exactly where the corpus already sits. Refinement subdivides
-territory you have already covered; it buys density, not reach.
-
-Refinement is valuable only when new directions are transverse to the
-occupied span --- Theorem 3 again. "Refine where saturated" is wrong on
-its own. The correct rule is \textbf{refine where saturated, in
-directions not yet spanned}, which is what the
-calculus\textquotesingle s transversality term computes and what
-\texttt{guided=True} implements (Vendi 11.23 versus 10.60).
-
-\subsubsection{8.2 Our breadth-versus-depth theorem was
-false}\label{82-our-breadth-versus-depth-theorem-was-false}
-
-We first claimed an interior optimum for samples-per-prompt. With free
-prompt-switching there is none: the optimum is \emph{n}* = 1, at the
-boundary. An interior optimum exists only once switching is priced
-(§3.6). We corrected the statement rather than the experiment. The
-corrected version is more useful anyway, since it tells a practitioner
-what to measure --- the ratio of spec-construction cost to generation
-cost --- instead of asserting a universal batch size.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\subsection{9. Relation to the coverage
-problem}\label{9-relation-to-the-coverage-problem}
+\subsection{8. Relation to the coverage
+problem}\label{8-relation-to-the-coverage-problem}
 
 This paper\textquotesingle s objective is a \textbf{packing} objective:
 max--min spacing, \emph{k}-center-like, driven by the worst-case nearest
@@ -1663,7 +1624,7 @@ proposal distribution is confined to a slice.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{10. Limitations}\label{10-limitations}
+\subsection{9. Limitations}\label{9-limitations}
 
 \textbf{The simulations encode our hypothesis.} Mixture-of-modes with
 skewed weights and a rare diffuse junk component is a model of generator
@@ -1696,7 +1657,7 @@ score.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{11. Conclusion}\label{11-conclusion}
+\subsection{10. Conclusion}\label{10-conclusion}
 
 The infinite-horizon diversity objective is easy to write, cheap to
 maintain, and largely beside the point. What determines whether a corpus

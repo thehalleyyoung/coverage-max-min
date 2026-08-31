@@ -211,7 +211,7 @@ the axis calculus, and it is the mechanism behind the table above.
 
 Calling coverage "the dual of max-min" is exactly right in one sense and
 importantly wrong in another, and both halves have algorithmic consequences we
-verified on real embeddings (`coverage/duality.py`).
+verified on real embeddings.
 
 **Where they are dual.** For radius ε, a *maximal* ε-packing is automatically an
 ε-covering: any uncovered point could have been added to the packing. We confirm

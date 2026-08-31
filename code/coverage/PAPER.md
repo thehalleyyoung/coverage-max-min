@@ -319,9 +319,8 @@ failure mode the clean theory hides: once greedy has saturated the pool at
 its selection radius, its marginal signal is identically zero and the
 tie-breaking rule silently decides where the rest of the budget goes.
 
-**Depth per condition and switch cost.** The sibling paper's slice theory
-(`../verify_slices.py`, all checks passing) sharpens the within-cell side of
-allocation. For a *fixed* prompt/spec the generator concentrates on an
+**Depth per condition and switch cost.** The sibling paper's slice theory sharpens the
+within-cell side of allocation. For a *fixed* prompt/spec the generator concentrates on an
 m-dimensional slice with m ≪ d, so fixed-prompt novelty decays as n^(−1/m)
 (fitted slopes −0.472, −0.309, −0.195 for m = 2, 3, 5 — governed by m, not by
 the ambient dimension), and one slice ε-covers a vanishing ε^(d−m) fraction
@@ -361,9 +360,8 @@ candidate is generated under each. Axes give the proposal distribution
 spread the base generator lacks; they are the reason the method's candidates
 are worth ranking at all.
 
-**Calculus-guided conditioning (the coverage adaptation).** The sibling
-paper's generation calculus (`../calculus.py`)
-ranks candidate axes by a four-factor product — spread (are the axis's levels
+**Calculus-guided conditioning (the coverage adaptation).** The sibling paper's generation
+calculus ranks candidate axes by a four-factor product — spread (are the axis's levels
 different from each other), transversality (does their variation point
 outside the corpus's occupied eigenspace), independence (measured against
 axes already in use, never against rival candidates — scoring candidates
@@ -582,7 +580,7 @@ and mean quality drifts with whatever the proposal distribution emits.
 
 ## 6. Numerical verification of the theory
 
-All checks in `verify_theory.py`; all numbers in
+All numbers in
 `figures/summary_theory.json`.
 
 **6.1 Submodularity (exact).** 200 candidates, 5,000-point pool, ε = 1.0.
@@ -658,8 +656,8 @@ binds relative to the proposal support, and conditioning — not selection —
 is where the missing coverage lives.
 
 **6.7 Lattice size is not reachable dimension.** Using the sibling paper's
-slice-structured world (specs compose level directions additively;
-`../simulate_slices.py`), we build two worlds with *identical* lattice size
+slice-structured world, in which specs compose level directions additively,
+we build two worlds with *identical* lattice size
 L^A = 1,024 distinct specs but different rank of the level-direction span:
 full-rank (rank 10, reachable dimension 13) versus low-rank (all axes forced
 into a shared 2-dim subspace: rank 2, reachable dimension 5). Same budget
@@ -869,7 +867,7 @@ meaningful for the uncentered form.
 
 **Is ε measuring the cone or the content?** This is the question the caveat
 raises for every coverage number computed with cosine distances, so we
-measured it (`cone_diagnostics` in `summary_live.json`). Our pool's mean
+measured it. Our pool's mean
 pairwise cosine is **0.444** (p05 0.330, p95 0.591) — a wide cone, not the
 ~0.9 concentration seen in some same-domain embedding sets — with mean
 direction norm 0.667. Our ε_sel = 0.770 corresponds to cosine similarity
@@ -901,7 +899,7 @@ real gpt-5.6-luna output produced by plain repeated prompting
 (`dalle_naive`, `psychometric_naive`), with saved embeddings. No selection
 policy shaped them, so they look like an ideal policy-independent reference
 measure, and we used one as the denominator for every arm of the parent
-project's competitive matrix (`real_coverage.py`). The result was stark: at
+project's competitive matrix. The result was stark: at
 the calibrated mid radius, coverage was **anti-correlated with every
 diversity metric**. In the DALL-E domain, naive scored 0.137 and
 high-temperature 0.135, while Self-Instruct scored 0.015, Evol-Instruct
@@ -950,7 +948,7 @@ generated, and which get kept. This paper's contribution is a selection rule.
 Selection is only comparable when every rule sees the same candidates.
 
 We also verified the estimator itself before trusting it further
-(`verify_estimator.py`): against the analytic volume of a ball in a uniform
+: against the analytic volume of a ball in a uniform
 cube it is within 3 Monte-Carlo standard errors at d = 2, 3, 4; the union of
 nine disjoint balls matches m·V to within 2.0e-4; duplicate centers add
 exactly zero coverage (the submodularity-critical property a naive
@@ -960,7 +958,7 @@ estimator was not the problem.
 
 ### 9.5 The corrected comparison: budget-matched selection
 
-`real_benchmark.py` fixes all three. Every method selects k = 400 items from
+The corrected benchmark fixes all three. Every method selects k = 400 items from
 one shared candidate pool, so all consume exactly the same number of
 generations and differ only in which items they keep — the comparison is
 budget-matched by construction, not merely n-matched. The reference is
@@ -1080,7 +1078,7 @@ actually use, so we compare against three released corpora as downloaded:
 **WizardLM Evol-Instruct V2** (143,000). Against them we place three arms
 generated from gpt-5.6-luna at 450 items each: unconditioned prompting,
 the same prompt at T = 1.6, and axis-conditioned generation with an attractor
-ledger (`instruction_gen.py`, $0.376, 564 s). Matched n = 60 after
+ledger ($0.376, 564 s). Matched n = 60 after
 deduplication, identical embedder, instruction field only.
 
 **The coverage metric does not survive this comparison, and that is the
@@ -1379,8 +1377,8 @@ space it covered.
 
 ---
 
-*All numbers in this paper are produced by `simulate_coverage.py`,
-`verify_theory.py`, and `live_pilot.py` in this directory and recorded in
+py`,
+the accompanying code, and the accompanying code in this directory and recorded in
 `figures/summary_sim.json`, `figures/summary_theory.json`, and
-`figures/summary_live.json`. Figures: `make_figures.py`. Reproduction:
+`figures/summary_live.json`.  Reproduction:
 `README.md`.*

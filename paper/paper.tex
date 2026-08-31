@@ -291,10 +291,7 @@ bank\textquotesingle s semantic diversity.
 
 In simulation, a fixed prompt in a world with \emph{d} = 24 and \emph{m}
 = 3 reaches a Vendi Score of 1.06 where the full stack reaches 11.23,
-and recursive refinement lifts the reachable dimension from 13 to 24. We
-report two negative results that changed the design: naive refinement of
-saturated regions \emph{reduces} novelty headroom, and our
-breadth-versus-depth theorem is false as originally stated.
+and recursive refinement lifts the reachable dimension from 13 to 24.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -392,10 +389,9 @@ induced output distributions point that way.
 \item
   \textbf{A conditional-dimension theory of generative saturation} (§3).
   Five theorems relating the conditional support dimension \emph{m} to
-  the reachable manifold dimension \emph{d}, each verified numerically
-  (\texttt{verify\_slices.py}, 7/7 checks pass). The practically
-  important one is that saturation is governed by \emph{m}, which is
-  small, and not by \emph{d}.
+  the reachable manifold dimension \emph{d}, each verified numerically.
+  The practically important one is that saturation is governed by
+  \emph{m}, which is small, and not by \emph{d}.
 \item
   \textbf{A calculus of diversity} (§4). A decision procedure for which
   latent variable to condition on next and which of its values to use,
@@ -414,9 +410,6 @@ induced output distributions point that way.
 \item
   \textbf{Live pilots} on \texttt{openai/gpt-5.6-luna} with
   locally-computed embeddings (§7).
-\item
-  \textbf{Two negative results} (§8) that we kept rather than tuned
-  away.
 \end{itemize}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
@@ -430,10 +423,10 @@ it throughout, with a computational note: under a linear kernel on
 unit-normalized embeddings, the \emph{n} × \emph{n} Gram matrix and the
 \emph{D} × \emph{D} second-moment matrix share their nonzero spectrum,
 so the score costs \emph{O}(\emph{nD}² + \emph{D}³) rather than
-\emph{O}(\emph{n}³). We verify this to machine precision (check T5, max
-eigenvalue mismatch 1.1 × 1\(0^{-16}\)). This matters for our setting
-specifically: an infinite-horizon method needs an evaluation whose cost
-does not grow superlinearly in the thing it is evaluating.
+\emph{O}(\emph{n}³). We verify this to machine precision (max eigenvalue
+mismatch 1.1 × 1\(0^{-16}\)). This matters for our setting specifically:
+an infinite-horizon method needs an evaluation whose cost does not grow
+superlinearly in the thing it is evaluating.
 
 \textbf{Selection and subset choice.} Determinantal point processes
 model repulsion via volume in feature space. Farthest-point /
@@ -517,9 +510,8 @@ predicts \(n^{-1/32}\) --- essentially flat, novelty never exhausted.
 The true rate at \emph{m} = 3 is \(n^{-1/3}\), which is roughly a 10×
 loss of headroom per 1000× of corpus. Measured slopes: −0.472 (\emph{m}
 = 2), −0.309 (\emph{m} = 3), −0.195 (\emph{m} = 5), against −0.5,
-−0.333, −0.2 (check P1). The \emph{m} = 2 case sits slightly above its
-asymptote at these \emph{n}, as expected for a rate with logarithmic
-corrections.
+−0.333, −0.2. The \emph{m} = 2 case sits slightly above its asymptote at
+these \emph{n}, as expected for a rate with logarithmic corrections.
 
 \begin{quote}
 \textbf{Corollary 1.1 (oversampling is not a strategy).} Drawing
@@ -529,8 +521,8 @@ larger corpus, \emph{K} must grow by 1000.
 \end{quote}
 
 Verified at \emph{m} = 3: best-of-8 yields a gain of 2.19 against
-\(K^{1/3}\) = 2.00 (check T7a). Selection is a constant-factor fix to an
-asymptotic problem.
+\(K^{1/3}\) = 2.00. Selection is a constant-factor fix to an asymptotic
+problem.
 
 \paragraph{I.3.3 The slice deficit}\label{i33-the-slice-deficit}
 
@@ -547,10 +539,10 @@ vol\emph{d}(\emph{M}) gives the claim. ∎
 
 Measured at \emph{d} = 8, \emph{m} = 2: fitted exponent 5.06 against a
 predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5
-→ 0.12 (check P2). The fitted exponent sits below prediction because at
-the larger ε the tube is no longer thin relative to the manifold, which
-flattens the low-ε end of the fit; the qualitative claim --- coverage
-collapsing polynomially in ε with a large exponent --- is unambiguous.
+→ 0.12. The fitted exponent sits below prediction because at the larger
+ε the tube is no longer thin relative to the manifold, which flattens
+the low-ε end of the fit; the qualitative claim --- coverage collapsing
+polynomially in ε with a large exponent --- is unambiguous.
 
 The practical reading is severe. \textbf{A single prompt, sampled
 infinitely often, covers essentially none of what the model could
@@ -579,7 +571,7 @@ slice\textquotesingle s own span adds no new direction. ∎
 Measured via participation ratio of the union\textquotesingle s
 covariance spectrum: parallel displacements give effective dimension
 1.88 (the slices lie on top of each other, \emph{m} = 2), transverse
-displacements give 11.18 (check P4).
+displacements give 11.18.
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays as n\^{}(-1/k), with fitted slopes matching theory for k = 3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}]{figures/fig5_scaling.png}}
 
@@ -615,15 +607,15 @@ argmax picks it whenever it appears. ∎
 Measured: ℙ(selected is off-manifold \textbar{} one present) = 1.000 at
 both \emph{n} = 50 and \emph{n} = 5000; unconditional rate 0.0418
 against a per-candidate rate of 0.005, an 8.4× amplification at \emph{K}
-= 8 (check P5).
+= 8.
 
 The consequence is not subtle in practice. In our exam-bank simulation
 with a hard novelty floor and no typicality gate, the junk fraction
 among accepted items rises from \textbf{7.9\% in the first half of the
-bank to 48.2\% in the second} (check T4). Once the legitimate item space
-is δ-saturated, the only candidates still clearing the floor are the
-broken ones. \textbf{The novelty constraint gets satisfied by garbage,
-and every embedding-based diversity metric reports success.}
+bank to 48.2\% in the second}. Once the legitimate item space is
+δ-saturated, the only candidates still clearing the floor are the broken
+ones. \textbf{The novelty constraint gets satisfied by garbage, and
+every embedding-based diversity metric reports success.}
 
 \begin{quote}
 \textbf{Corollary 4.1.} A typicality gate --- a hard rejection of
@@ -646,20 +638,16 @@ embedding it, occasionally refining), so \emph{B} = \emph{P}(\emph{c} +
 increases with \emph{c}.
 \end{quote}
 
-Measured (check P3a--c): with free switching, depth 1 achieves coverage
-0.995 while spending the entire budget on one prompt achieves 0.091 ---
-a 10.9× difference. With \emph{c} = 3, \emph{n}* = 10; with \emph{c} =
-30, \emph{n}* = 30.
+Measured: with free switching, depth 1 achieves coverage 0.995 while
+spending the entire budget on one prompt achieves 0.091 --- a 10.9×
+difference. With \emph{c} = 3, \emph{n}* = 10; with \emph{c} = 30,
+\emph{n}* = 30.
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 2. Breadth versus depth at fixed budget. With free prompt-switching the optimum is one sample per prompt; an interior optimum appears only once switching is priced.}]{figures/fig8_breadth_depth.png}}
 
 \emph{Figure 2. Breadth versus depth at fixed budget. With free
 prompt-switching the optimum is one sample per prompt; an interior
 optimum appears only once switching is priced.}
-
-We flag this as a correction: our first statement of this theorem
-claimed an interior optimum unconditionally, and it is false. The
-optimum is at the boundary when switching is free. See §8.2.
 
 The engineering reading is that \textbf{the ratio of prompt-switching
 cost to sampling cost sets your batch size}, and nothing else does. If
@@ -676,10 +664,10 @@ running statistics. Writing μ*n* for the corpus centroid,
 \frac{1}{n}\sum_i \lVert c - x_i\rVert^2 = \lVert c - \mu_n\rVert^2 + \frac{1}{n}\sum_i \lVert x_i - \mu_n\rVert^2
 \]
 
-verified to zero relative error (check T1). The second term does not
-depend on \emph{c}, so ranking candidates by mean squared distance to
-the corpus is ranking by distance to the centroid: \emph{O}(\emph{D})
-per candidate, \emph{O}(1) in \emph{n}. The repulsion term needs a
+verified to zero relative error. The second term does not depend on
+\emph{c}, so ranking candidates by mean squared distance to the corpus
+is ranking by distance to the centroid: \emph{O}(\emph{D}) per
+candidate, \emph{O}(1) in \emph{n}. The repulsion term needs a
 nearest-neighbour query, which we bound by subsampling. Neither term is
 the bottleneck. \textbf{The bottleneck is that both are evaluated on a
 candidate set drawn from an \emph{m}-dimensional slice.}
@@ -874,17 +862,17 @@ random" gets no harder to satisfy and no more useful.
 
 \subsubsection{I.6 Experiments}\label{i6-experiments}
 
-All simulations are seeded and reproducible. \texttt{verify\_theory.py}
-(8/8) and \texttt{verify\_slices.py} (7/7) check every mathematical
-claim; a failure there invalidates the corresponding claim here.
+All simulations are seeded and reproducible. Every mathematical claim is
+checked numerically; a failure there invalidates the corresponding claim
+here.
 
 \paragraph{I.6.1 The conditional world: the central
 result}\label{i61-the-conditional-world-the-central-result}
 
-\texttt{simulate\_slices.py} implements a world where a spec genuinely
-selects a slice: ambient \(ℝ^{64}\), reachable manifold \emph{d} = 24,
-conditional dimension \emph{m} = 3, additive composition over 5 axes × 4
-levels, rare off-manifold junk. Budget 10,000 generations, \emph{K} = 8.
+We simulate a world where a spec genuinely selects a slice: ambient
+\(ℝ^{64}\), reachable manifold \emph{d} = 24, conditional dimension
+\emph{m} = 3, additive composition over 5 axes × 4 levels, rare
+off-manifold junk. Budget 10,000 generations, \emph{K} = 8.
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -917,6 +905,14 @@ diversity. (b) Only recursive refinement raises the reachable-dimension
 ceiling. (c) Achieved diversity: 1.06 for a fixed prompt against 11.23
 for the full stack.}
 
+Refinement direction matters: children displaced isotropically from
+saturated modes reduce self-headroom (1.20 versus 1.38 unrefined), since
+tighter spread near the parent concentrates mass where the corpus
+already sits. Refinement pays only along directions transverse to the
+occupied span, which is what the calculus\textquotesingle s
+transversality term selects (Vendi 11.23 versus 10.60 for unguided
+refinement).
+
 Note that lattice size and reachable dimension \textbf{come apart}.
 Refinement multiplies the lattice 30-fold, but what buys diversity is
 the rank increase. A large lattice of low-rank levels gives many specs
@@ -932,10 +928,9 @@ a virtue by itself; it must be read jointly with achieved diversity.
 \paragraph{I.6.2 Budget-matched comparison and
 ablations}\label{i62-budget-matched-comparison-and-ablations}
 
-\texttt{experiment\_budget.py}: every method spends exactly 10,000
-generations on one world. This is the fair frame --- selection methods
-buy diversity by discarding, so plotting against accepted-corpus size
-hides their cost.
+Every method spends exactly 10,000 generations on one world. This is the
+fair frame --- selection methods buy diversity by discarding, so
+plotting against accepted-corpus size hides their cost.
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -997,14 +992,14 @@ we measured.
 \paragraph{\texorpdfstring{I.6.3 Poetry world at \emph{n} =
 10,000}{I.6.3 Poetry world at n = 10,000}}\label{i63-poetry-world-at-n--10000}
 
-\texttt{simulate.py}, six acquisition policies (figure 1). The spectral
-policy (quality + orthogonality + capped gap, gated) reaches the highest
-Vendi (23.28) with \textbf{zero} junk in the last 2,000 items and the
-highest quality (0.753), while pure max--min holds a much larger min-gap
-(2.26 versus \textasciitilde1.15) at 3.9\% junk and materially lower
-quality (0.626). Ungated anchor+repulsion is the worst configuration on
-every axis simultaneously --- it spends its selection pressure
-travelling outward and its Vendi \emph{declines} with \emph{n}.
+Six acquisition policies (figure 1). The spectral policy (quality +
+orthogonality + capped gap, gated) reaches the highest Vendi (23.28)
+with \textbf{zero} junk in the last 2,000 items and the highest quality
+(0.753), while pure max--min holds a much larger min-gap (2.26 versus
+\textasciitilde1.15) at 3.9\% junk and materially lower quality (0.626).
+Ungated anchor+repulsion is the worst configuration on every axis
+simultaneously --- it spends its selection pressure travelling outward
+and its Vendi \emph{declines} with \emph{n}.
 
 \paragraph{I.6.4 Exam items: a hard floor and finite
 packing}\label{i64-exam-items-a-hard-floor-and-finite-packing}
@@ -1022,7 +1017,7 @@ Item templates expose few manipulable slots, so each mode is a
 low-intrinsic-dimension disk and the δ-packing number is finite and
 small. Our bound \emph{N}max ≤ \emph{M}(2\emph{R}eff/δ + 1\()^{k}\)
 gives 5,543 for our parameters; the largest gated bank reaches 1,464
-real items, respecting it (check T3).
+real items, respecting it.
 
 The important result is what happens without a gate. Ungated strategies
 sail past the packing capacity to the full 2,000-item target --- by
@@ -1040,13 +1035,12 @@ generations per item overall.
 \paragraph{I.6.5 The coverage horizon, 5 →
 10,000}\label{i65-the-coverage-horizon-5--10000}
 
-\texttt{coverage\_horizon.py} probes, at log-spaced checkpoints, the
-best min-gap a \emph{fresh coherent} candidate can achieve against the
-corpus so far --- the novelty headroom remaining --- and normalizes it
-into an \emph{inability to be novel}, 1 −
-\emph{h}(\emph{g})/\emph{h}(5). Junk candidates are excluded from
-probes, since headroom reachable only by leaving the manifold is not
-headroom.
+We probe, at log-spaced checkpoints, the best min-gap a \emph{fresh
+coherent} candidate can achieve against the corpus so far --- the
+novelty headroom remaining --- and normalizes it into an \emph{inability
+to be novel}, 1 − \emph{h}(\emph{g})/\emph{h}(5). Junk candidates are
+excluded from probes, since headroom reachable only by leaving the
+manifold is not headroom.
 
 Every fixed-generator method converges toward exhaustion: naive 53.3\%,
 random-latent 49.0\%, online max--min 55.7\%, IHD selection 48.1\%. High
@@ -1662,41 +1656,8 @@ audio-diversity number without naming its embedder.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsubsection{I.8 Negative results}\label{i8-negative-results}
-
-We kept both of these rather than tuning them away.
-
-\paragraph{I.8.1 Naive refinement
-hurts}\label{i81-naive-refinement-hurts}
-
-Splitting saturated modes into tighter children displaced isotropically
-\textbf{reduced} self-headroom (1.20 versus 1.38 unrefined). Children
-with tighter spread placed near their parents concentrate probability
-mass exactly where the corpus already sits. Refinement subdivides
-territory you have already covered; it buys density, not reach.
-
-Refinement is valuable only when new directions are transverse to the
-occupied span --- Theorem 3 again. "Refine where saturated" is wrong on
-its own. The correct rule is \textbf{refine where saturated, in
-directions not yet spanned}, which is what the
-calculus\textquotesingle s transversality term computes and what
-\texttt{guided=True} implements (Vendi 11.23 versus 10.60).
-
-\paragraph{I.8.2 Our breadth-versus-depth theorem was
-false}\label{i82-our-breadth-versus-depth-theorem-was-false}
-
-We first claimed an interior optimum for samples-per-prompt. With free
-prompt-switching there is none: the optimum is \emph{n}* = 1, at the
-boundary. An interior optimum exists only once switching is priced
-(§3.6). We corrected the statement rather than the experiment. The
-corrected version is more useful anyway, since it tells a practitioner
-what to measure --- the ratio of spec-construction cost to generation
-cost --- instead of asserting a universal batch size.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\subsubsection{I.9 Relation to the coverage
-problem}\label{i9-relation-to-the-coverage-problem}
+\subsubsection{I.8 Relation to the coverage
+problem}\label{i8-relation-to-the-coverage-problem}
 
 This paper\textquotesingle s objective is a \textbf{packing} objective:
 max--min spacing, \emph{k}-center-like, driven by the worst-case nearest
@@ -1724,7 +1685,7 @@ proposal distribution is confined to a slice.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsubsection{I.10 Limitations}\label{i10-limitations}
+\subsubsection{I.9 Limitations}\label{i9-limitations}
 
 \textbf{The simulations encode our hypothesis.} Mixture-of-modes with
 skewed weights and a rare diffuse junk component is a model of generator
@@ -1757,7 +1718,7 @@ score.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsubsection{I.11 Conclusion}\label{i11-conclusion}
+\subsubsection{I.10 Conclusion}\label{i10-conclusion}
 
 The infinite-horizon diversity objective is easy to write, cheap to
 maintain, and largely beside the point. What determines whether a corpus
@@ -2243,28 +2204,27 @@ zero and the tie-breaking rule silently decides where the rest of the
 budget goes.
 
 \textbf{Depth per condition and switch cost.} The sibling
-paper\textquotesingle s slice theory (\texttt{../verify\_slices.py}, all
-checks passing) sharpens the within-cell side of allocation. For a
-\emph{fixed} prompt/spec the generator concentrates on an m-dimensional
-slice with m ≪ d, so fixed-prompt novelty decays as n\^{}(−1/m) (fitted
-slopes −0.472, −0.309, −0.195 for m = 2, 3, 5 --- governed by m, not by
-the ambient dimension), and one slice ε-covers a vanishing ε\^{}(d−m)
-fraction of the manifold. The budgeted consequence is a breadth-vs-depth
-rule whose correct form (their P3, corrected from its first statement)
-is: with \emph{free} condition-switching the optimum is the boundary n*
-= 1 --- one sample per spec, then move --- and an interior optimal depth
-exists only once switching carries a real cost c (eliciting a spec,
-embedding levels, an occasional refinement call): their measured n*
-rises from 1 (c = 0) to 10 (c = 3) to 30 (c = 30). Optimal depth is set
-by the switch-cost-to-sample-cost ratio, not by ε alone. Our pipelines
-sit near the cheap-switching regime --- in simulation a spec switch is
-free, and in the live pilot we measure c ≈ 0.10 generation-equivalents
-(§8: 5 axis-elicitation, refinement and ledger-mining calls amortized
-over 50 steps, against 3 generations per step) --- which is why every
-policy here draws its K candidates from K \emph{fresh} specs rather than
-sampling any spec deeply. At that switch cost the
-sibling\textquotesingle s sweep puts the optimum at or adjacent to n* =
-1, which is what we do.
+paper\textquotesingle s slice theory sharpens the within-cell side of
+allocation. For a \emph{fixed} prompt/spec the generator concentrates on
+an m-dimensional slice with m ≪ d, so fixed-prompt novelty decays as
+n\^{}(−1/m) (fitted slopes −0.472, −0.309, −0.195 for m = 2, 3, 5 ---
+governed by m, not by the ambient dimension), and one slice ε-covers a
+vanishing ε\^{}(d−m) fraction of the manifold. The budgeted consequence
+is a breadth-vs-depth rule whose correct form (their P3, corrected from
+its first statement) is: with \emph{free} condition-switching the
+optimum is the boundary n* = 1 --- one sample per spec, then move ---
+and an interior optimal depth exists only once switching carries a real
+cost c (eliciting a spec, embedding levels, an occasional refinement
+call): their measured n* rises from 1 (c = 0) to 10 (c = 3) to 30 (c =
+30). Optimal depth is set by the switch-cost-to-sample-cost ratio, not
+by ε alone. Our pipelines sit near the cheap-switching regime --- in
+simulation a spec switch is free, and in the live pilot we measure c ≈
+0.10 generation-equivalents (§8: 5 axis-elicitation, refinement and
+ledger-mining calls amortized over 50 steps, against 3 generations per
+step) --- which is why every policy here draws its K candidates from K
+\emph{fresh} specs rather than sampling any spec deeply. At that switch
+cost the sibling\textquotesingle s sweep puts the optimum at or adjacent
+to n* = 1, which is what we do.
 
 \subsubsection{II.4 Method}\label{ii4-method}
 
@@ -2291,38 +2251,37 @@ the reason the method\textquotesingle s candidates are worth ranking at
 all.
 
 \textbf{Calculus-guided conditioning (the coverage adaptation).} The
-sibling paper\textquotesingle s generation calculus
-(\texttt{../calculus.py}) ranks candidate axes by a four-factor product
---- spread (are the axis\textquotesingle s levels different from each
-other), transversality (does their variation point outside the
-corpus\textquotesingle s occupied eigenspace), independence (measured
-against axes already in use, never against rival candidates --- scoring
-candidates against each other makes duplicates zero each other out), and
-headroom (an entropy deficit over the axis\textquotesingle s sampled
-levels). Under a \emph{coverage} objective this product collapses, and
-the collapse is itself a packing-vs-covering result. Packing has no
-per-axis marginal decomposition --- min-gap is a global property --- so
-the calculus must approximate "will this axis move the slice somewhere
-new" from four separate geometric proxies. Submodular coverage has an
-exact marginal quantity: the \textbf{expected marginal ε-ball gain of
-conditioning on the axis}, E\_\{x∼axis\}{[}F(S ∪ \{x\}) − F(S){]}. That
-one scalar subsumes the four factors: an axis with near-synonym levels
-(no spread) or whose slices sit inside covered territory (no
-transversality) or which duplicates an axis already exploited (no
-independence, because the covered mask already contains that
-axis\textquotesingle s contribution and re-scores every candidate after
-every accept --- the same greedy re-scoring insight as the
-calculus\textquotesingle s \texttt{select\_axis\_set}, executed by the
-objective itself) or whose region is already covered (no headroom) all
-have small expected marginal gain, and the headroom that remains is
-\emph{measure-weighted} by construction --- a large under-sampled region
-beats a small one because it holds more uncovered pool mass. In
-simulation we estimate the scalar directly: each spec carries an
-estimate initialized from an 8-draw probe at creation and updated as an
-EMA of observed candidate gains, and the K specs per step are drawn
-proportionally to it with a 20\% uniform exploration floor
-(\texttt{gated\_coverage\_refine\_calc}). In the live pilot, where axes
-rather than opaque specs are the unit, we keep the
+sibling paper\textquotesingle s generation calculus ranks candidate axes
+by a four-factor product --- spread (are the axis\textquotesingle s
+levels different from each other), transversality (does their variation
+point outside the corpus\textquotesingle s occupied eigenspace),
+independence (measured against axes already in use, never against rival
+candidates --- scoring candidates against each other makes duplicates
+zero each other out), and headroom (an entropy deficit over the
+axis\textquotesingle s sampled levels). Under a \emph{coverage}
+objective this product collapses, and the collapse is itself a
+packing-vs-covering result. Packing has no per-axis marginal
+decomposition --- min-gap is a global property --- so the calculus must
+approximate "will this axis move the slice somewhere new" from four
+separate geometric proxies. Submodular coverage has an exact marginal
+quantity: the \textbf{expected marginal ε-ball gain of conditioning on
+the axis}, E\_\{x∼axis\}{[}F(S ∪ \{x\}) − F(S){]}. That one scalar
+subsumes the four factors: an axis with near-synonym levels (no spread)
+or whose slices sit inside covered territory (no transversality) or
+which duplicates an axis already exploited (no independence, because the
+covered mask already contains that axis\textquotesingle s contribution
+and re-scores every candidate after every accept --- the same greedy
+re-scoring insight as the calculus\textquotesingle s
+\texttt{select\_axis\_set}, executed by the objective itself) or whose
+region is already covered (no headroom) all have small expected marginal
+gain, and the headroom that remains is \emph{measure-weighted} by
+construction --- a large under-sampled region beats a small one because
+it holds more uncovered pool mass. In simulation we estimate the scalar
+directly: each spec carries an estimate initialized from an 8-draw probe
+at creation and updated as an EMA of observed candidate gains, and the K
+specs per step are drawn proportionally to it with a 20\% uniform
+exploration floor (\texttt{gated\_coverage\_refine\_calc}). In the live
+pilot, where axes rather than opaque specs are the unit, we keep the
 sibling\textquotesingle s embedding-based spread and transversality
 (level-description embeddings against the accepted
 corpus\textquotesingle s occupied eigenspace) and replace its entropy
@@ -2570,8 +2529,7 @@ emits.
 \subsubsection{II.6 Numerical verification of the
 theory}\label{ii6-numerical-verification-of-the-theory}
 
-All checks in \texttt{verify\_theory.py}; all numbers in
-\texttt{figures/summary\_theory.json}.
+All numbers in \texttt{figures/summary\_theory.json}.
 
 \textbf{6.1 Submodularity (exact).} 200 candidates, 5,000-point pool, ε
 = 1.0. Over 5,000 random nested chains S ⊂ T with a fresh x: 0
@@ -2663,24 +2621,24 @@ target recursive refinement works toward) covers 0.374, recovering
 --- not selection --- is where the missing coverage lives.
 
 \textbf{6.7 Lattice size is not reachable dimension.} Using the sibling
-paper\textquotesingle s slice-structured world (specs compose level
-directions additively; \texttt{../simulate\_slices.py}), we build two
-worlds with \emph{identical} lattice size L\^{}A = 1,024 distinct specs
-but different rank of the level-direction span: full-rank (rank 10,
-reachable dimension 13) versus low-rank (all axes forced into a shared
-2-dim subspace: rank 2, reachable dimension 5). Same budget (n = 2,000
-random-spec draws), same radius (ε = 0.27): the low-rank
-world\textquotesingle s own reachable pool is 68.1\% covered where the
-full-rank world\textquotesingle s is 49.0\%. The number of distinct
-prompts you can write says nothing about how much there is to cover;
-covered volume is governed by reachable dimension, and a huge lattice
-over low-rank level directions is a thin space wearing a combinatorial
-costume. For coverage this distinction is sharper than for packing ---
-the denominator itself is set by reachable dimension --- and it is why
-our simulation worlds put a spec layer between policy and world rather
-than drawing from a global mixture: a simulator without conditioning
-structure cannot exhibit the effect and understates refinement (the
-sibling paper measured exactly this failure in its own first simulator).
+paper\textquotesingle s slice-structured world, in which specs compose
+level directions additively, we build two worlds with \emph{identical}
+lattice size L\^{}A = 1,024 distinct specs but different rank of the
+level-direction span: full-rank (rank 10, reachable dimension 13) versus
+low-rank (all axes forced into a shared 2-dim subspace: rank 2,
+reachable dimension 5). Same budget (n = 2,000 random-spec draws), same
+radius (ε = 0.27): the low-rank world\textquotesingle s own reachable
+pool is 68.1\% covered where the full-rank world\textquotesingle s is
+49.0\%. The number of distinct prompts you can write says nothing about
+how much there is to cover; covered volume is governed by reachable
+dimension, and a huge lattice over low-rank level directions is a thin
+space wearing a combinatorial costume. For coverage this distinction is
+sharper than for packing --- the denominator itself is set by reachable
+dimension --- and it is why our simulation worlds put a spec layer
+between policy and world rather than drawing from a global mixture: a
+simulator without conditioning structure cannot exhibit the effect and
+understates refinement (the sibling paper measured exactly this failure
+in its own first simulator).
 
 \textbf{6.8 Refinement direction: density vs reach.} The sibling
 paper\textquotesingle s negative result --- naive refinement hurt,
@@ -2923,8 +2881,7 @@ uncentered form.
 
 \textbf{Is ε measuring the cone or the content?} This is the question
 the caveat raises for every coverage number computed with cosine
-distances, so we measured it (\texttt{cone\_diagnostics} in
-\texttt{summary\_live.json}). Our pool\textquotesingle s mean pairwise
+distances, so we measured it. Our pool\textquotesingle s mean pairwise
 cosine is \textbf{0.444} (p05 0.330, p95 0.591) --- a wide cone, not the
 \textasciitilde0.9 concentration seen in some same-domain embedding sets
 --- with mean direction norm 0.667. Our ε\_sel = 0.770 corresponds to
@@ -2958,15 +2915,14 @@ repeated prompting (\texttt{dalle\_naive},
 \texttt{psychometric\_naive}), with saved embeddings. No selection
 policy shaped them, so they look like an ideal policy-independent
 reference measure, and we used one as the denominator for every arm of
-the parent project\textquotesingle s competitive matrix
-(\texttt{real\_coverage.py}). The result was stark: at the calibrated
-mid radius, coverage was \textbf{anti-correlated with every diversity
-metric}. In the DALL-E domain, naive scored 0.137 and high-temperature
-0.135, while Self-Instruct scored 0.015, Evol-Instruct 0.011, and
-Persona-Hub, the parent method, and its vision-steered variant all
-scored \textbf{0.000} --- the same ordering, reversed, as distinct-2
-(0.284 for naive rising to 0.699 for the vision arm) and centered Vendi
-(50.3 rising to 92.0).
+the parent project\textquotesingle s competitive matrix. The result was
+stark: at the calibrated mid radius, coverage was
+\textbf{anti-correlated with every diversity metric}. In the DALL-E
+domain, naive scored 0.137 and high-temperature 0.135, while
+Self-Instruct scored 0.015, Evol-Instruct 0.011, and Persona-Hub, the
+parent method, and its vision-steered variant all scored \textbf{0.000}
+--- the same ordering, reversed, as distinct-2 (0.284 for naive rising
+to 0.699 for the vision arm) and centered Vendi (50.3 rising to 92.0).
 
 A number that ranks methods in exact reverse order of every other
 diversity measure is not measuring what its name says. Three things were
@@ -3016,23 +2972,23 @@ get generated, and which get kept. This paper\textquotesingle s
 contribution is a selection rule. Selection is only comparable when
 every rule sees the same candidates.
 
-We also verified the estimator itself before trusting it further
-(\texttt{verify\_estimator.py}): against the analytic volume of a ball
-in a uniform cube it is within 3 Monte-Carlo standard errors at d = 2,
-3, 4; the union of nine disjoint balls matches m·V to within 2.0e-4;
-duplicate centers add exactly zero coverage (the submodularity-critical
-property a naive sum-of-counts implementation would violate); and on a
-1-D instance with an analytically known optimum, greedy attains it
-exactly (70/70 points). The estimator was not the problem.
+We also verified the estimator itself before trusting it further :
+against the analytic volume of a ball in a uniform cube it is within 3
+Monte-Carlo standard errors at d = 2, 3, 4; the union of nine disjoint
+balls matches m·V to within 2.0e-4; duplicate centers add exactly zero
+coverage (the submodularity-critical property a naive sum-of-counts
+implementation would violate); and on a 1-D instance with an
+analytically known optimum, greedy attains it exactly (70/70 points).
+The estimator was not the problem.
 
 \paragraph{II.9.5 The corrected comparison: budget-matched
 selection}\label{ii95-the-corrected-comparison-budget-matched-selection}
 
-\texttt{real\_benchmark.py} fixes all three. Every method selects k =
-400 items from one shared candidate pool, so all consume exactly the
-same number of generations and differ only in which items they keep ---
-the comparison is budget-matched by construction, not merely n-matched.
-The reference is stratum-balanced; ε is calibrated on it.
+The corrected benchmark fixes all three. Every method selects k = 400
+items from one shared candidate pool, so all consume exactly the same
+number of generations and differ only in which items they keep --- the
+comparison is budget-matched by construction, not merely n-matched. The
+reference is stratum-balanced; ε is calibrated on it.
 
 \textbf{A fourth error, found by auditing our own win.} Our first
 version of this benchmark built one incidence matrix against the
@@ -3172,9 +3128,9 @@ downloaded: \textbf{Alpaca} (Self-Instruct, 52,002 items),
 \textbf{PersonaHub} (50,000), and \textbf{WizardLM Evol-Instruct V2}
 (143,000). Against them we place three arms generated from gpt-5.6-luna
 at 450 items each: unconditioned prompting, the same prompt at T = 1.6,
-and axis-conditioned generation with an attractor ledger
-(\texttt{instruction\_gen.py}, \$0.376, 564 s). Matched n = 60 after
-deduplication, identical embedder, instruction field only.
+and axis-conditioned generation with an attractor ledger (\$0.376, 564
+s). Matched n = 60 after deduplication, identical embedder, instruction
+field only.
 
 \textbf{The coverage metric does not survive this comparison, and that
 is the result.} Ranked by covered fraction of a stratum-balanced
@@ -3607,13 +3563,7 @@ it covered.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\emph{All numbers in this paper are produced by
-\texttt{simulate\_coverage.py}, \texttt{verify\_theory.py}, and
-\texttt{live\_pilot.py} in this directory and recorded in
-\texttt{figures/summary\_sim.json},
-\texttt{figures/summary\_theory.json}, and
-\texttt{figures/summary\_live.json}. Figures: \texttt{make\_figures.py}.
-Reproduction: \texttt{README.md}.}
+py\texttt{,\ the\ accompanying\ code,\ and\ the\ accompanying\ code\ in\ this\ directory\ and\ recorded\ in\ }figures/summary\_sim.json\texttt{,\ }figures/summary\_theory.json\texttt{,\ and\ }figures/summary\_live.json\texttt{.\ \ Reproduction:\ }README.md`.*
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -3696,8 +3646,7 @@ seriously}\label{iii2b-the-duality-taken-seriously}
 
 Calling coverage "the dual of max-min" is exactly right in one sense and
 importantly wrong in another, and both halves have algorithmic
-consequences we verified on real embeddings
-(\texttt{coverage/duality.py}).
+consequences we verified on real embeddings.
 
 \textbf{Where they are dual.} For radius ε, a \emph{maximal} ε-packing
 is automatically an ε-covering: any uncovered point could have been

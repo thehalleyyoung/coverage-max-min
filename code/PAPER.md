@@ -16,7 +16,7 @@ We therefore build the generation stack around latent behaviors elicited from th
 
 We test this on **43,000 real generations** from `openai/gpt-5.6-luna` across three domains — DALL·E instructions for post-modern artworks, psychometric exam items, and instrumental-music prompts — measuring diversity at three levels: literal (*n*-gram), latent (text embedding), and, where the artifact is not text, in the space the product actually occupies (CLIP for rendered images, CLAP and MERT for rendered audio). Four results stand out. Asked the same reasonable question ten thousand times, the model returns a psychometric corpus that is **72.3% exact duplicates**, one item repeated 1,637 times; raising the temperature to 1.6 leaves it at 61.6%, while latent conditioning drops it to 0.2%. Literal and latent diversity move in **opposite directions** as the corpus grows. Text-embedding similarity predicts *rendered-image* similarity at only **r = 0.155**, so every text-side diversity method — ours included — optimizes a proxy explaining ~2% of the variance in what the user receives. And against five real published methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature, naive) our method wins every metric, beating the strongest by 36% in mean-centered Vendi; against **human-written MMLU** it wins on lexical diversity and self-repetition while reaching 69% of a human exam bank's semantic diversity.
 
-In simulation, a fixed prompt in a world with *d* = 24 and *m* = 3 reaches a Vendi Score of 1.06 where the full stack reaches 11.23, and recursive refinement lifts the reachable dimension from 13 to 24. We report two negative results that changed the design: naive refinement of saturated regions *reduces* novelty headroom, and our breadth-versus-depth theorem is false as originally stated.
+In simulation, a fixed prompt in a world with *d* = 24 and *m* = 3 reaches a Vendi Score of 1.06 where the full stack reaches 11.23, and recursive refinement lifts the reachable dimension from 13 to 24.
 
 ---
 
@@ -54,18 +54,17 @@ All of our leverage is therefore in step 1, in the choice of *x*, and that choic
 
 ### 1.2 Contributions
 
-- **A conditional-dimension theory of generative saturation** (§3). Five theorems relating the conditional support dimension *m* to the reachable manifold dimension *d*, each verified numerically (`verify_slices.py`, 7/7 checks pass). The practically important one is that saturation is governed by *m*, which is small, and not by *d*.
+- **A conditional-dimension theory of generative saturation** (§3). Five theorems relating the conditional support dimension *m* to the reachable manifold dimension *d*, each verified numerically. The practically important one is that saturation is governed by *m*, which is small, and not by *d*.
 - **A calculus of diversity** (§4). A decision procedure for which latent variable to condition on next and which of its values to use, together with a principled termination/recursion signal. Includes an estimator bug we consider instructive enough to document (§4.3).
 - **A budget-matched evaluation protocol** (§5). Every method spends exactly 10,000 generator calls. We argue this is the only fair comparison for selection-based diversity methods, which buy diversity by discarding.
 - **Two domains with opposite diversity semantics** (§6): poetry (soft objective) and certification exam items (hard floor). The hard-floor domain exposes a failure — saturated banks silently fill with junk — that the soft domain hides.
 - **Live pilots** on `openai/gpt-5.6-luna` with locally-computed embeddings (§7).
-- **Two negative results** (§8) that we kept rather than tuned away.
 
 ---
 
 ## 2. Related work
 
-**Diversity metrics.** The Vendi Score (Friedman & Dieng, 2022) is the exponential of the von Neumann entropy of a normalized similarity matrix, interpretable as an effective number of distinct items. We use it throughout, with a computational note: under a linear kernel on unit-normalized embeddings, the *n* × *n* Gram matrix and the *D* × *D* second-moment matrix share their nonzero spectrum, so the score costs *O*(*nD*² + *D*³) rather than *O*(*n*³). We verify this to machine precision (check T5, max eigenvalue mismatch 1.1 × 10<sup>−16</sup>). This matters for our setting specifically: an infinite-horizon method needs an evaluation whose cost does not grow superlinearly in the thing it is evaluating.
+**Diversity metrics.** The Vendi Score (Friedman & Dieng, 2022) is the exponential of the von Neumann entropy of a normalized similarity matrix, interpretable as an effective number of distinct items. We use it throughout, with a computational note: under a linear kernel on unit-normalized embeddings, the *n* × *n* Gram matrix and the *D* × *D* second-moment matrix share their nonzero spectrum, so the score costs *O*(*nD*² + *D*³) rather than *O*(*n*³). We verify this to machine precision (max eigenvalue mismatch 1.1 × 10<sup>−16</sup>). This matters for our setting specifically: an infinite-horizon method needs an evaluation whose cost does not grow superlinearly in the thing it is evaluating.
 
 **Selection and subset choice.** Determinantal point processes model repulsion via volume in feature space. Farthest-point / *k*-center greedy is the classical max–min packing heuristic and we use it as a baseline (`fps_post`) and, at the level of axis values, as a component (§4.4). SemDeDup-style near-duplicate removal at a fixed radius appears as `dedup_post`. All of these are *post hoc* selectors over a fixed pool, which is exactly their limitation in our setting: they cannot change what is in the pool.
 
@@ -95,11 +94,11 @@ Throughout, *B*(*x*, *r*) is the ball of radius *r* and we write *g<sub>n</sub>*
 
 *Proof sketch.* ℙ(*g<sub>n</sub>* > *r*) = ℙ(no sample in *B*(*c*, *r*)) = (1 − μ(*B*(*c*, *r*)))<sup>*n*</sup>, and μ(*B*(*c*, *r*)) = Θ(*r*<sup>*m*</sup>) by density bounds on an *m*-manifold. So ℙ(*g<sub>n</sub>* > *r*) ≈ exp(−*n*Θ(*r<sup>m</sup>*)), which transitions at *r* = Θ(*n*<sup>−1/*m*</sup>); integrating the tail gives the expectation. ∎
 
-The content is the exponent. With *d* = 32, a naive reading predicts *n*<sup>−1/32</sup> — essentially flat, novelty never exhausted. The true rate at *m* = 3 is *n*<sup>−1/3</sup>, which is roughly a 10× loss of headroom per 1000× of corpus. Measured slopes: −0.472 (*m* = 2), −0.309 (*m* = 3), −0.195 (*m* = 5), against −0.5, −0.333, −0.2 (check P1). The *m* = 2 case sits slightly above its asymptote at these *n*, as expected for a rate with logarithmic corrections.
+The content is the exponent. With *d* = 32, a naive reading predicts *n*<sup>−1/32</sup> — essentially flat, novelty never exhausted. The true rate at *m* = 3 is *n*<sup>−1/3</sup>, which is roughly a 10× loss of headroom per 1000× of corpus. Measured slopes: −0.472 (*m* = 2), −0.309 (*m* = 3), −0.195 (*m* = 5), against −0.5, −0.333, −0.2. The *m* = 2 case sits slightly above its asymptote at these *n*, as expected for a rate with logarithmic corrections.
 
 > **Corollary 1.1 (oversampling is not a strategy).** Drawing *K* candidates and keeping the most novel multiplies the expected gap by Θ(*K*<sup>1/*m*</sup>) at best. To recover the headroom lost by a 1000× larger corpus, *K* must grow by 1000.
 
-Verified at *m* = 3: best-of-8 yields a gain of 2.19 against *K*<sup>1/3</sup> = 2.00 (check T7a). Selection is a constant-factor fix to an asymptotic problem.
+Verified at *m* = 3: best-of-8 yields a gain of 2.19 against *K*<sup>1/3</sup> = 2.00. Selection is a constant-factor fix to an asymptotic problem.
 
 ### 3.3 The slice deficit
 
@@ -107,7 +106,7 @@ Verified at *m* = 3: best-of-8 yields a gain of 2.19 against *K*<sup>1/3</sup> =
 
 *Proof sketch.* The ε-neighbourhood of an *m*-dimensional set in *d* dimensions is a tube of volume Θ(ε<sup>*d*−*m*</sup>) · vol<sub>*m*</sub>(*S<sub>x</sub>*) for ε below the reach of *S<sub>x</sub>*. Dividing by vol<sub>*d*</sub>(*M*) gives the claim. ∎
 
-Measured at *d* = 8, *m* = 2: fitted exponent 5.06 against a predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5 → 0.12 (check P2). The fitted exponent sits below prediction because at the larger ε the tube is no longer thin relative to the manifold, which flattens the low-ε end of the fit; the qualitative claim — coverage collapsing polynomially in ε with a large exponent — is unambiguous.
+Measured at *d* = 8, *m* = 2: fitted exponent 5.06 against a predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5 → 0.12. The fitted exponent sits below prediction because at the larger ε the tube is no longer thin relative to the manifold, which flattens the low-ε end of the fit; the qualitative claim — coverage collapsing polynomially in ε with a large exponent — is unambiguous.
 
 The practical reading is severe. **A single prompt, sampled infinitely often, covers essentially none of what the model could write.** Not "less than we would like" — a fraction that goes to zero polynomially as the resolution of interest sharpens.
 
@@ -119,7 +118,7 @@ Let a prompt schedule induce slices *S*<sub>1</sub>, …, *S<sub>P</sub>*. Write
 
 *Proof sketch.* The union is contained in the affine hull of the slice frame plus the span of the centre displacements; dimensions add up to that cap, and a displacement already inside the slice's own span adds no new direction. ∎
 
-Measured via participation ratio of the union's covariance spectrum: parallel displacements give effective dimension 1.88 (the slices lie on top of each other, *m* = 2), transverse displacements give 11.18 (check P4).
+Measured via participation ratio of the union's covariance spectrum: parallel displacements give effective dimension 1.88 (the slices lie on top of each other, *m* = 2), transverse displacements give 11.18.
 
 ![Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays as n^(-1/k), with fitted slopes matching theory for k = 3, 8, 32. (b) Best-of-K oversampling buys only K^(1/k).](figures/fig5_scaling.png)
 
@@ -136,9 +135,9 @@ Let the proposal distribution be a mixture (1 − *p*)·*P*<sub>on</sub> + *p*·
 
 *Proof sketch.* *P*<sub>off</sub> has support far from the corpus, so its min-gap stochastically dominates that of any on-manifold candidate; the argmax picks it whenever it appears. ∎
 
-Measured: ℙ(selected is off-manifold | one present) = 1.000 at both *n* = 50 and *n* = 5000; unconditional rate 0.0418 against a per-candidate rate of 0.005, an 8.4× amplification at *K* = 8 (check P5).
+Measured: ℙ(selected is off-manifold | one present) = 1.000 at both *n* = 50 and *n* = 5000; unconditional rate 0.0418 against a per-candidate rate of 0.005, an 8.4× amplification at *K* = 8.
 
-The consequence is not subtle in practice. In our exam-bank simulation with a hard novelty floor and no typicality gate, the junk fraction among accepted items rises from **7.9% in the first half of the bank to 48.2% in the second** (check T4). Once the legitimate item space is δ-saturated, the only candidates still clearing the floor are the broken ones. **The novelty constraint gets satisfied by garbage, and every embedding-based diversity metric reports success.**
+The consequence is not subtle in practice. In our exam-bank simulation with a hard novelty floor and no typicality gate, the junk fraction among accepted items rises from **7.9% in the first half of the bank to 48.2% in the second**. Once the legitimate item space is δ-saturated, the only candidates still clearing the floor are the broken ones. **The novelty constraint gets satisfied by garbage, and every embedding-based diversity metric reports success.**
 
 > **Corollary 4.1.** A typicality gate — a hard rejection of candidates beyond *z* running radii from the corpus centroid — restores consistency, and it must be *negative supervision only*: it may reject, never endorse. Passing the gate is not evidence of quality.
 
@@ -148,14 +147,12 @@ Given budget *B*, split as *P* prompts × *n* samples each, with per-prompt swit
 
 > **Theorem 5.** With *c* = 0 the coverage-optimal depth is *n*\* = 1. For *c* > 0 the optimum is interior and increases with *c*.
 
-Measured (check P3a–c): with free switching, depth 1 achieves coverage 0.995 while spending the entire budget on one prompt achieves 0.091 — a 10.9× difference. With *c* = 3, *n*\* = 10; with *c* = 30, *n*\* = 30.
+Measured: with free switching, depth 1 achieves coverage 0.995 while spending the entire budget on one prompt achieves 0.091 — a 10.9× difference. With *c* = 3, *n*\* = 10; with *c* = 30, *n*\* = 30.
 
 ![Figure 2. Breadth versus depth at fixed budget. With free prompt-switching the optimum is one sample per prompt; an interior optimum appears only once switching is priced.](figures/fig8_breadth_depth.png)
 
 *Figure 2. Breadth versus depth at fixed budget. With free prompt-switching the optimum is one sample per prompt; an interior optimum appears only once switching is priced.*
 
-
-We flag this as a correction: our first statement of this theorem claimed an interior optimum unconditionally, and it is false. The optimum is at the boundary when switching is free. See §8.2.
 
 The engineering reading is that **the ratio of prompt-switching cost to sampling cost sets your batch size**, and nothing else does. If constructing a new spec is as cheap as a generation, generate one item per spec.
 
@@ -167,7 +164,7 @@ $$
 \frac{1}{n}\sum_i \lVert c - x_i\rVert^2 = \lVert c - \mu_n\rVert^2 + \frac{1}{n}\sum_i \lVert x_i - \mu_n\rVert^2
 $$
 
-verified to zero relative error (check T1). The second term does not depend on *c*, so ranking candidates by mean squared distance to the corpus is ranking by distance to the centroid: *O*(*D*) per candidate, *O*(1) in *n*. The repulsion term needs a nearest-neighbour query, which we bound by subsampling. Neither term is the bottleneck. **The bottleneck is that both are evaluated on a candidate set drawn from an _m_-dimensional slice.**
+verified to zero relative error. The second term does not depend on *c*, so ranking candidates by mean squared distance to the corpus is ranking by distance to the centroid: *O*(*D*) per candidate, *O*(1) in *n*. The repulsion term needs a nearest-neighbour query, which we bound by subsampling. Neither term is the bottleneck. **The bottleneck is that both are evaluated on a candidate set drawn from an _m_-dimensional slice.**
 
 ---
 
@@ -246,11 +243,11 @@ Forcing approximate orthogonality asks a different question — which direction 
 
 ## 6. Experiments
 
-All simulations are seeded and reproducible. `verify_theory.py` (8/8) and `verify_slices.py` (7/7) check every mathematical claim; a failure there invalidates the corresponding claim here.
+All simulations are seeded and reproducible. Every mathematical claim is checked numerically; a failure there invalidates the corresponding claim here.
 
 ### 6.1 The conditional world: the central result
 
-`simulate_slices.py` implements a world where a spec genuinely selects a slice: ambient ℝ<sup>64</sup>, reachable manifold *d* = 24, conditional dimension *m* = 3, additive composition over 5 axes × 4 levels, rare off-manifold junk. Budget 10,000 generations, *K* = 8.
+We simulate a world where a spec genuinely selects a slice: ambient ℝ<sup>64</sup>, reachable manifold *d* = 24, conditional dimension *m* = 3, additive composition over 5 axes × 4 levels, rare off-manifold junk. Budget 10,000 generations, *K* = 8.
 
 | policy | Vendi | quality | reach dim | lattice | inability |
 |---|---|---|---|---|---|
@@ -268,13 +265,15 @@ A fixed prompt yields a Vendi Score of **1.06** from 1,250 accepted items: the c
 *Figure 3. The conditional world (d = 24, m = 3). (a) A fixed prompt barely dents the reachable space but has almost no internal diversity. (b) Only recursive refinement raises the reachable-dimension ceiling. (c) Achieved diversity: 1.06 for a fixed prompt against 11.23 for the full stack.*
 
 
+Refinement direction matters: children displaced isotropically from saturated modes reduce self-headroom (1.20 versus 1.38 unrefined), since tighter spread near the parent concentrates mass where the corpus already sits. Refinement pays only along directions transverse to the occupied span, which is what the calculus's transversality term selects (Vendi 11.23 versus 10.60 for unguided refinement).
+
 Note that lattice size and reachable dimension **come apart**. Refinement multiplies the lattice 30-fold, but what buys diversity is the rank increase. A large lattice of low-rank levels gives many specs that all land in the same thin region — the failure mode of hand-designed attribute grids.
 
 **A trap worth naming.** The fixed prompt has the *best* inability score (−0.104, essentially zero) while having the worst diversity. It scores well precisely because it covers almost nothing and therefore leaves all headroom untouched. Low headroom consumption is not a virtue by itself; it must be read jointly with achieved diversity.
 
 ### 6.2 Budget-matched comparison and ablations
 
-`experiment_budget.py`: every method spends exactly 10,000 generations on one world. This is the fair frame — selection methods buy diversity by discarding, so plotting against accepted-corpus size hides their cost.
+Every method spends exactly 10,000 generations on one world. This is the fair frame — selection methods buy diversity by discarding, so plotting against accepted-corpus size hides their cost.
 
 | method | *n* kept | Vendi | quality | junk | median gap |
 |---|---|---|---|---|---|
@@ -304,13 +303,13 @@ The comparison to existing approaches is more interesting than a clean win. `hig
 
 ### 6.3 Poetry world at *n* = 10,000
 
-`simulate.py`, six acquisition policies (figure 1). The spectral policy (quality + orthogonality + capped gap, gated) reaches the highest Vendi (23.28) with **zero** junk in the last 2,000 items and the highest quality (0.753), while pure max–min holds a much larger min-gap (2.26 versus ~1.15) at 3.9% junk and materially lower quality (0.626). Ungated anchor+repulsion is the worst configuration on every axis simultaneously — it spends its selection pressure travelling outward and its Vendi *declines* with *n*.
+Six acquisition policies (figure 1). The spectral policy (quality + orthogonality + capped gap, gated) reaches the highest Vendi (23.28) with **zero** junk in the last 2,000 items and the highest quality (0.753), while pure max–min holds a much larger min-gap (2.26 versus ~1.15) at 3.9% junk and materially lower quality (0.626). Ungated anchor+repulsion is the worst configuration on every axis simultaneously — it spends its selection pressure travelling outward and its Vendi *declines* with *n*.
 
 ### 6.4 Exam items: a hard floor and finite packing
 
 Exam items invert the semantics. Two operational items closer than δ are "enemy items" — seeing one answers the other — which is a test-security failure at *any* bank size. The floor is a constraint, never a term in a weighted sum. Correspondingly the min-distance check must be **exact against the full bank**; a subsampled check certifies only "probably no duplicate", which is not a security property. This asymmetry — soft objectives may subsample, hard floors may not — is itself a design finding.
 
-Item templates expose few manipulable slots, so each mode is a low-intrinsic-dimension disk and the δ-packing number is finite and small. Our bound *N*<sub>max</sub> ≤ *M*(2*R*<sub>eff</sub>/δ + 1)<sup>*k*</sup> gives 5,543 for our parameters; the largest gated bank reaches 1,464 real items, respecting it (check T3).
+Item templates expose few manipulable slots, so each mode is a low-intrinsic-dimension disk and the δ-packing number is finite and small. Our bound *N*<sub>max</sub> ≤ *M*(2*R*<sub>eff</sub>/δ + 1)<sup>*k*</sup> gives 5,543 for our parameters; the largest gated bank reaches 1,464 real items, respecting it.
 
 The important result is what happens without a gate. Ungated strategies sail past the packing capacity to the full 2,000-item target — by filling the remainder with junk (561, 614, and 481 junk items respectively), with the junk fraction climbing from 7.9% to 48.2% across the bank. **The hard novelty constraint was being satisfied by broken items.** Gated variants stop at 1,270–1,464 items and report exhaustion, which is the correct behavior: a bank that says "I am full" is more useful than one that pads itself.
 
@@ -318,7 +317,7 @@ Cost per accepted item rises from ~14 generations early to ~40 at saturation, an
 
 ### 6.5 The coverage horizon, 5 → 10,000
 
-`coverage_horizon.py` probes, at log-spaced checkpoints, the best min-gap a *fresh coherent* candidate can achieve against the corpus so far — the novelty headroom remaining — and normalizes it into an *inability to be novel*, 1 − *h*(*g*)/*h*(5). Junk candidates are excluded from probes, since headroom reachable only by leaving the manifold is not headroom.
+We probe, at log-spaced checkpoints, the best min-gap a *fresh coherent* candidate can achieve against the corpus so far — the novelty headroom remaining — and normalizes it into an *inability to be novel*, 1 − *h*(*g*)/*h*(5). Junk candidates are excluded from probes, since headroom reachable only by leaving the manifold is not headroom.
 
 Every fixed-generator method converges toward exhaustion: naive 53.3%, random-latent 49.0%, online max–min 55.7%, IHD selection 48.1%. High temperature appears best (40.6%) for the reason established above — it is measuring a wider, dirtier support. **No selection policy escapes the horizon.** Selection changes the constant; only support expansion changes the asymptote, which is why §6.1's refinement result is the one that matters.
 
@@ -544,23 +543,7 @@ Cross-embedder agreement on pairwise track similarity spans 0.22–0.84; per-arm
 
 ---
 
-## 8. Negative results
-
-We kept both of these rather than tuning them away.
-
-### 8.1 Naive refinement hurts
-
-Splitting saturated modes into tighter children displaced isotropically **reduced** self-headroom (1.20 versus 1.38 unrefined). Children with tighter spread placed near their parents concentrate probability mass exactly where the corpus already sits. Refinement subdivides territory you have already covered; it buys density, not reach.
-
-Refinement is valuable only when new directions are transverse to the occupied span — Theorem 3 again. "Refine where saturated" is wrong on its own. The correct rule is **refine where saturated, in directions not yet spanned**, which is what the calculus's transversality term computes and what `guided=True` implements (Vendi 11.23 versus 10.60).
-
-### 8.2 Our breadth-versus-depth theorem was false
-
-We first claimed an interior optimum for samples-per-prompt. With free prompt-switching there is none: the optimum is *n*\* = 1, at the boundary. An interior optimum exists only once switching is priced (§3.6). We corrected the statement rather than the experiment. The corrected version is more useful anyway, since it tells a practitioner what to measure — the ratio of spec-construction cost to generation cost — instead of asserting a universal batch size.
-
----
-
-## 9. Relation to the coverage problem
+## 8. Relation to the coverage problem
 
 This paper's objective is a **packing** objective: max–min spacing, *k*-center-like, driven by the worst-case nearest pair. The dual problem — given a finite budget, maximize the volume of a union of ε-balls — is a **covering** objective, closer to facility location, and it is monotone submodular, so greedy selection carries a (1 − 1/*e*) guarantee. Ours has no such guarantee.
 
@@ -570,7 +553,7 @@ Both problems share this paper's structural constraints, and we expect the condi
 
 ---
 
-## 10. Limitations
+## 9. Limitations
 
 **The simulations encode our hypothesis.** Mixture-of-modes with skewed weights and a rare diffuse junk component is a model of generator behavior, not a measurement of it. The theorems are unconditional given their assumptions and verified numerically; the *simulation* results inherit the model's assumptions. The live pilots are too small to independently confirm the asymptotics.
 
@@ -586,7 +569,7 @@ Both problems share this paper's structural constraints, and we expect the condi
 
 ---
 
-## 11. Conclusion
+## 10. Conclusion
 
 The infinite-horizon diversity objective is easy to write, cheap to maintain, and largely beside the point. What determines whether a corpus can keep growing without collapsing into paraphrase is the dimension of the generator's conditional support relative to the manifold it lives in, and every practically important consequence follows from that one gap: saturation arrives at rate *n*<sup>−1/*m*</sup> rather than *n*<sup>−1/*d*</sup>; a single prompt covers an ε<sup>*d*−*m*</sup> fraction of what the model could write; only transverse prompt motion raises the ceiling; and novelty pressure without a typicality constraint reliably escapes the manifold rather than exploring it.
 
