@@ -104,6 +104,17 @@ generator calls against Alpaca's 52,000, and with the highest precision in the
 field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC's
 304-item selective arm.
 
+That score is validated downstream rather than left as a number. Across nine
+corpora, coverage predicts how often a retrieved neighbour is relevant
+(*r* = 0.97) and how well a model answers from four retrieved demonstrations
+(*r* = 0.82): RAC's pool serves **seven times as many held-out queries** as plain
+conditioning at a tight radius, and reaches the highest semantic similarity of
+any corpus tested. It does not predict fine-tuning quality (*r* = −0.17), and
+splitting scores by distance to the training data shows why — the retrieval-aimed
+corpus yields the best model on queries near its own items and the worst on those
+far from them, and a gradient step averages the two away. Coverage buys what its
+definition promises: retrieval, demonstration and evaluation-suite quality.
+
 In automatic item generation for psychometrics the margin is larger and the
 result is new. Asked a reasonable question ten thousand times, a strong model
 returns a bank that is **73.6% exact duplicates**, one question repeated 2,726

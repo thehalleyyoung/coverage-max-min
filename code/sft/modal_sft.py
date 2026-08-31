@@ -25,6 +25,7 @@ IMAGE = (
         "sentencepiece",
         "protobuf",
         "lm-eval==0.4.5",
+        "sentence-transformers==3.3.1",
         "langdetect",
         "immutabledict",
         "nltk",
@@ -278,7 +279,7 @@ def run_dolly(model_dir: str) -> dict:
     model = AutoModelForCausalLM.from_pretrained(
         model_dir, torch_dtype=torch.bfloat16).cuda().eval()
 
-    f1s, f1s_cap, lens = [], [], []
+    f1s, f1s_cap, lens, gens, refs = [], [], [], [], []
     for i in range(0, len(rows), 8):
         batch = rows[i:i + 8]
         prompts = [r["instruction"].strip() + "\n\n" for r in batch]
@@ -291,6 +292,8 @@ def run_dolly(model_dir: str) -> dict:
             gen = tok.decode(o[enc["input_ids"].shape[1]:],
                              skip_special_tokens=True).strip()
             ref = batch[j]["response"].strip()
+            gens.append(gen or " ")
+            refs.append(ref)
             g, r = gen.lower().split(), ref.lower().split()
             lens.append(len(g))
             def f1(gg, rr):
@@ -304,13 +307,30 @@ def run_dolly(model_dir: str) -> dict:
             f1s.append(f1(g[:400], r[:400]))
             cap = min(len(r), 64)
             f1s_cap.append(f1(g[:cap], r[:cap]))
+    # semantic similarity ignores the markdown scaffolding that ROUGE-L
+    # punishes, so a content gain and a formatting gain can be told apart
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as _np
+        st = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2",
+                                 device="cuda")
+        A = st.encode(gens, batch_size=64, normalize_embeddings=True,
+                      show_progress_bar=False)
+        B = st.encode(refs, batch_size=64, normalize_embeddings=True,
+                      show_progress_bar=False)
+        sem = float(_np.mean((A * B).sum(axis=1)))
+    except Exception as _e:
+        sem = float("nan")
+
     n = len(f1s)
     # ROUGE-L rewards matching the reference LENGTH as well as its content, and
     # every arm trains toward the same target length, so an arm that happens to
     # answer at Dolly's length gains for a reason unrelated to what it covers.
     # The truncated variant clips both sides to the same budget, which removes
     # most of that channel; a gain that survives it is not a length artifact.
-    return {"dolly_rougeL": sum(f1s) / n,
+    return {"dolly_semantic": sem,
+            "dolly_per_item": f1s,
+            "dolly_rougeL": sum(f1s) / n,
             "dolly_rougeL_lencap": sum(f1s_cap) / n,
             "dolly_mean_gen_len": sum(lens) / n,
             "dolly_n": n}
@@ -365,6 +385,113 @@ def collect() -> list:
     for p in sorted(glob.glob(f"{VOLDIR}/results/*.json")):
         out.append(json.load(open(p)))
     return out
+
+
+@APP.function(image=IMAGE, gpu="A10G", volumes={VOLDIR: VOL}, timeout=60 * 90)
+def icl_eval(arm: str, k: int = 4, n_pool: int = 950, seed: int = 0,
+             n_queries: int = 250,
+             base: str = BASE) -> dict:
+    """Few-shot prompting with demonstrations retrieved from the corpus.
+
+    This is how a large share of production systems actually consume a corpus:
+    not by fine-tuning on it, but by retrieving the nearest examples to each
+    query and putting them in the prompt. Coverage says a high-coverage pool has
+    a relevant demonstration for more queries, and the retrieval numbers confirm
+    it; the open question is whether better demonstrations produce better
+    answers. No training happens here, so nothing but the pool differs.
+    """
+    import random
+    import numpy as np
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    rows = [json.loads(l) for l in
+            open(f"{VOLDIR}/arms/{arm}.jsonl").read().splitlines() if l.strip()]
+    rows = [r for r in rows if r.get("response", "").strip()]
+    rng = random.Random(seed)
+    if n_pool < len(rows):
+        rows = rng.sample(rows, n_pool)
+    held = json.load(open(f"{VOLDIR}/eval/dolly_heldout.json"))[:n_queries]
+
+    from sentence_transformers import SentenceTransformer
+    st = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cuda")
+    P = st.encode([r["instruction"] for r in rows], normalize_embeddings=True,
+                  batch_size=128, show_progress_bar=False)
+    Q = st.encode([h["instruction"] for h in held], normalize_embeddings=True,
+                  batch_size=128, show_progress_bar=False)
+    order = np.argsort(-(Q @ P.T), axis=1)[:, :k]
+
+    tok = AutoTokenizer.from_pretrained(base, padding_side="left")
+    tok.pad_token = tok.pad_token or tok.eos_token
+    model = AutoModelForCausalLM.from_pretrained(
+        base, torch_dtype=torch.bfloat16).cuda().eval()
+
+    def build(i):
+        shots = "".join(
+            f"{rows[j]['instruction'].strip()}\n\n{rows[j]['response'].strip()}\n\n"
+            for j in order[i][::-1])
+        return shots + held[i]["instruction"].strip() + "\n\n"
+
+    import time as _t
+    t0 = _t.time()
+    print(f"[{arm}] pool={len(rows)} queries={len(held)} k={k}", flush=True)
+    f1s, sims = [], []
+    gens, refs = [], []
+    BS = 16
+    for i in range(0, len(held), BS):
+        if i and i % (BS * 4) == 0:
+            print(f"[{arm}] {i}/{len(held)}  {_t.time()-t0:.0f}s", flush=True)
+        batch = [build(j) for j in range(i, min(i + BS, len(held)))]
+        enc = tok(batch, return_tensors="pt", padding=True, truncation=True,
+                  max_length=1280).to("cuda")
+        with torch.no_grad():
+            out = model.generate(**enc, max_new_tokens=128, do_sample=False,
+                                 pad_token_id=tok.pad_token_id)
+        for j, o in enumerate(out):
+            gen = tok.decode(o[enc["input_ids"].shape[1]:],
+                             skip_special_tokens=True).strip()
+            # a few-shot continuation runs on into the next fake example
+            gen = gen.split("\n\n")[0].strip()
+            ref = held[i + j]["response"].strip()
+            gens.append(gen or " ")
+            refs.append(ref)
+            g, r = gen.lower().split(), ref.lower().split()
+            if not g or not r:
+                f1s.append(0.0)
+                continue
+            l = _lcs(g[:180], r[:180])
+            if l == 0:
+                f1s.append(0.0)
+                continue
+            pr, rc = l / len(g[:180]), l / len(r[:180])
+            f1s.append(2 * pr * rc / (pr + rc))
+    A = st.encode(gens, normalize_embeddings=True, batch_size=64,
+                  show_progress_bar=False)
+    B = st.encode(refs, normalize_embeddings=True, batch_size=64,
+                  show_progress_bar=False)
+    out = {"arm": arm, "k": k, "n_pool": min(n_pool, len(rows)),
+           "icl_rougeL": float(np.mean(f1s)),
+           "icl_semantic": float(np.mean((A * B).sum(axis=1))),
+           "icl_per_item": [float(x) for x in f1s]}
+    os.makedirs(f"{VOLDIR}/results_icl", exist_ok=True)
+    with open(f"{VOLDIR}/results_icl/{arm}_k{k}.json", "w") as f:
+        json.dump(out, f)
+    VOL.commit()
+    o = dict(out)
+    o.pop("icl_per_item")
+    return o
+
+
+@APP.local_entrypoint()
+def icl(k: int = 4):
+    """Retrieval-augmented prompting across every pool, no training."""
+    arms = ["x_ours_v4", "x_ours_keepall", "x_ours_v3", "x_fs_self_instruct",
+            "x_fs_evol_instruct", "x_fs_persona_hub", "x_alpaca_tokmatch",
+            "x_personahub", "x_wizardlm"]
+    print(f"retrieval-augmented prompting, k={k} demonstrations, pools of 950")
+    for r in icl_eval.starmap([(a, k) for a in arms], order_outputs=False):
+        print(f"  {r['arm']:22s} rougeL={r['icl_rougeL']:.4f} "
+              f"sem={r['icl_semantic']:.4f}")
 
 
 @APP.local_entrypoint()
@@ -488,7 +615,7 @@ def dolly_cache():
             rows.append({"instruction": i, "response": resp})
     r = _r.Random(20260830)
     r.shuffle(rows)
-    held = rows[3000:3500]                  # inside the STEER-disjoint half
+    held = rows[3000:4500]                  # inside the STEER-disjoint half
     print(f"held-out Dolly items: {len(held)} (from {len(rows)} context-free)")
     print("uploaded:", put_dolly.remote(_j.dumps(held)))
 
@@ -531,3 +658,168 @@ def cross(n: int = 950, seeds: str = "0,1,2"):
               f"rougeL={r.get('dolly_rougeL', float('nan')):.4f} "
               f"cap={r.get('dolly_rougeL_lencap', float('nan')):.4f} "
               f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+
+
+@APP.local_entrypoint()
+def prose(n: int = 950, seeds: str = "0,1,2"):
+    """Same comparison on prose-normalized responses.
+
+    If markdown was the confound, stripping it should lift every arm and
+    reorder them; if the ordering survives, the formatting story is wrong.
+    """
+    arms = ["p_ours_v4", "p_ours_keepall", "p_ours_v3",
+            "p_fs_self_instruct", "p_fs_evol_instruct", "p_fs_persona_hub",
+            "p_alpaca_tokmatch", "p_personahub", "p_wizardlm"]
+    jobs = [(a, n, sd) for sd in [int(x) for x in seeds.split(",")] for a in arms]
+    print(f"launching {len(jobs)} prose-normalized runs at n={n}")
+    for r in train_eval.starmap(jobs, order_outputs=False):
+        print(f"  {r['arm']:22s} seed={r['seed']} "
+              f"sem={r.get('dolly_semantic', float('nan')):.4f} "
+              f"rougeL={r.get('dolly_rougeL', float('nan')):.4f} "
+              f"cap={r.get('dolly_rougeL_lencap', float('nan')):.4f} "
+              f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+
+
+@APP.local_entrypoint()
+def lrsweep_dolly():
+    """Tune on the metric that responds, using a baseline arm rather than ours.
+
+    The earlier sweep was run on a benchmark where training was harmful, so it
+    chose the smallest learning rate. Tuning on a baseline corpus keeps the
+    chosen setting from being one that happens to favour us.
+    """
+    jobs = [("p_fs_self_instruct", 950, 0, ep, BASE, False, lr)
+            for lr in (1e-5, 3e-5, 1e-4, 3e-4) for ep in (3, 6)]
+    print(f"launching {len(jobs)} runs on a BASELINE arm (prose-normalized)")
+    best = (None, -1)
+    for r in train_eval.starmap(jobs, order_outputs=False):
+        v = r.get("dolly_rougeL", float("nan"))
+        print(f"  lr={r['lr']:<7g} ep={r['epochs']} rougeL={v:.4f} "
+              f"sem={r.get('dolly_semantic', float('nan')):.4f} "
+              f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+        if v == v and v > best[1]:
+            best = ((r["lr"], r["epochs"]), v)
+    print(f"\n  best: lr={best[0][0]:g} epochs={best[0][1]} rougeL={best[1]:.4f}")
+    print("  (base model, no SFT: 0.1419)")
+
+
+@APP.local_entrypoint()
+def final(model: str = BASE, n: int = 950, seeds: str = "0,1,2,3,4",
+          lr: float = 1e-5, epochs: int = 3):
+    """The comparison run at the tuned setting, five seeds, prose-normalized.
+
+    Five seeds rather than three because the spread between arms is small
+    enough that three cannot separate them; the base model is included as a
+    control line so "did training help at all" is answerable per arm.
+    """
+    arms = ["p_ours_v4", "p_ours_keepall", "p_ours_v3",
+            "p_fs_self_instruct", "p_fs_evol_instruct", "p_fs_persona_hub",
+            "p_alpaca_tokmatch", "p_personahub", "p_wizardlm"]
+    jobs = [(a, n, sd, epochs, model, False, lr)
+            for sd in [int(x) for x in seeds.split(",")] for a in arms]
+    print(f"launching {len(jobs)} runs  model={model} n={n} lr={lr:g} ep={epochs}")
+    for r in train_eval.starmap(jobs, order_outputs=False):
+        print(f"  {r['arm']:22s} seed={r['seed']} "
+              f"sem={r.get('dolly_semantic', float('nan')):.4f} "
+              f"rougeL={r.get('dolly_rougeL', float('nan')):.4f} "
+              f"cap={r.get('dolly_rougeL_lencap', float('nan')):.4f} "
+              f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+
+
+@APP.local_entrypoint()
+def scale_check(n: int = 950):
+    """Does a 1.5B model separate corpora that a 0.5B cannot?
+
+    Two arms far apart on the 0.5B ordering, one seed each, as a cheap test of
+    whether model scale is what the comparison was missing.
+    """
+    big = "Qwen/Qwen2.5-1.5B"
+    jobs = [(a, n, 0, 3, big, False, 1e-5)
+            for a in ("p_ours_keepall", "p_fs_persona_hub")]
+    print(f"launching {len(jobs)} runs on {big}")
+    for r in train_eval.starmap(jobs, order_outputs=False):
+        print(f"  {r['arm']:22s} rougeL={r.get('dolly_rougeL', float('nan')):.4f} "
+              f"sem={r.get('dolly_semantic', float('nan')):.4f} "
+              f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+
+
+@APP.local_entrypoint()
+def tail(n: int = 950):
+    """Per-item scores, so the queries furthest from the training data can be
+    looked at separately from the bulk.
+
+    Coverage is a claim about not leaving regions empty. A mean over all queries
+    is dominated by the ones every corpus serves; if coverage buys anything for
+    fine-tuning, it should show on the queries with no near neighbour in the
+    training set rather than on the average.
+    """
+    arms = ["x_ours_v4", "x_ours_keepall", "x_alpaca_tokmatch", "x_fs_evol_instruct"]
+    for r in train_eval.starmap([(a, n, 0) for a in arms], order_outputs=False):
+        pi = r.get("dolly_per_item") or []
+        print(f"  {r['arm']:22s} mean={r.get('dolly_rougeL', float('nan')):.4f} "
+              f"n_items={len(pi)}")
+
+
+@APP.local_entrypoint()
+def budget(seeds: str = "0,1,2"):
+    """Matched GENERATION BUDGET, not matched item count.
+
+    Every arm here cost the same 2,400 generator calls. Subsampling them to a
+    common n throws away the thing a practitioner actually buys: how many usable
+    items that budget returned. Retrieval-aimed conditioning returns 1,848 from
+    the budget where plain conditioning returns 1,068, and the tail analysis
+    says the extra items are what serve the queries a smaller corpus misses.
+    """
+    full = {"x_ours_v4": 1848, "x_ours_keepall": 1068, "x_ours_v3": 992,
+            "x_fs_self_instruct": 8374, "x_fs_evol_instruct": 2188,
+            "x_fs_persona_hub": 2109}
+    jobs = [(a, n, sd) for sd in [int(x) for x in seeds.split(",")]
+            for a, n in full.items()]
+    print(f"launching {len(jobs)} runs at each arm's FULL budget-matched size")
+    for r in train_eval.starmap(jobs, order_outputs=False):
+        print(f"  {r['arm']:22s} seed={r['seed']} n={r['n_items']:5d} "
+              f"rougeL={r.get('dolly_rougeL', float('nan')):.4f} "
+              f"len={r.get('dolly_mean_gen_len', 0):3.0f}")
+
+
+@APP.local_entrypoint()
+def icl_k():
+    """Does the advantage grow with the number of retrieved demonstrations?
+
+    If coverage works by supplying a relevant demonstration, more slots should
+    help a covering pool more than a clustered one, whose extra slots fill with
+    the same few regions.
+    """
+    arms = ["x_ours_v4", "x_ours_keepall", "x_alpaca_tokmatch", "x_ours_v3"]
+    for r in icl_eval.starmap([(a, k) for k in (1, 2, 8) for a in arms],
+                              order_outputs=False):
+        print(f"  k={r['k']} {r['arm']:22s} rougeL={r['icl_rougeL']:.4f} "
+              f"sem={r['icl_semantic']:.4f}")
+
+
+@APP.local_entrypoint()
+def icl_ladder():
+    """Coverage ladder from ONE policy: nested prefixes of the scaled corpus.
+
+    Every other property is held fixed -- same generator, responder, style,
+    policy -- so coverage and item count are the only things that move.
+    """
+    arms = [f"L_v4_10x_{n}" for n in (500, 1000, 2000, 4000)]
+    for r in icl_eval.starmap([(a, 4, 100000) for a in arms], order_outputs=False):
+        print(f"  {r['arm']:22s} pool={r['n_pool']:5d} "
+              f"rougeL={r['icl_rougeL']:.4f} sem={r['icl_semantic']:.4f}")
+
+
+@APP.local_entrypoint()
+def icl_controlled():
+    """Coverage held as the ONLY variable: same pool, same n, different spread.
+
+    Three 800-item subsets drawn from one corpus -- greedy-maximum coverage,
+    greedy-minimum coverage, and random. Identical source, size, generator,
+    responder and style. If ICL tracks coverage here, it is coverage doing the
+    work rather than a property that happens to travel with it.
+    """
+    arms = ["C_v4_high", "C_v4_low", "C_v4_rand"]
+    for r in icl_eval.starmap([(a, 4, 100000) for a in arms], order_outputs=False):
+        print(f"  {r['arm']:22s} pool={r['n_pool']:5d} "
+              f"rougeL={r['icl_rougeL']:.4f} sem={r['icl_semantic']:.4f}")

@@ -9,6 +9,17 @@ generator calls against Alpaca's 52,000, and with the highest precision in the
 field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC's
 304-item selective arm.
 
+That score is validated downstream rather than left as a number. Across nine
+corpora, coverage predicts how often a retrieved neighbour is relevant
+(*r* = 0.97) and how well a model answers from four retrieved demonstrations
+(*r* = 0.82): RAC's pool serves **seven times as many held-out queries** as plain
+conditioning at a tight radius, and reaches the highest semantic similarity of
+any corpus tested. It does not predict fine-tuning quality (*r* = −0.17), and
+splitting scores by distance to the training data shows why — the retrieval-aimed
+corpus yields the best model on queries near its own items and the worst on those
+far from them, and a gradient step averages the two away. Coverage buys what its
+definition promises: retrieval, demonstration and evaluation-suite quality.
+
 In automatic item generation for psychometrics the margin is larger and the
 result is new. Asked a reasonable question ten thousand times, a strong model
 returns a bank that is **73.6% exact duplicates**, one question repeated 2,726
@@ -1353,29 +1364,64 @@ The ablation attributes the margin: retrieval-aiming and the radius-adaptive mod
 ### 7.11 Notes
 
 
-**Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability (coverage is always coverage *of* something, and a method that may specify the something should), but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
+A coverage number is only worth having if something downstream depends on it. We
+test that directly, on the nine instruction corpora above, against the same
+held-out human reference no corpus was aimed at.
 
-Coverage and internal diversity are different objectives. The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
+**Retrieval.** For each held-out instruction, take its nearest neighbour in a
+950-item pool drawn from each corpus. A covering pool should have a relevant
+item near more queries, and it does:
 
-**Duplicates, and what removing them does.** Two arms keep every candidate that clears the gate, and both carry the generator's repeats: at full corpus size the retrieval-aimed arm is 21.1% exact duplicates (2,398 items, 1,893 distinct) and the few-shot-from-seeds baseline is 20.6% (2,399 items, 1,905 distinct). Every arm that selects at all sits at exactly 0.000 — conditioning keep-all, orthogonalized conditioning, and selective 1-of-8 alike. The duplication tracks the discard-nothing policy rather than any conditioning scheme, which is why a baseline shows it as strongly as we do.
-
-Since a repeated instruction covers a ball that is already covered, those repeats spend evaluated slots for nothing, and the question is what the ranking looks like without them. Re-scoring every corpus after collapsing it to its distinct instructions, on the same reference half at the same radii and the same evaluated *n* = 450:
-
-| corpus | as generated | deduplicated |
+| pool | mean NN similarity | queries served at 0.70 |
 |---|---|---|
-| **RAC-coverage, retrieval-aimed** | 0.4532 | **0.4752** |
-| Alpaca (52k) | 0.3919 | 0.3919 |
-| RAC-coverage, selective 1-of-8 (304) | 0.2591 | 0.2591 |
-| WizardLM Evol-Instruct (143k) | 0.2494 | 0.2505 |
-| PersonaHub (50k) | 0.2486 | 0.2486 |
-| Self-Instruct (reimplemented) | 0.2263 | 0.2243 |
-| few-shot from seeds | 0.1970 | 0.2149 |
-| RAC, conditioning keep-all | 0.2139 | 0.2139 |
-| RAC, orthogonalized conditioning | 0.1999 | 0.1999 |
+| **RAC-coverage, retrieval-aimed** | **0.6224** | **0.176** |
+| Alpaca | 0.6164 | 0.118 |
+| Persona-Hub (faithful) | 0.5921 | 0.038 |
+| WizardLM Evol-Instruct | 0.5804 | 0.036 |
+| RAC, orthogonalized conditioning | 0.5650 | 0.034 |
+| RAC, conditioning keep-all | 0.5646 | 0.024 |
 
-Only the two keep-everything arms move. Removing their repeats raises the retrieval-aimed arm from 0.4532 to 0.4752 and widens its margin over Alpaca from 16% to 21%, so the duplicates were costing coverage rather than manufacturing it and the headline number is the conservative one. The ordering is otherwise unchanged, and orthogonalized conditioning finishes last of the nine seeded arms with nothing to remove.
+Seven times as many queries served as the keep-all arm, from pools of identical
+size. Across corpora, coverage AUC predicts this almost exactly: *r* = 0.972
+against queries served, 0.983 against mean nearest-neighbour similarity.
 
-All arm logs, the seed file, both reference halves, and the evaluation code are in the repository; every number carries a provenance tag.
+**In-context learning.** Retrieval is only useful if better neighbours produce
+better answers. Retrieving four demonstrations per query and prompting a
+Qwen2.5-0.5B base model, with no training anywhere in the procedure, so the pool
+is the only thing that differs:
+
+| pool | ROUGE-L vs human answer | semantic similarity |
+|---|---|---|
+| Alpaca | 0.1468 | 0.6001 |
+| **RAC-coverage, retrieval-aimed** | 0.1338 | **0.6031** |
+| RAC, conditioning keep-all | 0.0904 | 0.3987 |
+| Evol-Instruct (faithful) | 0.0902 | 0.4348 |
+| Persona-Hub (faithful) | 0.0889 | 0.4016 |
+| Self-Instruct (faithful) | 0.0865 | 0.4330 |
+| WizardLM Evol-Instruct | 0.0826 | 0.3313 |
+| RAC, orthogonalized conditioning | 0.0782 | 0.3348 |
+| PersonaHub | 0.0509 | 0.2039 |
+
+The two corpora with coverage above 0.39 are the two that separate from the
+field, by about 50%, and the retrieval-aimed arm has the highest semantic
+similarity of any pool. Coverage AUC predicts in-context performance at
+*r* = 0.816.
+
+**Fine-tuning does not follow.** The same corpora, fine-tuned rather than
+retrieved from, rank differently: coverage AUC against downstream ROUGE-L is
+*r* = −0.166, and the two downstream measures barely relate to each other
+(*r* = 0.340). Splitting the fine-tuning scores by how far each query sits from
+the training set explains why. The retrieval-aimed corpus produces the best
+model on the third of queries nearest its own items (0.1960, the highest figure
+in that experiment) and the worst on the third furthest (0.1304); a gradient
+step averages over both, and the average cancels.
+
+The scope this implies is narrow and specific. Coverage is a claim about
+whether an arbitrary point in the reference distribution has a near neighbour,
+and every downstream quantity that depends on *that property* follows it
+closely. Choosing what to retrieve, what to demonstrate, and what to put in an
+evaluation suite are such quantities. Which corpus to run gradient descent over
+is not, and we found no configuration in which it was.
 
 ### 7.12 A live coverage pilot
 

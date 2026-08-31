@@ -453,7 +453,68 @@ Budget-matched ablation (full corpora, 2,400 generator calls each, same evaluati
 
 The ablation attributes the margin: retrieval-aiming and the radius-adaptive mode carry it (rows 1 vs 2–4), few-shot anchoring to the human seeds accounts for most of the baselines' scores (row 3 vs the unseeded arms at 0.09–0.10), Self-Instruct's ROUGE filter adds 0.0016 over bare few-shot, and both selection (row 6), and orthogonalized conditioning (row 5) reduce coverage relative to keeping everything — consistent with Part III: coverage is monotone and measure-seeking, so discarding and occupied-span avoidance are each counter-productive under this objective, whereas both are load-bearing under max-min.
 
-### 5.4 Notes
+### 5.4 What the coverage score buys downstream
+
+A coverage number is only worth having if something downstream depends on it. We
+test that directly, on the nine instruction corpora above, against the same
+held-out human reference no corpus was aimed at.
+
+**Retrieval.** For each held-out instruction, take its nearest neighbour in a
+950-item pool drawn from each corpus. A covering pool should have a relevant
+item near more queries, and it does:
+
+| pool | mean NN similarity | queries served at 0.70 |
+|---|---|---|
+| **RAC-coverage, retrieval-aimed** | **0.6224** | **0.176** |
+| Alpaca | 0.6164 | 0.118 |
+| Persona-Hub (faithful) | 0.5921 | 0.038 |
+| WizardLM Evol-Instruct | 0.5804 | 0.036 |
+| RAC, orthogonalized conditioning | 0.5650 | 0.034 |
+| RAC, conditioning keep-all | 0.5646 | 0.024 |
+
+Seven times as many queries served as the keep-all arm, from pools of identical
+size. Across corpora, coverage AUC predicts this almost exactly: *r* = 0.972
+against queries served, 0.983 against mean nearest-neighbour similarity.
+
+**In-context learning.** Retrieval is only useful if better neighbours produce
+better answers. Retrieving four demonstrations per query and prompting a
+Qwen2.5-0.5B base model, with no training anywhere in the procedure, so the pool
+is the only thing that differs:
+
+| pool | ROUGE-L vs human answer | semantic similarity |
+|---|---|---|
+| Alpaca | 0.1468 | 0.6001 |
+| **RAC-coverage, retrieval-aimed** | 0.1338 | **0.6031** |
+| RAC, conditioning keep-all | 0.0904 | 0.3987 |
+| Evol-Instruct (faithful) | 0.0902 | 0.4348 |
+| Persona-Hub (faithful) | 0.0889 | 0.4016 |
+| Self-Instruct (faithful) | 0.0865 | 0.4330 |
+| WizardLM Evol-Instruct | 0.0826 | 0.3313 |
+| RAC, orthogonalized conditioning | 0.0782 | 0.3348 |
+| PersonaHub | 0.0509 | 0.2039 |
+
+The two corpora with coverage above 0.39 are the two that separate from the
+field, by about 50%, and the retrieval-aimed arm has the highest semantic
+similarity of any pool. Coverage AUC predicts in-context performance at
+*r* = 0.816.
+
+**Fine-tuning does not follow.** The same corpora, fine-tuned rather than
+retrieved from, rank differently: coverage AUC against downstream ROUGE-L is
+*r* = −0.166, and the two downstream measures barely relate to each other
+(*r* = 0.340). Splitting the fine-tuning scores by how far each query sits from
+the training set explains why. The retrieval-aimed corpus produces the best
+model on the third of queries nearest its own items (0.1960, the highest figure
+in that experiment) and the worst on the third furthest (0.1304); a gradient
+step averages over both, and the average cancels.
+
+The scope this implies is narrow and specific. Coverage is a claim about
+whether an arbitrary point in the reference distribution has a near neighbour,
+and every downstream quantity that depends on *that property* follows it
+closely. Choosing what to retrieve, what to demonstrate, and what to put in an
+evaluation suite are such quantities. Which corpus to run gradient descent over
+is not, and we found no configuration in which it was.
+
+### 5.5 Notes
 
 **Reference-sample asymmetry.** Our method consumes a sample of the target distribution, as embeddings, on the steering side; the released corpora had no such input. This is the method's designed capability (coverage is always coverage *of* something, and a method that may specify the something should), but the like-for-like no-reference comparison is rows 2–5 of the ablation, where our no-STEER configurations sit at parity with the Self-Instruct family. The precise claim: given a specification of the space to cover, even one the generator never reads, retrieval-aimed density-adaptive conditioning covers it substantially better than the strongest seeded baseline covers it at twenty times the budget.
 
