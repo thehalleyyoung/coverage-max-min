@@ -22,7 +22,7 @@ low-coverage pools collapse to a third of their one-shot score. A clustered pool
 runs out of distinct relevant demonstrations; a covering one does not. Coverage
 predicts retrieval quality at *r* = 0.97 and in-context score at *r* = 0.82.
 
-Two limits are worth stating with the same clarity. Fine-tuning does not follow
+Two limits deserve the same clarity. Fine-tuning does not follow
 (*r* = −0.17): the retrieval-aimed corpus yields the best model on queries near
 its own items and the worst on those far from them, and a gradient step averages
 the two away. And within a *single* corpus, subsets differing only in spread are
