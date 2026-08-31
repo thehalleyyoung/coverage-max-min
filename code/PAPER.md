@@ -213,7 +213,7 @@ Refinement shows the model the saturated cell and the mined attractors and asks 
 
 ### 5.3 Why "orthogonalize", not "randomize"
 
-Forcing randomness (raising temperature, injecting random seed words) buys variance in the surface while leaving the mode structure intact, and degrades quality monotonically because temperature cannot distinguish *surprising* from *wrong*. The measurements bear this out: raising the sampling temperature to 1.6 moves distinct-2 from 0.3341 to 0.3342 and leaves 61.6% of the corpus byte-identical duplicates, against 72.3% at the default setting.
+Forcing randomness (raising temperature, injecting random seed words) buys variance in the surface while leaving the mode structure intact, and degrades quality monotonically because temperature cannot distinguish *surprising* from *wrong*. The measurements bear this out: raising the sampling temperature to 1.6 moves distinct-2 from 0.3341 to 0.3342 and leaves 71.0% of the corpus byte-identical duplicates, against 73.6% at the default setting.
 
 Forcing approximate orthogonality asks a different question (which direction is this corpus not yet spending energy on), which has a computable answer, improves rather than degrades quality when paired with a quality term, and stays informative as *n* grows. "Be random" gets no harder to satisfy and no more useful.
 
@@ -253,18 +253,27 @@ Five of these are real published approaches, implemented faithfully rather than 
 
 One faithfulness caveat we chose deliberately: Self-Instruct's ROUGE filter compares a candidate against the entire pool, which is O(*n*) longest-common-subsequence computations per candidate and comes to dominate the loop at *n* in the thousands. We compare against a bounded random sample of 120 pool members. This makes our reimplementation *weaker* than the original at large *n*, and that is itself the point: the original's redundancy check does not have an infinite horizon, because its cost grows linearly in the corpus it is protecting.
 
-### 6.3 Mode collapse is not a metaphor
+### 6.3 Duplication under repeated sampling
 
 Two 10,000-item corpora, one call each, no selection:
 
 | domain | *n* | unique texts | exact-duplicate rate | most-repeated item |
 |---|---|---|---|---|
 | DALL·E instructions | 10,000 | 10,000 | 0.000 | 1× |
-| psychometric items | 10,000 | ~1,656 | **0.723** | **1,637×** |
+| psychometric items | 10,000 | 2,645 | **0.736** | **2,726×** |
 
-In the psychometric domain, 72.3% of a ten-thousand-item corpus is exact duplicate text, and one single question (*"What number comes next in the sequence: 2, 6, 12, 20, 30, ?"*) accounts for 1,637 of them. No embedding, no threshold, and no interpretation is required to see this; it is byte-identical repetition, and it is what a strong instruction-tuned model does when asked the same reasonable question ten thousand times.
+In the psychometric domain, 73.6% of a ten-thousand-item corpus is exact duplicate text, and a single question accounts for 2,726 of them. The four most frequent items are these:
 
-Temperature barely helps: at *T* = 1.6 the duplicate rate is still 0.616. Conditioning nearly eliminates it: persona conditioning drops it to 0.002. Between those two numbers — randomness does not buy diversity, conditioning does.
+| copies | item |
+|---|---|
+| 2,726 | What number comes next in the sequence: 2, 6, 12, 20, 30, ?  (A. 40  B. 42  C. 44  D. 46) |
+| 655 | What number *should* come next in the sequence: 2, 6, 12, 20, 30, ?  (A. 40  B. 42  C. 44  D. 46) |
+| 467 | What number comes next in the sequence: 2, 6, 12, 20, 30, ?  (A. 36  B. 40  C. 42  D. 44) |
+| 434 | What number comes next in the sequence: 3, 8, 15, 24, 35, ?  (A. 46  B. 48  C. 50  D. 52) |
+
+Deduplication does not rescue this corpus. Removing the 2,726 identical copies leaves the three paraphrases behind, and a paraphrase of a live item is an enemy item on any bank a psychometrician would sign off on. No embedding, no threshold, and no interpretation is required to see this; it is byte-identical repetition, and it is what a strong instruction-tuned model does when asked the same reasonable question ten thousand times.
+
+Temperature barely helps: at *T* = 1.6 the duplicate rate is still 0.710. Conditioning nearly eliminates it: persona conditioning drops it to 0.009, and axis conditioning to 0.000. Between those two numbers — randomness does not buy diversity, conditioning does.
 
 It also shows the failure is domain-shaped and invisible from one vantage point. The identical pipeline, prompt style, and model produce zero duplicates on DALL·E instructions. A practitioner who validated their pipeline on the first domain and deployed it on the second would ship a bank that is three-quarters one question.
 
@@ -275,29 +284,49 @@ It also shows the failure is domain-shaped and invisible from one vantage point.
 
 The same failure is visible in a corpus with no duplicates at all. The poetry pilot has an exact-duplicate rate of 0.000 under naive prompting and a distinct-2 of 0.610, so every literal counter reports a healthy corpus. Here are the opening lines of eight poems sampled at random from those sixty:
 
-> At dawn, the river gathered up the stars
-> At dusk, the windows gather fire,
-> At dusk, the rooftops gather amber light,
-> At dusk, the windows gather amber light,
-> At dawn, the windows gather up the rain,
-> At dusk, the river gathers every color
-> At dusk, the river gathers up the day,
-> At dusk, the river gathers up the sky,
+- *At dawn, the river gathered up the stars*
+- *At dusk, the windows gather fire*
+- *At dusk, the rooftops gather amber light*
+- *At dusk, the windows gather amber light*
+- *At dawn, the windows gather up the rain*
+- *At dusk, the river gathers every color*
+- *At dusk, the river gathers up the day*
+- *At dusk, the river gathers up the sky*
 
 Eight of eight are the same sentence with two slots filled. The closest pair in that corpus sits at cosine similarity 0.946 and shares its first line verbatim (*"At dusk, the windows gather gold,"*) before diverging into the same sparrow stitching the same thread across the same evening. Sixty samples from one prompt behave like two and a half distinct items by Vendi Score, and the duplicate counter sees none of it.
 
 Eight openings from the sixty RAC produced under the same generator and budget:
 
-> Had you arrived at the registry after midnight, when the lamps were still accountable,
-> We have tried to piece that evening together from what remained.
-> I am the conjurer in the green coat, stepping into the light.
-> I have reconstructed the trench, Mara, from the surviving datum points.
-> I wore the cobalt pressure suit, and the regolith took my weight,
-> We went back through that winter in our minds.
-> "Attend, O citizens, beneath the unappeased sky:
-> At the appointed hour, you will rise beneath the bells,
+- *Had you arrived at the registry after midnight, when the lamps were still accountable*
+- *We have tried to piece that evening together from what remained.*
+- *I am the conjurer in the green coat, stepping into the light.*
+- *I have reconstructed the trench, Mara, from the surviving datum points.*
+- *I wore the cobalt pressure suit, and the regolith took my weight*
+- *We went back through that winter in our minds.*
+- *"Attend, O citizens, beneath the unappeased sky:*
+- *At the appointed hour, you will rise beneath the bells*
 
 Counterfactual conditional, collective reconstruction, first-person performance, a report addressed to a named absent person, plain retrospect, public proclamation, prophecy. The closest pair RAC produces sits at 0.809 and shares a subject rather than a template: one poem is a nested incantation about a coal inside a chamber inside a breast, the other a kitchen-table conjuring trick performed for a child in a red coat.
+
+The exam domain shows the same contrast at the level of what an item asks. A representative item from each of four methods, same generator, same budget:
+
+- **naive** — *What number comes next in the sequence: 2, 6, 12, 20, 30, ? (A. 40 B. 42 C. 44 D. 46)*, generated 2,726 times.
+- **Self-Instruct** — *What number should come next in the sequence? 3, 8, 15, 24, ___ (A. 32 B. 35 C. 36 D. 39)*. The ROUGE filter blocks the byte-identical copy and admits the same item on new numbers.
+- **persona conditioning** — *Of 120 rare books examined, 70 contain a particular watermark, 50 have documented provenance, and 30 have both. How many have neither?* A costume (rare-book forgery, flood-risk pricing, restaurant scheduling) is drawn over a recurring set-arithmetic skeleton.
+- **RAC** — *An incident report recorded the following events. The pump had to be primed before the valve could be opened. The technician was using a blue clipboard, and rain was visible outside. The heater could be switched on only after the valve was opened… printing the label was independent of the pump-and-heater process. Which sequence of events is consistent with the report?*
+
+Four more RAC items, with the axis levels that produced them:
+
+| item | conditioned on |
+|---|---|
+| An imagined archive with a ventilation fan and three rooms; air reaches the East room only once it is already reaching the South room. Which rooms are ventilated? | model causal dependencies · counterfactual scenario · overgeneralized-rule distractors |
+| A sorting machine moves the leftmost crate to the right end, then adds 2 to every number, wrapping 9 back to 1. Given [1, 4, 8], [6, 1, 3], [3, 5, 8], what comes next? | apply an explicit rule · unfolding narrative · surface-feature-match distractors |
+| Identical seedlings wilt unevenly; the team suspects a newly painted wall, then varies moisture, airflow and fungus exposure. Pot-label colours are tabulated and have no effect. | evaluate competing explanations · reversed-relation distractors |
+| Rina claims no layout satisfies the rules; Omar replies that one valid layout would disprove her. Which layout is the counterexample? | evaluate competing explanations · dialogue with conflicting claims |
+
+The variation is in the cognitive operation being assessed and in how the wrong answers are built, rather than in the surface story. That is the axis structure showing through: two items wearing different costumes over one rule are still enemy items, and two items testing different operations are not, however similar they read.
+
+One cost is visible in the same examples. Several RAC items carry deliberate irrelevant detail, which the *distractor logic* axis asks for and which real psychometric items use, and it makes them long. The RAC exam corpus reached 1,999 items on the budget that returned 10,000 naive ones.
 
 The measurements follow the reading. Against the naive corpus, RAC holds 2.7× the median nearest-neighbour distance (0.239 against 0.089), and cuts 4-gram self-repetition by a factor of 37 (0.0023 against 0.0855), at a distinct-2 of 0.774 against 0.610. Mean-centered Vendi moves very little in comparison, 38.81 against 37.00, and that is the honest reading of it: a spectral summary of sixty points in 768 dimensions is close to insensitive to the difference between sixty poems that begin the same way and sixty that do not. The nearest-neighbour statistic is what registers it, and the page registers it immediately.
 
@@ -508,6 +537,6 @@ Given an embedding oracle and no inverse, the system cannot compute its way to t
 
 That recursion is the single mechanism we found that changes the asymptote rather than the constant. Everything else (better selection, more candidates, higher temperature) buys a constant factor against a problem that is asymptotic, and the loudest of them buys it by quietly breaking the generator.
 
-The measurements make the stakes concrete in a way the theory could not. A strong model, asked a perfectly reasonable question ten thousand times, returns the same item 1,637 times; the temperature knob barely moves that number and conditioning nearly erases it. Two diversity metrics computed on the same growing corpus point in opposite directions. And the text embeddings every method in this literature optimizes turn out to explain about two percent of the variance in whether the rendered images look alike. Each of those is a reason to distrust a single diversity number, and together they are the argument for the practice we ended up recommending: measure at the level of the artifact you are shipping, report the literal and the latent separately, publish the similarity distribution your kernel is operating on, and count your duplicates before you compute anything else.
+The measurements make the stakes concrete in a way the theory could not. A strong model, asked a perfectly reasonable question ten thousand times, returns the same item 2,726 times; the temperature knob barely moves that number and conditioning nearly erases it. Two diversity metrics computed on the same growing corpus point in opposite directions. And the text embeddings every method in this literature optimizes turn out to explain about two percent of the variance in whether the rendered images look alike. Each of those is a reason to distrust a single diversity number, and together they are the argument for the practice we ended up recommending: measure at the level of the artifact you are shipping, report the literal and the latent separately, publish the similarity distribution your kernel is operating on, and count your duplicates before you compute anything else.
 
 ---

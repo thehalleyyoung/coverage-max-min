@@ -151,9 +151,9 @@ one-twentieth of Alpaca's generation budget and with the highest precision in th
 field. On max-min, it wins every literal and latent measure against five
 published methods in both text domains, reaching 124.8 mean-centered Vendi on
 psychometric items where persona conditioning reaches 99.7 and naive prompting
-7.1. Along the way: a psychometric corpus that is **72.3% exact duplicates** with
-one item repeated 1,637 times, which temperature barely dents (61.6%) and
-conditioning nearly eliminates (0.2%); literal and latent diversity moving in
+7.1. Along the way: a psychometric corpus that is **73.6% exact duplicates** with
+one item repeated 2,726 times, which temperature barely dents (71.0%) and
+conditioning nearly eliminates (0.0%); literal and latent diversity moving in
 **opposite directions** as *n* grows; and text-embedding similarity predicting
 rendered-image similarity at only ***r* = 0.170**, so every text-side method
 here optimizes a proxy that explains about 3% of the variance in what the reader
