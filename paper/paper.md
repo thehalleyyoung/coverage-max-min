@@ -17,8 +17,12 @@ conditioning at a tight radius, and reaches the highest semantic similarity of
 any corpus tested. It does not predict fine-tuning quality (*r* = −0.17), and
 splitting scores by distance to the training data shows why — the retrieval-aimed
 corpus yields the best model on queries near its own items and the worst on those
-far from them, and a gradient step averages the two away. Coverage buys what its
-definition promises: retrieval, demonstration and evaluation-suite quality.
+far from them, and a gradient step averages the two away. A controlled test
+qualifies this: three 800-item subsets of a single corpus, differing only in
+spread, are *not* monotone in coverage — the random subset edges the
+coverage-maximised one — though the zero-coverage subset is worst on both
+measures. Coverage ranks corpora on the tasks its definition describes and is
+not, on its own, the mechanism behind that ranking.
 
 In automatic item generation for psychometrics the margin is larger and the
 result is new. Asked a reasonable question ten thousand times, a strong model
@@ -1416,12 +1420,38 @@ model on the third of queries nearest its own items (0.1960, the highest figure
 in that experiment) and the worst on the third furthest (0.1304); a gradient
 step averages over both, and the average cancels.
 
-The scope this implies is narrow and specific. Coverage is a claim about
-whether an arbitrary point in the reference distribution has a near neighbour,
-and every downstream quantity that depends on *that property* follows it
-closely. Choosing what to retrieve, what to demonstrate, and what to put in an
-evaluation suite are such quantities. Which corpus to run gradient descent over
-is not, and we found no configuration in which it was.
+**The correlation does not survive a controlled test, and we report that.**
+Comparing whole corpora confounds coverage with everything else that differs
+between them. To separate those, we drew three 800-item subsets from a single
+corpus produced by one policy, one generator and one responder, differing only
+in how they spread over the reference: greedy-maximum coverage (0.674 of the
+reference covered), random (0.504), and greedy-minimum (0.000). Instruction and
+response lengths match to within a few words.
+
+| subset | reference covered | ICL ROUGE-L | semantic |
+|---|---|---|---|
+| random | 0.504 | **0.1456** | **0.5846** |
+| greedy-maximum coverage | 0.674 | 0.1409 | 0.5605 |
+| greedy-minimum coverage | 0.000 | 0.1274 | 0.5188 |
+
+The random subset beats the deliberately maximised one. A nested ladder from the
+same corpus, at 500 / 1,000 / 2,000 / 4,000 items covering 0.376 to 0.666, is
+likewise non-monotone (0.1504, 0.1417, 0.1386, 0.1425). What does hold is that
+the zero-coverage subset is worst on both measures: some coverage is necessary,
+and beyond a threshold more of it does not help.
+
+So the cross-corpus relationship above is real as a *ranking* and unproven as a
+*mechanism*. Coverage travels with brevity, register and topical proximity to
+the reference, and those may be what the retrieval and in-context results are
+picking up. One candidate explanation for the controlled result is that
+greedy-maximum selection prefers distinctive, outlying items, and an outlier
+fills a hole in the space while making a poor demonstration.
+
+The scope we can defend is therefore narrower than the correlations suggest.
+Coverage is a claim about whether an arbitrary point has a near neighbour, it
+predicts retrieval and in-context quality across corpora at *r* = 0.97 and 0.82,
+it does not predict fine-tuning quality at all, and within a single corpus it is
+not by itself the cause of the downstream ranking.
 
 ### 7.12 A live coverage pilot
 

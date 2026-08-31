@@ -507,12 +507,38 @@ model on the third of queries nearest its own items (0.1960, the highest figure
 in that experiment) and the worst on the third furthest (0.1304); a gradient
 step averages over both, and the average cancels.
 
-The scope this implies is narrow and specific. Coverage is a claim about
-whether an arbitrary point in the reference distribution has a near neighbour,
-and every downstream quantity that depends on *that property* follows it
-closely. Choosing what to retrieve, what to demonstrate, and what to put in an
-evaluation suite are such quantities. Which corpus to run gradient descent over
-is not, and we found no configuration in which it was.
+**The correlation does not survive a controlled test, and we report that.**
+Comparing whole corpora confounds coverage with everything else that differs
+between them. To separate those, we drew three 800-item subsets from a single
+corpus produced by one policy, one generator and one responder, differing only
+in how they spread over the reference: greedy-maximum coverage (0.674 of the
+reference covered), random (0.504), and greedy-minimum (0.000). Instruction and
+response lengths match to within a few words.
+
+| subset | reference covered | ICL ROUGE-L | semantic |
+|---|---|---|---|
+| random | 0.504 | **0.1456** | **0.5846** |
+| greedy-maximum coverage | 0.674 | 0.1409 | 0.5605 |
+| greedy-minimum coverage | 0.000 | 0.1274 | 0.5188 |
+
+The random subset beats the deliberately maximised one. A nested ladder from the
+same corpus, at 500 / 1,000 / 2,000 / 4,000 items covering 0.376 to 0.666, is
+likewise non-monotone (0.1504, 0.1417, 0.1386, 0.1425). What does hold is that
+the zero-coverage subset is worst on both measures: some coverage is necessary,
+and beyond a threshold more of it does not help.
+
+So the cross-corpus relationship above is real as a *ranking* and unproven as a
+*mechanism*. Coverage travels with brevity, register and topical proximity to
+the reference, and those may be what the retrieval and in-context results are
+picking up. One candidate explanation for the controlled result is that
+greedy-maximum selection prefers distinctive, outlying items, and an outlier
+fills a hole in the space while making a poor demonstration.
+
+The scope we can defend is therefore narrower than the correlations suggest.
+Coverage is a claim about whether an arbitrary point has a near neighbour, it
+predicts retrieval and in-context quality across corpora at *r* = 0.97 and 0.82,
+it does not predict fine-tuning quality at all, and within a single corpus it is
+not by itself the cause of the downstream ranking.
 
 ### 5.5 Notes
 

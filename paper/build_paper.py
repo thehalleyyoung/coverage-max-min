@@ -112,8 +112,12 @@ conditioning at a tight radius, and reaches the highest semantic similarity of
 any corpus tested. It does not predict fine-tuning quality (*r* = −0.17), and
 splitting scores by distance to the training data shows why — the retrieval-aimed
 corpus yields the best model on queries near its own items and the worst on those
-far from them, and a gradient step averages the two away. Coverage buys what its
-definition promises: retrieval, demonstration and evaluation-suite quality.
+far from them, and a gradient step averages the two away. A controlled test
+qualifies this: three 800-item subsets of a single corpus, differing only in
+spread, are *not* monotone in coverage — the random subset edges the
+coverage-maximised one — though the zero-coverage subset is worst on both
+measures. Coverage ranks corpora on the tasks its definition describes and is
+not, on its own, the mechanism behind that ranking.
 
 In automatic item generation for psychometrics the margin is larger and the
 result is new. Asked a reasonable question ten thousand times, a strong model
