@@ -319,7 +319,11 @@ sweep puts the optimum at or adjacent to n\* = 1, which is what we do.
 
 The pipeline is Part I's **Recursive Axis Conditioning** (RAC) stack with the selection
 objective and its bookkeeping swapped from packing to covering; we write RAC-coverage for
-this instantiation and RAC-packing for Part I's. Concretely:
+this instantiation and RAC-packing for Part I's. Part I's Figure 3 draws the shared
+loop and marks the two points where the objective enters it: how a candidate axis is
+scored, and how one of the K candidates is chosen. Coverage adds a third element that
+packing has no use for, described below, because only coverage has a reference
+distribution to aim at. Concretely:
 
 **Reachable pool (the denominator).** Before selection begins, draw a pool of
 cheap, unconditioned samples from the generator and embed them. This pool

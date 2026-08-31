@@ -624,6 +624,16 @@ split into finer conditional sub-axes. The recursion is what the name
 refers to, and it is the part that changes the asymptote rather than the
 constant.
 
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 3. Recursive Axis Conditioning. Steps 1--7 are shared by both objectives. The objective enters at two points only: how a candidate axis is scored (step 2) and how one of the K candidates is chosen (step 5). Everything else --- elicitation, the contracts, the reject-only gate, the attractor ledger, the refinement trigger --- is the same machinery. Coverage adds one step max-min has no use for, since only coverage has a reference distribution to aim at.}]{figures/fig15_rac_diagram.png}}
+
+\emph{Figure 3. Recursive Axis Conditioning. Steps 1--7 are shared by
+both objectives. The objective enters at two points only: how a
+candidate axis is scored (step 2) and how one of the K candidates is
+chosen (step 5). Everything else --- elicitation, the contracts, the
+reject-only gate, the attractor ledger, the refinement trigger --- is
+the same machinery. Coverage adds one step max-min has no use for, since
+only coverage has a reference distribution to aim at.}
+
 \subsubsection{5.1 The stack}\label{51-the-stack}
 
 Per accepted item, a bounded number of model calls regardless of corpus
@@ -860,9 +870,9 @@ zero duplicates on DALL·E instructions. A practitioner who validated
 their pipeline on the first domain and deployed it on the second would
 ship a bank that is three-quarters one question.
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.}]{figures/fig10_real_curves.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.}]{figures/fig10_real_curves.png}}
 
-\emph{Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal
+\emph{Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal
 measures (top row), and latent measures (bottom row) do not agree about
 what is happening.}
 
@@ -1056,9 +1066,9 @@ embedder --- the cone is corpus-dependent, not a fixed property of the
 embedder, which is exactly why it has to be reported rather than
 assumed.
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 4. The decoupling, normalised to each series\textquotesingle{} value at n = 5: literal diversity falls while latent diversity rises.}]{figures/fig11_literal_vs_latent.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 5. The decoupling, normalised to each series\textquotesingle{} value at n = 5: literal diversity falls while latent diversity rises.}]{figures/fig11_literal_vs_latent.png}}
 
-\emph{Figure 4. The decoupling, normalised to each
+\emph{Figure 5. The decoupling, normalised to each
 series\textquotesingle{} value at n = 5: literal diversity falls while
 latent diversity rises.}
 
@@ -1112,9 +1122,9 @@ literal level only. It achieves the best self-repetition of any baseline
 ROUGE-L threshold cannot see semantic redundancy, and semantic
 redundancy is what remains once the lexical kind is filtered.
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 5. Competitive comparison on real corpora at matched n, both domains, across four metrics.}]{figures/fig14_arms.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 6. Competitive comparison on real corpora at matched n, both domains, across four metrics.}]{figures/fig14_arms.png}}
 
-\emph{Figure 5. Competitive comparison on real corpora at matched n,
+\emph{Figure 6. Competitive comparison on real corpora at matched n,
 both domains, across four metrics.}
 
 The psychometric domain repeats the ordering on all six arms at matched
@@ -1167,7 +1177,7 @@ thing the user actually receives.
 The qualitative version is more damning than the correlation.
 Independently generated instructions, from a corpus with a 0.000
 exact-duplicate rate and healthy lexical diversity, render to
-near-interchangeable pictures (Figure 7, top): the same magenta-and-cyan
+near-interchangeable pictures (Figure 8, top): the same magenta-and-cyan
 palette, a classical marble bust, neon signage, halftone collage, a
 receding grid. A vision judge shown samples of the set rates its
 distinctness 6--7 out of 10 and names the attractors precisely ---
@@ -1181,15 +1191,15 @@ This is a second mode collapse, downstream of ours, contributed by the
 image model and by the fact that much of what varies in the text
 ("post-modern", "appropriated source") lands in the same visual place.
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 6. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.}]{figures/fig12_vision.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.}]{figures/fig12_vision.png}}
 
-\emph{Figure 6. Text versus vision diversity on 97 rendered artworks.
+\emph{Figure 7. Text versus vision diversity on 97 rendered artworks.
 (c) Pairwise similarities in the two spaces correlate at only r =
 0.170.}
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §6.6 and §6.11 quantify.}]{figures/fig13_contact_sheet.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 8. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §6.6 and §6.11 quantify.}]{figures/fig13_contact_sheet.png}}
 
-\emph{Figure 7. Sixteen renders per policy, same generator, same budget,
+\emph{Figure 8. Sixteen renders per policy, same generator, same budget,
 same image model. Rows 1--2, naive prompting: a corpus with a 0.000
 exact-duplicate rate and healthy lexical diversity that still returns
 one visual mode, with magenta and cyan collage, barcodes and QR codes,
@@ -1203,7 +1213,7 @@ survives the steering: 38\% of the steered renders still score as
 literal tilings and 42\% still share a palette with a nearest neighbour,
 which §6.6 and §6.11 quantify.}
 
-A reader looking at rows 3 and 4 of Figure 7 will notice that they still
+A reader looking at rows 3 and 4 of Figure 8 will notice that they still
 favour grids, panels and tiled compositions more than a human art
 director would, and the structural audit agrees: 38\% of those renders
 score above 0.5 on the autocorrelation tiling measure. That is what the

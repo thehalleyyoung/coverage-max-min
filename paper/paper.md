@@ -255,6 +255,11 @@ Cost is *O*(|*A*| · *D*²) per decision and does not grow with *n*.
 
 We call the method **Recursive Axis Conditioning** (RAC): the generator is asked for the language-valued axes along which its own outputs can differ, those axes are ranked and their most-different levels chosen, and an axis that runs out of transverse variation is split into finer conditional sub-axes. The recursion is what the name refers to, and it is the part that changes the asymptote rather than the constant.
 
+![Figure 3. Recursive Axis Conditioning. Steps 1–7 are shared by both objectives. The objective enters at two points only: how a candidate axis is scored (step 2) and how one of the K candidates is chosen (step 5). Everything else — elicitation, the contracts, the reject-only gate, the attractor ledger, the refinement trigger — is the same machinery. Coverage adds one step max-min has no use for, since only coverage has a reference distribution to aim at.](figures/fig15_rac_diagram.png)
+
+*Figure 3. Recursive Axis Conditioning. Steps 1–7 are shared by both objectives. The objective enters at two points only: how a candidate axis is scored (step 2) and how one of the K candidates is chosen (step 5). Everything else — elicitation, the contracts, the reject-only gate, the attractor ledger, the refinement trigger — is the same machinery. Coverage adds one step max-min has no use for, since only coverage has a reference distribution to aim at.*
+
+
 #### I.5.1 The stack
 
 Per accepted item, a bounded number of model calls regardless of corpus size:
@@ -340,9 +345,9 @@ Temperature barely helps: at *T* = 1.6 the duplicate rate is still 0.710. Condit
 
 It also shows the failure is domain-shaped and invisible from one vantage point. The identical pipeline, prompt style, and model produce zero duplicates on DALL·E instructions. A practitioner who validated their pipeline on the first domain and deployed it on the second would ship a bank that is three-quarters one question.
 
-![Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.](figures/fig10_real_curves.png)
+![Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.](figures/fig10_real_curves.png)
 
-*Figure 3. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.*
+*Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.*
 
 
 The same failure is visible in a corpus with no duplicates at all. The poetry pilot has an exact-duplicate rate of 0.000 under naive prompting and a distinct-2 of 0.610, so every literal counter reports a healthy corpus. Here are the opening lines of eight poems sampled at random from those sixty:
@@ -409,9 +414,9 @@ Literal diversity collapses monotonically (by *n* = 1,750 more than half of each
 
 **Centering.** The uncentered embedding Vendi on this corpus reads 1.63 → 2.33, which would suggest ten thousand instructions behave like two distinct items. That number is mostly an artifact of the kernel. Same-domain embeddings sit in a narrow cone (mean pairwise cosine similarity is 0.883 here and 0.788 on the psychometric corpus), so the Gram spectrum is dominated by the shared mean direction and the score compresses toward 1. After removing the mean direction the same corpus reads 3.79 → 65.30, which is the honest curve and the one in the table. We report both, and we suggest any embedding-based diversity result publish the corpus's pairwise-similarity distribution alongside it, because the number is meaningless without it. Part II measured a mean pairwise cosine of 0.444 on its own pool with the same embedder — the cone is corpus-dependent, not a fixed property of the embedder, which is exactly why it has to be reported rather than assumed.
 
-![Figure 4. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.](figures/fig11_literal_vs_latent.png)
+![Figure 5. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.](figures/fig11_literal_vs_latent.png)
 
-*Figure 4. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.*
+*Figure 5. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.*
 
 
 #### I.6.5 Competitive comparison at matched *n*
@@ -436,9 +441,9 @@ Evol-Instruct comes out worse than naive at the one thing a diversity method exi
 
 Self-Instruct's guard is literal, and it defends the literal level only. It achieves the best self-repetition of any baseline (0.131) (its ROUGE filter is doing real work), while its centered Vendi (67.45) trails RAC by 10 points and RAC with vision steering by 24. A ROUGE-L threshold cannot see semantic redundancy, and semantic redundancy is what remains once the lexical kind is filtered.
 
-![Figure 5. Competitive comparison on real corpora at matched n, both domains, across four metrics.](figures/fig14_arms.png)
+![Figure 6. Competitive comparison on real corpora at matched n, both domains, across four metrics.](figures/fig14_arms.png)
 
-*Figure 5. Competitive comparison on real corpora at matched n, both domains, across four metrics.*
+*Figure 6. Competitive comparison on real corpora at matched n, both domains, across four metrics.*
 
 
 The psychometric domain repeats the ordering on all six arms at matched *n* = 1,058:
@@ -462,20 +467,20 @@ We rendered the first 199 DALL·E instructions from the naive corpus to actual i
 
 Knowing that two instructions are semantically far apart tells you very nearly nothing about whether the two pictures look different. Every text-side diversity method in the table above (ours included) is optimizing a proxy that explains roughly 2% of the variance in the thing the user actually receives.
 
-The qualitative version is more damning than the correlation. Independently generated instructions, from a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity, render to near-interchangeable pictures (Figure 7, top): the same magenta-and-cyan palette, a classical marble bust, neon signage, halftone collage, a receding grid. A vision judge shown samples of the set rates its distinctness 6–7 out of 10 and names the attractors precisely — *"muted beige, cream, brown, ochre and black foundations accented by saturated cyan/teal, turquoise, pink"*, *"appropriation of canonical or religious imagery, especially Mona Lisa-like female portraits"*, *"frontal, museum-like presentation with centered, symmetrical compositions"*.
+The qualitative version is more damning than the correlation. Independently generated instructions, from a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity, render to near-interchangeable pictures (Figure 8, top): the same magenta-and-cyan palette, a classical marble bust, neon signage, halftone collage, a receding grid. A vision judge shown samples of the set rates its distinctness 6–7 out of 10 and names the attractors precisely — *"muted beige, cream, brown, ochre and black foundations accented by saturated cyan/teal, turquoise, pink"*, *"appropriation of canonical or religious imagery, especially Mona Lisa-like female portraits"*, *"frontal, museum-like presentation with centered, symmetrical compositions"*.
 
 This is a second mode collapse, downstream of ours, contributed by the image model and by the fact that much of what varies in the text ("post-modern", "appropriated source") lands in the same visual place.
 
-![Figure 6. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.](figures/fig12_vision.png)
+![Figure 7. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.](figures/fig12_vision.png)
 
-*Figure 6. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.*
+*Figure 7. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.*
 
-![Figure 7. Sixteen renders per policy, same generator, same budget, same image model. Rows 1–2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3–4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38% of the steered renders still score as literal tilings and 42% still share a palette with a nearest neighbour, which §I.6.6 and §I.6.11 quantify.](figures/fig13_contact_sheet.png)
+![Figure 8. Sixteen renders per policy, same generator, same budget, same image model. Rows 1–2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3–4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38% of the steered renders still score as literal tilings and 42% still share a palette with a nearest neighbour, which §I.6.6 and §I.6.11 quantify.](figures/fig13_contact_sheet.png)
 
-*Figure 7. Sixteen renders per policy, same generator, same budget, same image model. Rows 1–2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3–4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38% of the steered renders still score as literal tilings and 42% still share a palette with a nearest neighbour, which §I.6.6 and §I.6.11 quantify.*
+*Figure 8. Sixteen renders per policy, same generator, same budget, same image model. Rows 1–2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3–4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38% of the steered renders still score as literal tilings and 42% still share a palette with a nearest neighbour, which §I.6.6 and §I.6.11 quantify.*
 
 
-A reader looking at rows 3 and 4 of Figure 7 will notice that they still favour grids, panels and tiled compositions more than a human art director would, and the structural audit agrees: 38% of those renders score above 0.5 on the autocorrelation tiling measure. That is what the objective asks for and no more. A max-min corpus is scored on how far apart its items are, and nothing in the score says the corpus should look like any particular distribution of artworks — there is no likelihood term, no reference set, no penalty for sitting in a region of image space that real post-modern art rarely occupies. If the generator's prior happens to place a whole family of mutually distant images inside the tiled-grid region, spreading points is satisfied by staying there and varying what fills the cells. Part II's objective is the one that has a reference distribution in it, and a corpus scored on coverage of human-written material inherits a pull toward where that material actually sits. Buying both at once means carrying both terms, which is a different optimization from the one measured here.
+A reader looking at rows 3 and 4 of Figure 8 will notice that they still favour grids, panels and tiled compositions more than a human art director would, and the structural audit agrees: 38% of those renders score above 0.5 on the autocorrelation tiling measure. That is what the objective asks for and no more. A max-min corpus is scored on how far apart its items are, and nothing in the score says the corpus should look like any particular distribution of artworks — there is no likelihood term, no reference set, no penalty for sitting in a region of image space that real post-modern art rarely occupies. If the generator's prior happens to place a whole family of mutually distant images inside the tiled-grid region, spreading points is satisfied by staying there and varying what fills the cells. Part II's objective is the one that has a reference distribution in it, and a corpus scored on coverage of human-written material inherits a pull toward where that material actually sits. Buying both at once means carrying both terms, which is a different optimization from the one measured here.
 
 The vision-steered arm closes the loop where the product actually lives. It renders a bounded sample of accepted instructions, embeds them with CLIP, and feeds two things back into the text-side loop: a least-squares map from the crowded *image* directions into instruction-embedding space, so the text-side orthogonality term can push away from visual redundancy it cannot itself perceive; and mined *visual* attractors from the vision judge, appended to the same append-only ledger as the textual ones and repelled against in subsequent prompts. It is the paper's mechanism applied one level down: the ledger already repels against what the model keeps saying, and now also against what it keeps showing. It is the best arm in the table.
 
@@ -929,7 +934,11 @@ sweep puts the optimum at or adjacent to n\* = 1, which is what we do.
 
 The pipeline is Part I's **Recursive Axis Conditioning** (RAC) stack with the selection
 objective and its bookkeeping swapped from packing to covering; we write RAC-coverage for
-this instantiation and RAC-packing for Part I's. Concretely:
+this instantiation and RAC-packing for Part I's. Part I's Figure 3 draws the shared
+loop and marks the two points where the objective enters it: how a candidate axis is
+scored, and how one of the K candidates is chosen. Coverage adds a third element that
+packing has no use for, described below, because only coverage has a reference
+distribution to aim at. Concretely:
 
 **Reachable pool (the denominator).** Before selection begins, draw a pool of
 cheap, unconditioned samples from the generator and embed them. This pool
