@@ -37,6 +37,13 @@
       "measured_in": "rendered artifact (CLAP/MERT audio, CLIP image)",
       "artifact_rendered": true,
       "calculus": "real space (score_axes_realized / score_axes_coverage)"
+    },
+    "P5_dedup_rescore": {
+      "what": "Scale-free Dolly coverage re-scored after collapsing each corpus to its distinct instructions, alongside the as-generated score.",
+      "procedure": "coverage/rescore_dedup.py; STEER-disjoint Dolly half (n=3000) as reference, reference-side k-NN radii, AUC over k in {3,5,10,20}, matched evaluated n=450, seed 20260830 for the reference draw.",
+      "date": "2026-08-31",
+      "note": "A separate scoring pass from the published head-to-head, so its as-generated numbers differ slightly from that table (0.4532 vs 0.4441 for the retrieval-aimed arm) through a different sample draw. The as-is and dedup columns are paired within this pass.",
+      "outputs": "coverage/figures/summary_dedup_rescore.json"
     }
   },
   "results": {
@@ -221,6 +228,22 @@
       "note": "CLAP gate WITH rejection -- superseded by lyria_steer.py; kept for the rejection-cost comparison",
       "bytes": 2795,
       "modified": "2026-08-30T18:26:47"
+    },
+    "P5_dedup_rescore": {
+      "headline": {
+        "ours_v4_as_is": 0.4532,
+        "ours_v4_dedup": 0.4752,
+        "alpaca": 0.3919,
+        "ours_v3_orthcond": 0.1999
+      },
+      "duplicate_rates_full_corpus": {
+        "ours_v4": 0.2106,
+        "random_seed": 0.2059,
+        "self_instruct": 0.0791,
+        "ours_keepall": 0.0,
+        "ours_v3": 0.0,
+        "ours_selective": 0.0
+      }
     }
   },
   "missing_not_yet_produced": [

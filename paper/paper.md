@@ -1357,6 +1357,24 @@ The ablation attributes the margin: retrieval-aiming and the radius-adaptive mod
 
 Coverage and internal diversity are different objectives. The winning corpus has the lowest mean-centered Vendi of its cohort (62.1; density 1.69): it spends items where the reference measure is, near-duplicates included, exactly as facility location prescribes. Ranking these corpora by a single internal-diversity score would rank the coverage winner last.
 
+**Duplicates, and what removing them does.** Two arms keep every candidate that clears the gate, and both carry the generator's repeats: at full corpus size the retrieval-aimed arm is 21.1% exact duplicates (2,398 items, 1,893 distinct) and the few-shot-from-seeds baseline is 20.6% (2,399 items, 1,905 distinct). Every arm that selects at all sits at exactly 0.000 — conditioning keep-all, orthogonalized conditioning, and selective 1-of-8 alike. The duplication tracks the discard-nothing policy rather than any conditioning scheme, which is why a baseline shows it as strongly as we do.
+
+Since a repeated instruction covers a ball that is already covered, those repeats spend evaluated slots for nothing, and the question is what the ranking looks like without them. Re-scoring every corpus after collapsing it to its distinct instructions, on the same reference half at the same radii and the same evaluated *n* = 450:
+
+| corpus | as generated | deduplicated |
+|---|---|---|
+| **RAC-coverage, retrieval-aimed** | 0.4532 | **0.4752** |
+| Alpaca (52k) | 0.3919 | 0.3919 |
+| RAC-coverage, selective 1-of-8 (304) | 0.2591 | 0.2591 |
+| WizardLM Evol-Instruct (143k) | 0.2494 | 0.2505 |
+| PersonaHub (50k) | 0.2486 | 0.2486 |
+| Self-Instruct (reimplemented) | 0.2263 | 0.2243 |
+| few-shot from seeds | 0.1970 | 0.2149 |
+| RAC, conditioning keep-all | 0.2139 | 0.2139 |
+| RAC, orthogonalized conditioning | 0.1999 | 0.1999 |
+
+Only the two keep-everything arms move. Removing their repeats raises the retrieval-aimed arm from 0.4532 to 0.4752 and widens its margin over Alpaca from 16% to 21%, so the duplicates were costing coverage rather than manufacturing it and the headline number is the conservative one. The ordering is otherwise unchanged, and orthogonalized conditioning finishes last of the nine seeded arms with nothing to remove.
+
 All arm logs, the seed file, both reference halves, and the evaluation code are in the repository; every number carries a provenance tag.
 
 ### 7.12 A live coverage pilot

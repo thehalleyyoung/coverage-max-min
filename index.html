@@ -259,6 +259,34 @@ h2,h3{scroll-margin-top:1.5rem}
   .toc li.sub{display:none}
 }
 @media print{.toc{display:none}.layout{display:block}}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
 </style>
 </head>
 <body>
@@ -2670,6 +2698,83 @@ corpus has the lowest mean-centered Vendi of its cohort (62.1; density
 included, exactly as facility location prescribes. Ranking these corpora
 by a single internal-diversity score would rank the coverage winner
 last.</p>
+<p><strong>Duplicates, and what removing them does.</strong> Two arms
+keep every candidate that clears the gate, and both carry the
+generator's repeats: at full corpus size the retrieval-aimed arm is
+21.1% exact duplicates (2,398 items, 1,893 distinct) and the
+few-shot-from-seeds baseline is 20.6% (2,399 items, 1,905 distinct).
+Every arm that selects at all sits at exactly 0.000 — conditioning
+keep-all, orthogonalized conditioning, and selective 1-of-8 alike. The
+duplication tracks the discard-nothing policy rather than any
+conditioning scheme, which is why a baseline shows it as strongly as we
+do.</p>
+<p>Since a repeated instruction covers a ball that is already covered,
+those repeats spend evaluated slots for nothing, and the question is
+what the ranking looks like without them. Re-scoring every corpus after
+collapsing it to its distinct instructions, on the same reference half
+at the same radii and the same evaluated <em>n</em> = 450:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>corpus</th>
+<th>as generated</th>
+<th>deduplicated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RAC-coverage, retrieval-aimed</strong></td>
+<td>0.4532</td>
+<td><strong>0.4752</strong></td>
+</tr>
+<tr>
+<td>Alpaca (52k)</td>
+<td>0.3919</td>
+<td>0.3919</td>
+</tr>
+<tr>
+<td>RAC-coverage, selective 1-of-8 (304)</td>
+<td>0.2591</td>
+<td>0.2591</td>
+</tr>
+<tr>
+<td>WizardLM Evol-Instruct (143k)</td>
+<td>0.2494</td>
+<td>0.2505</td>
+</tr>
+<tr>
+<td>PersonaHub (50k)</td>
+<td>0.2486</td>
+<td>0.2486</td>
+</tr>
+<tr>
+<td>Self-Instruct (reimplemented)</td>
+<td>0.2263</td>
+<td>0.2243</td>
+</tr>
+<tr>
+<td>few-shot from seeds</td>
+<td>0.1970</td>
+<td>0.2149</td>
+</tr>
+<tr>
+<td>RAC, conditioning keep-all</td>
+<td>0.2139</td>
+<td>0.2139</td>
+</tr>
+<tr>
+<td>RAC, orthogonalized conditioning</td>
+<td>0.1999</td>
+<td>0.1999</td>
+</tr>
+</tbody>
+</table></div>
+<p>Only the two keep-everything arms move. Removing their repeats raises
+the retrieval-aimed arm from 0.4532 to 0.4752 and widens its margin over
+Alpaca from 16% to 21%, so the duplicates were costing coverage rather
+than manufacturing it and the headline number is the conservative one.
+The ordering is otherwise unchanged, and orthogonalized conditioning
+finishes last of the nine seeded arms with nothing to remove.</p>
 <p>All arm logs, the seed file, both reference halves, and the
 evaluation code are in the repository; every number carries a provenance
 tag.</p>
