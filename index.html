@@ -91,11 +91,39 @@ h2,h3{scroll-margin-top:1.5rem}
   .toc li.sub{display:none}
 }
 @media print{.toc{display:none}.layout{display:block}}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
 </style>
 </head>
 <body>
 <div class="layout">
-<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol><li class=""><a class="sec" href="#1-results">1. Results</a></li><li class=""><a class="sec" href="#2-introduction">2. Introduction</a></li><li class="sub"><a class="" href="#21-the-oracle-asymmetry">2.1 The oracle asymmetry</a></li><li class="sub"><a class="" href="#22-contributions">2.2 Contributions</a></li><li class=""><a class="sec" href="#3-related-work">3. Related work</a></li><li class=""><a class="sec" href="#4-two-objectives-and-how-they-relate">4. Two objectives, and how they relate</a></li><li class="sub"><a class="" href="#41-the-packing-objective">4.1 The packing objective</a></li><li class="sub"><a class="" href="#42-the-covering-objective">4.2 The covering objective</a></li><li class="sub"><a class="" href="#43-where-they-coincide">4.3 Where they coincide</a></li><li class="sub"><a class="" href="#44-coverage-is-not-packing">4.4 Coverage is not packing</a></li><li class="sub"><a class="" href="#45-where-they-part-measured">4.5 Where they part, measured</a></li><li class="sub"><a class="" href="#46-why-the-scoring-rule-has-to-fork">4.6 Why the scoring rule has to fork</a></li><li class="sub"><a class="" href="#47-the-comparison-that-shows-the-fork">4.7 The comparison that shows the fork</a></li><li class="sub"><a class="" href="#48-what-both-objectives-share">4.8 What both objectives share</a></li><li class="sub"><a class="" href="#49-practical-guidance">4.9 Practical guidance</a></li><li class=""><a class="sec" href="#5-theory-what-limits-both">5. Theory: what limits both</a></li><li class="sub"><a class="" href="#51-saturation-at-a-fixed-prompt">5.1 Saturation at a fixed prompt</a></li><li class="sub"><a class="" href="#52-the-slice-deficit">5.2 The slice deficit</a></li><li class="sub"><a class="" href="#53-transversality-which-prompt-motion-helps">5.3 Transversality: which prompt motion helps</a></li><li class="sub"><a class="" href="#54-breadth-versus-depth">5.4 Breadth versus depth</a></li><li class="sub"><a class="" href="#55-what-this-means-for-the-packing-objective">5.5 What this means for the packing objective</a></li><li class="sub"><a class="" href="#56-the-coverage-functional-is-monotone-submodular">5.6 The coverage functional is monotone submodular</a></li><li class="sub"><a class="" href="#57-greedy-and-its-guarantee">5.7 Greedy and its guarantee</a></li><li class="sub"><a class="" href="#58-sequential-generation-is-streaming-greedy">5.8 Sequential generation is streaming greedy</a></li><li class="sub"><a class="" href="#59-estimation-error-of-the-monte-carlo-coverage">5.9 Estimation error of the Monte-Carlo coverage</a></li><li class="sub"><a class="" href="#510-allocation-under-a-known-budget">5.10 Allocation under a known budget</a></li><li class="sub"><a class="" href="#511-numerical-verification">5.11 Numerical verification</a></li><li class=""><a class="sec" href="#6-method-recursive-axis-conditioning">6. Method: Recursive Axis Conditioning</a></li><li class="sub"><a class="" href="#61-the-stack">6.1 The stack</a></li><li class="sub"><a class="" href="#62-scoring-candidate-axes">6.2 Scoring candidate axes</a></li><li class="sub"><a class="" href="#63-the-four-factors">6.3 The four factors</a></li><li class="sub"><a class="" href="#64-choosing-values-and-recursing">6.4 Choosing values, and recursing</a></li><li class="sub"><a class="" href="#65-eliciting-and-refining-latent-behaviors">6.5 Eliciting and refining latent behaviors</a></li><li class="sub"><a class="" href="#66-the-covering-instantiation">6.6 The covering instantiation</a></li><li class="sub"><a class="" href="#67-why-orthogonalize-not-randomize">6.7 Why "orthogonalize", not "randomize"</a></li><li class=""><a class="sec" href="#7-experiments">7. Experiments</a></li><li class="sub"><a class="" href="#71-domains">7.1 Domains</a></li><li class="sub"><a class="" href="#72-methods-compared">7.2 Methods compared</a></li><li class="sub"><a class="" href="#73-duplication-under-repeated-sampling">7.3 Duplication under repeated sampling</a></li><li class="sub"><a class="" href="#74-literal-and-latent-diversity-move-in-opposite-directions">7.4 Literal and latent diversity move in opposite directions</a></li><li class="sub"><a class="" href="#75-competitive-comparison-at-matched-n">7.5 Competitive comparison at matched n</a></li><li class="sub"><a class="" href="#76-head-to-head-against-released-instruction-corpora">7.6 Head-to-head against released instruction corpora</a></li><li class="sub"><a class="" href="#77-protocol">7.7 Protocol</a></li><li class="sub"><a class="" href="#78-the-configuration">7.8 The configuration</a></li><li class="sub"><a class="" href="#79-results">7.9 Results</a></li><li class="sub"><a class="" href="#710-notes">7.10 Notes</a></li><li class="sub"><a class="" href="#711-a-live-coverage-pilot">7.11 A live coverage pilot</a></li><li class="sub"><a class="" href="#712-setup-and-what-it-cost">7.12 Setup and what it cost</a></li><li class="sub"><a class="" href="#713-literal-versus-latent-diversity-and-a-kernel-caveat">7.13 Literal versus latent diversity, and a kernel caveat</a></li><li class="sub"><a class="" href="#715-attractor-mining-works-and-is-legible">7.15 Attractor mining works, and is legible</a></li><li class="sub"><a class="" href="#716-the-exam-bank-a-judged-enemy-item-radius">7.16 The exam bank: a judged enemy-item radius</a></li><li class="sub"><a class="" href="#717-head-to-head-against-a-human-written-exam-bank">7.17 Head-to-head against a human-written exam bank</a></li><li class="sub"><a class="" href="#718-which-metrics-are-independent-of-the-objective">7.18 Which metrics are independent of the objective</a></li><li class="sub"><a class="" href="#721-scale-and-cost">7.21 Scale and cost</a></li><li class=""><a class="sec" href="#8-limitations">8. Limitations</a></li><li class=""><a class="sec" href="#9-conclusion">9. Conclusion</a></li></ol></nav>
+<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol><li class=""><a class="sec" href="#1-results">1. Results</a></li><li class=""><a class="sec" href="#2-introduction">2. Introduction</a></li><li class="sub"><a class="" href="#21-the-oracle-asymmetry">2.1 The oracle asymmetry</a></li><li class="sub"><a class="" href="#22-contributions">2.2 Contributions</a></li><li class=""><a class="sec" href="#3-related-work">3. Related work</a></li><li class=""><a class="sec" href="#4-which-measure-and-what-changes-with-it">4. Which measure, and what changes with it</a></li><li class="sub"><a class="" href="#41-max-min-stated">4.1 Max-min, stated</a></li><li class="sub"><a class="" href="#42-coverage-stated">4.2 Coverage, stated</a></li><li class="sub"><a class="" href="#43-where-they-coincide">4.3 Where they coincide</a></li><li class="sub"><a class="" href="#44-coverage-is-not-packing">4.4 Coverage is not packing</a></li><li class="sub"><a class="" href="#45-where-they-part-measured">4.5 Where they part, measured</a></li><li class="sub"><a class="" href="#46-why-the-scoring-rule-has-to-fork">4.6 Why the scoring rule has to fork</a></li><li class="sub"><a class="" href="#47-the-comparison-that-shows-the-fork">4.7 The comparison that shows the fork</a></li><li class="sub"><a class="" href="#48-what-both-objectives-share">4.8 What both objectives share</a></li><li class="sub"><a class="" href="#49-practical-guidance">4.9 Practical guidance</a></li><li class=""><a class="sec" href="#5-theory-what-limits-both">5. Theory: what limits both</a></li><li class="sub"><a class="" href="#51-saturation-at-a-fixed-prompt">5.1 Saturation at a fixed prompt</a></li><li class="sub"><a class="" href="#52-the-slice-deficit">5.2 The slice deficit</a></li><li class="sub"><a class="" href="#53-transversality-which-prompt-motion-helps">5.3 Transversality: which prompt motion helps</a></li><li class="sub"><a class="" href="#54-breadth-versus-depth">5.4 Breadth versus depth</a></li><li class="sub"><a class="" href="#55-what-this-means-for-the-packing-objective">5.5 What this means for the packing objective</a></li><li class="sub"><a class="" href="#56-the-coverage-functional-is-monotone-submodular">5.6 The coverage functional is monotone submodular</a></li><li class="sub"><a class="" href="#57-greedy-and-its-guarantee">5.7 Greedy and its guarantee</a></li><li class="sub"><a class="" href="#58-sequential-generation-is-streaming-greedy">5.8 Sequential generation is streaming greedy</a></li><li class="sub"><a class="" href="#59-estimation-error-of-the-monte-carlo-coverage">5.9 Estimation error of the Monte-Carlo coverage</a></li><li class="sub"><a class="" href="#510-allocation-under-a-known-budget">5.10 Allocation under a known budget</a></li><li class="sub"><a class="" href="#511-numerical-verification">5.11 Numerical verification</a></li><li class=""><a class="sec" href="#6-method-recursive-axis-conditioning">6. Method: Recursive Axis Conditioning</a></li><li class="sub"><a class="" href="#61-the-stack">6.1 The stack</a></li><li class="sub"><a class="" href="#62-scoring-candidate-axes">6.2 Scoring candidate axes</a></li><li class="sub"><a class="" href="#63-the-four-factors">6.3 The four factors</a></li><li class="sub"><a class="" href="#64-choosing-values-and-recursing">6.4 Choosing values, and recursing</a></li><li class="sub"><a class="" href="#65-eliciting-and-refining-latent-behaviors">6.5 Eliciting and refining latent behaviors</a></li><li class="sub"><a class="" href="#66-the-covering-instantiation">6.6 The covering instantiation</a></li><li class="sub"><a class="" href="#67-why-orthogonalize-not-randomize">6.7 Why "orthogonalize", not "randomize"</a></li><li class=""><a class="sec" href="#7-experiments">7. Experiments</a></li><li class="sub"><a class="" href="#71-domains">7.1 Domains</a></li><li class="sub"><a class="" href="#72-methods-compared">7.2 Methods compared</a></li><li class="sub"><a class="" href="#73-duplication-under-repeated-sampling">7.3 Duplication under repeated sampling</a></li><li class="sub"><a class="" href="#74-literal-and-latent-diversity-move-in-opposite-directions">7.4 Literal and latent diversity move in opposite directions</a></li><li class="sub"><a class="" href="#75-competitive-comparison-at-matched-n">7.5 Competitive comparison at matched n</a></li><li class="sub"><a class="" href="#76-head-to-head-against-released-instruction-corpora">7.6 Head-to-head against released instruction corpora</a></li><li class="sub"><a class="" href="#77-protocol">7.7 Protocol</a></li><li class="sub"><a class="" href="#78-the-configuration">7.8 The configuration</a></li><li class="sub"><a class="" href="#79-results">7.9 Results</a></li><li class="sub"><a class="" href="#710-notes">7.10 Notes</a></li><li class="sub"><a class="" href="#711-a-live-coverage-pilot">7.11 A live coverage pilot</a></li><li class="sub"><a class="" href="#712-setup-and-what-it-cost">7.12 Setup and what it cost</a></li><li class="sub"><a class="" href="#713-literal-versus-latent-diversity-and-a-kernel-caveat">7.13 Literal versus latent diversity, and a kernel caveat</a></li><li class="sub"><a class="" href="#715-attractor-mining-works-and-is-legible">7.15 Attractor mining works, and is legible</a></li><li class="sub"><a class="" href="#716-the-exam-bank-a-judged-enemy-item-radius">7.16 The exam bank: a judged enemy-item radius</a></li><li class="sub"><a class="" href="#717-head-to-head-against-a-human-written-exam-bank">7.17 Head-to-head against a human-written exam bank</a></li><li class="sub"><a class="" href="#718-which-metrics-are-independent-of-the-objective">7.18 Which metrics are independent of the objective</a></li><li class="sub"><a class="" href="#721-scale-and-cost">7.21 Scale and cost</a></li><li class=""><a class="sec" href="#8-limitations">8. Limitations</a></li><li class=""><a class="sec" href="#9-conclusion">9. Conclusion</a></li></ol></nav>
 <main>
 <div class="banner">Paper: <a href="paper/paper.pdf">PDF</a> &middot; <a href="paper/paper.tex">LaTeX</a> &middot; <a href="https://github.com/thehalleyyoung/coverage-max-min">code &amp; data</a></div>
 <h1
@@ -105,28 +133,32 @@ and Max-Min Diversity in Synthetic Data Generation</h1>
 that limits both</strong></p>
 <hr />
 <h2 id="abstract">Abstract</h2>
-<p>Synthetic corpora are generated under a fixed budget of <em>n</em>
-model calls, and two different things are wanted from that budget.
-<strong>Coverage</strong> asks to reach as much of the space as possible
-in <em>n</em> turns. <strong>Max-min</strong> asks that no two of the
-<em>n</em> items resemble each other. They pull in different directions:
-coverage will place two items near each other if between them they reach
-a large region, and max-min will leave most of the space empty provided
-nothing collides. We build one method for both, <strong>Recursive Axis
-Conditioning</strong> (RAC), and show that the objective needs to enter
-it at only two points.</p>
-<p>We assume an embedding oracle and, critically, <strong>no
-inverse</strong>. We can compute exactly where the next item ought to
-land and have no way to decode that point into text. Every architectural
-choice follows: the system must propose, measure and select rather than
-solve, and its only steering handles are language-valued. RAC asks the
-generator to name the axes along which its own outputs can differ, ranks
-them, selects their most-different values, and splits an axis with
-nothing transverse left to offer into finer sub-axes that apply only
-inside the region that exhausted it.</p>
-<p>Neither objective is limited by its own optimizer. Both are limited
-by the <strong>support</strong>: conditioned on a fixed prompt, a
-language model's output concentrates on a submanifold of dimension
+<p>A synthetic corpus is built to be good at something measurable, and
+the measure is chosen before the corpus is. <strong>Coverage</strong>
+asks the corpus to reach as much of the space as possible in <em>n</em>
+generator calls. <strong>Max-min</strong> asks that no two of the
+<em>n</em> items resemble each other. Duplicate rate, mean-centered
+Vendi, precision against a reference and worst-case nearest-neighbour
+distance are all in use, and a corpus that scores well on one can score
+badly on another. This paper is about how to build a generator loop that
+improves such a measure, and about how much of that loop has to change
+when the measure does.</p>
+<p>The method is <strong>Recursive Axis Conditioning</strong> (RAC). We
+assume an embedding oracle and, critically, <strong>no inverse</strong>:
+we can compute exactly where the next item ought to land and have no way
+to decode that point into text. Every architectural choice follows. RAC
+asks the generator to name the axes along which its own outputs can
+differ, ranks those axes, selects their most-different values, and
+splits an axis with nothing new left to offer into finer sub-axes that
+apply only inside the region that exhausted it. We study two measures in
+depth, coverage and max-min, and find that the loop is shared and the
+measure enters at two points: how a candidate axis is scored, and how
+one of K candidates is selected. Those two points are enough to reverse
+the ranking of methods, so a measure has to be named before a diversity
+number means anything.</p>
+<p>No measure here is limited by its own optimizer. All of them are
+limited by the <strong>support</strong>: conditioned on a fixed prompt,
+a language model's output concentrates on a submanifold of dimension
 <em>m</em> far below the dimension <em>d</em> of the space it could
 reach. Fifteen numerical checks establish the consequences. Novelty at
 fixed prompt decays as
@@ -144,26 +176,27 @@ among twelve corpora against the released Alpaca, PersonaHub and
 WizardLM sets — 0.4441 against Alpaca's 0.3722 at matched
 evaluated-<em>n</em> on a human-written reference no corpus was aimed
 at, on one twentieth of Alpaca's generation budget — and wins every
-literal and latent measure against five published methods on the max-min
-side. Along the way: a psychometric corpus that is 73.6% exact
-duplicates with one item repeated 2,726 times, which temperature barely
-dents (71.0%) and conditioning nearly eliminates (0.0%); literal and
-latent diversity moving in opposite directions as <em>n</em> grows; and
-text-embedding similarity predicting rendered-image similarity at only
-<strong><em>r</em> = 0.170</strong>. The two objectives resist being
-served by one tool: applying the packing side's orthogonalized
-conditioning to the covering objective scores below plain conditioning,
+literal and latent measure against five published methods under the
+max-min objective. Along the way: a psychometric corpus that is 73.6%
+exact duplicates with one item repeated 2,726 times, which temperature
+barely dents (71.0%) and conditioning nearly eliminates (0.0%); literal
+and latent diversity moving in opposite directions as <em>n</em> grows;
+and text-embedding similarity predicting rendered-image similarity at
+only <strong><em>r</em> = 0.170</strong>. The two measures also resist
+being served by one tool: applying the max-min side's orthogonalized
+conditioning to the coverage objective scores below plain conditioning,
 because steering away from the occupied span steers away from where the
 reference measure is densest.</p>
 <hr />
 <h2 id="1-results">1. Results</h2>
-<p>Two things are wanted from a fixed budget of <em>n</em> generator
-calls, and they are not the same thing. <strong>Coverage</strong> asks
-the corpus to reach as much of the space as possible in <em>n</em>
-turns. <strong>Max-min</strong> asks that no two of the <em>n</em> items
-resemble each other. This paper builds one method for both,
-<strong>Recursive Axis Conditioning</strong> (RAC), and reports what it
-achieves on each.</p>
+<p>Synthetic corpora are judged by a measure, and the measure is chosen
+before the corpus is. This paper is about building a generator loop that
+improves such a measure. The method is <strong>Recursive Axis
+Conditioning</strong> (RAC), and the two measures we take it furthest on
+are <strong>coverage</strong>, which asks the corpus to reach as much of
+the space as possible in <em>n</em> generator calls, and
+<strong>max-min</strong>, which asks that no two of the <em>n</em> items
+resemble each other. What the method achieves on each:</p>
 <p><strong>Coverage of a held-out human-written reference.</strong>
 Twelve corpora, matched evaluated <em>n</em> = 450, scored by the Naeem
 et al. (2020) estimator with reference-side k-NN radii, reported as AUC
@@ -384,19 +417,20 @@ write by how nearly their induced output distributions point that
 way.</p>
 <h3 id="22-contributions">2.2 Contributions</h3>
 <ul>
-<li><strong>One method for two objectives</strong> (§6). Language-valued
-axes elicited from the generator, ranked by a scoring rule, with the
-exhausted ones split recursively into conditional sub-axes. The
-objective enters at two points only: how an axis is scored, and how one
-of K candidates is selected.</li>
+<li><strong>A generator loop that improves a chosen measure</strong>
+(§6). Language-valued axes elicited from the generator, ranked by a
+scoring rule, with the exhausted ones split recursively into conditional
+sub-axes. The measure enters at two points only: how an axis is scored,
+and how one of K candidates is selected, so pointing the loop at a
+different measure means changing those two and nothing else.</li>
 <li><strong>A theory of what limits both</strong> (§5). Conditioned on a
 fixed prompt, the output concentrates on a submanifold of dimension
 <em>m</em> far below the dimension <em>d</em> of the reachable space,
 and the consequences are the same for packing and for covering.</li>
-<li><strong>The two objectives measured against each other</strong>
-(§4). Greedy k-center wins min-gap in both domains and finishes last on
-coverage; each objective's characteristic tool damages the other's
-score.</li>
+<li><strong>Evidence that the measure has to be named</strong> (§4).
+Greedy k-center wins min-gap in both domains and finishes last on
+coverage, and each measure's characteristic tool damages the other's
+score, so "diverse" without a named measure carries no information.</li>
 <li><strong>Head-to-head against released corpora</strong> (§7), on a
 scale-free estimator against a reference no corpus was aimed at, and
 against a human-written exam bank under a judged enemy-item radius.</li>
@@ -506,12 +540,25 @@ side our baselines are the standard ones for diverse subset choice:
 SemDeDup (Abbas et al. 2023), farthest-point traversal (Gonzalez 1985),
 and greedy MAP inference for DPPs (Kulesza &amp; Taskar 2012; Chen,
 Zhang &amp; Zhou 2018).</p>
-<h2 id="4-two-objectives-and-how-they-relate">4. Two objectives, and how
-they relate</h2>
-<p>The two objectives are stated above on the same footing. This section
-asks what their relationship actually is, since the answer changes with
-the budget.</p>
-<h3 id="41-the-packing-objective">4.1 The packing objective</h3>
+<h2 id="4-which-measure-and-what-changes-with-it">4. Which measure, and
+what changes with it</h2>
+<p>Everything so far has been about improving <em>a</em> measure. Which
+one is not a detail that can be left until evaluation, because the
+measure changes the method. This section states the two we study, shows
+where they agree, and shows where a loop tuned for one is actively worse
+at the other.</p>
+<p>The two are chosen because they sit at opposite ends of what
+practitioners actually ask for. Coverage is the right question when the
+corpus is an evaluation suite or a training set meant to represent a
+population: what fraction of the space has an exemplar? Max-min is the
+right question when any single collision is a defect, as in an exam bank
+where two items testing the same rule are a security failure whatever
+the rest of the bank looks like. Other measures sit between them —
+duplicate rate, mean-centered Vendi, precision against a reference, the
+worst-case nearest-neighbour distance — and the machinery below applies
+to those too, since what changes from one to the next is the scoring
+rule and the selection rule, not the loop that carries them.</p>
+<h3 id="41-max-min-stated">4.1 Max-min, stated</h3>
 <p>Let <em>M</em> ⊂ ℝ<sup><em>D</em></sup> be the reachable semantic
 manifold, dim <em>M</em> = <em>d</em>: the set of embeddings of texts
 the generator could produce under <em>some</em> prompt. For a fixed
@@ -529,7 +576,7 @@ samples behave like roughly two and a half distinct items.</p>
 <p>Throughout, <em>B</em>(<em>x</em>, <em>r</em>) is the ball of radius
 <em>r</em> and we write <em>g<sub>n</sub></em> for the min-gap of a
 fresh draw against a corpus of size <em>n</em>.</p>
-<h3 id="42-the-covering-objective">4.2 The covering objective</h3>
+<h3 id="42-coverage-stated">4.2 Coverage, stated</h3>
 <p>Fix an embedding map φ into R^D (we use unit-normalized 768-d
 embeddings), and a radius ε &gt; 0. The generator, prompted in whatever
 ways the pipeline can reach, induces a <em>reachable distribution</em> μ
@@ -3037,21 +3084,28 @@ else.</p>
 (function () {
   var links = [].slice.call(document.querySelectorAll('.toc a'));
   var targets = links.map(function (a) {
-    return document.getElementById(a.getAttribute('href').slice(1));
+    return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
   });
+  var current = -1;
   function mark() {
     var best = 0;
     for (var i = 0; i < targets.length; i++) {
       if (targets[i] && targets[i].getBoundingClientRect().top <= 90) best = i;
     }
-    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+    if (best === current) return;
+    if (current >= 0) links[current].classList.remove('here');
+    links[best].classList.add('here');
+    current = best;
+    var a = links[best];
+    var rail = a.closest('.toc');
+    if (rail && rail.scrollHeight > rail.clientHeight) {
+      var t = a.offsetTop - rail.clientHeight / 2;
+      if (Math.abs(rail.scrollTop - t) > 40) rail.scrollTop = t;
+    }
   }
-  var tick = false;
-  addEventListener('scroll', function () {
-    if (tick) return;
-    tick = true;
-    requestAnimationFrame(function () { mark(); tick = false; });
-  }, {passive: true});
+  addEventListener('scroll', mark, {passive: true});
+  addEventListener('resize', mark, {passive: true});
+  addEventListener('load', mark);
   mark();
 })();
 </script>

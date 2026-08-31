@@ -1,57 +1,62 @@
 ## Abstract
 
-Synthetic corpora are generated under a fixed budget of *n* model calls, and two
-different things are wanted from that budget. **Coverage** asks to reach as much
-of the space as possible in *n* turns. **Max-min** asks that no two of the *n*
-items resemble each other. They pull in different directions: coverage will
-place two items near each other if between them they reach a large region, and
-max-min will leave most of the space empty provided nothing collides. We build
-one method for both, **Recursive Axis Conditioning** (RAC), and show that the
-objective needs to enter it at only two points.
+A synthetic corpus is built to be good at something measurable, and the measure
+is chosen before the corpus is. **Coverage** asks the corpus to reach as much of
+the space as possible in *n* generator calls. **Max-min** asks that no two of the
+*n* items resemble each other. Duplicate rate, mean-centered Vendi, precision
+against a reference and worst-case nearest-neighbour distance are all in use, and
+a corpus that scores well on one can score badly on another. This paper is about
+how to build a generator loop that improves such a measure, and about how much of
+that loop has to change when the measure does.
 
-We assume an embedding oracle and, critically, **no inverse**. We can compute
-exactly where the next item ought to land and have no way to decode that point
-into text. Every architectural choice follows: the system must propose, measure
-and select rather than solve, and its only steering handles are language-valued.
-RAC asks the generator to name the axes along which its own outputs can differ,
-ranks them, selects their most-different values, and splits an axis with nothing
-transverse left to offer into finer sub-axes that apply only inside the region
-that exhausted it.
+The method is **Recursive Axis Conditioning** (RAC). We assume an embedding oracle
+and, critically, **no inverse**: we can compute exactly where the next item ought
+to land and have no way to decode that point into text. Every architectural choice
+follows. RAC asks the generator to name the axes along which its own outputs can
+differ, ranks those axes, selects their most-different values, and splits an axis
+with nothing new left to offer into finer sub-axes that apply only inside the
+region that exhausted it. We study two measures in depth, coverage and max-min,
+and find that the loop is shared and the measure enters at two points: how a
+candidate axis is scored, and how one of K candidates is selected. Those two
+points are enough to reverse the ranking of methods, so a measure has to be named
+before a diversity number means anything.
 
-Neither objective is limited by its own optimizer. Both are limited by the
-**support**: conditioned on a fixed prompt, a language model's output
-concentrates on a submanifold of dimension *m* far below the dimension *d* of the
-space it could reach. Fifteen numerical checks establish the consequences.
-Novelty at fixed prompt decays as $n^{-1/m}$, not $n^{-1/d}$; one prompt
-ε-covers a vanishing $ε^{d-m}$ fraction; only prompt motion *transverse* to the
-already-occupied span raises the ceiling; and the optimal number of samples per
-prompt is set by the ratio of prompt-switching cost to sampling cost.
+No measure here is limited by its own optimizer. All of them are limited by the
+**support**: conditioned on a fixed prompt, a language model's output concentrates
+on a submanifold of dimension *m* far below the dimension *d* of the space it
+could reach. Fifteen numerical checks establish the consequences. Novelty at fixed
+prompt decays as $n^{-1/m}$, not $n^{-1/d}$; one prompt ε-covers a vanishing
+$ε^{d-m}$ fraction; only prompt motion *transverse* to the already-occupied span
+raises the ceiling; and the optimal number of samples per prompt is set by the
+ratio of prompt-switching cost to sampling cost.
 
 On ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered images and
 ~200 rendered instrumentals, RAC places first among twelve corpora against the
-released Alpaca, PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722
-at matched evaluated-*n* on a human-written reference no corpus was aimed at, on
-one twentieth of Alpaca's generation budget — and wins every literal and latent
-measure against five published methods on the max-min side. Along the way: a
-psychometric corpus that is 73.6% exact duplicates with one item repeated 2,726
+released Alpaca, PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722 at
+matched evaluated-*n* on a human-written reference no corpus was aimed at, on one
+twentieth of Alpaca's generation budget — and wins every literal and latent
+measure against five published methods under the max-min objective. Along the way:
+a psychometric corpus that is 73.6% exact duplicates with one item repeated 2,726
 times, which temperature barely dents (71.0%) and conditioning nearly eliminates
 (0.0%); literal and latent diversity moving in opposite directions as *n* grows;
 and text-embedding similarity predicting rendered-image similarity at only
-***r* = 0.170**. The two objectives resist being served by one tool: applying
-the packing side's orthogonalized conditioning to the covering objective scores
-below plain conditioning, because steering away from the occupied span steers
-away from where the reference measure is densest.
+***r* = 0.170**. The two measures also resist being served by one tool: applying
+the max-min side's orthogonalized conditioning to the coverage objective scores
+below plain conditioning, because steering away from the occupied span steers away
+from where the reference measure is densest.
 
 ---
 
 ## 1. Results
 
 
-Two things are wanted from a fixed budget of *n* generator calls, and they are
-not the same thing. **Coverage** asks the corpus to reach as much of the space
-as possible in *n* turns. **Max-min** asks that no two of the *n* items resemble
-each other. This paper builds one method for both, **Recursive Axis
-Conditioning** (RAC), and reports what it achieves on each.
+Synthetic corpora are judged by a measure, and the measure is chosen before the
+corpus is. This paper is about building a generator loop that improves such a
+measure. The method is **Recursive Axis Conditioning** (RAC), and the two
+measures we take it furthest on are **coverage**, which asks the corpus to reach
+as much of the space as possible in *n* generator calls, and **max-min**, which
+asks that no two of the *n* items resemble each other. What the method achieves
+on each:
 
 **Coverage of a held-out human-written reference.** Twelve corpora, matched
 evaluated *n* = 450, scored by the Naeem et al. (2020) estimator with
@@ -131,17 +136,20 @@ All of the control we have is therefore in step 1, in the choice of *x*, and tha
 ### 2.2 Contributions
 
 
-- **One method for two objectives** (§6). Language-valued axes elicited from the
-  generator, ranked by a scoring rule, with the exhausted ones split
-  recursively into conditional sub-axes. The objective enters at two points
-  only: how an axis is scored, and how one of K candidates is selected.
+- **A generator loop that improves a chosen measure** (§6). Language-valued axes
+  elicited from the generator, ranked by a scoring rule, with the exhausted ones
+  split recursively into conditional sub-axes. The measure enters at two points
+  only: how an axis is scored, and how one of K candidates is selected, so
+  pointing the loop at a different measure means changing those two and nothing
+  else.
 - **A theory of what limits both** (§5). Conditioned on a fixed prompt, the
   output concentrates on a submanifold of dimension *m* far below the dimension
   *d* of the reachable space, and the consequences are the same for packing and
   for covering.
-- **The two objectives measured against each other** (§4). Greedy k-center wins
-  min-gap in both domains and finishes last on coverage; each objective's
-  characteristic tool damages the other's score.
+- **Evidence that the measure has to be named** (§4). Greedy k-center wins min-gap
+  in both domains and finishes last on coverage, and each measure's characteristic
+  tool damages the other's score, so "diverse" without a named measure carries no
+  information.
 - **Head-to-head against released corpora** (§7), on a scale-free estimator
   against a reference no corpus was aimed at, and against a human-written exam
   bank under a judged enemy-item radius.
@@ -226,14 +234,27 @@ standard ones for diverse subset choice: SemDeDup (Abbas et al. 2023),
 farthest-point traversal (Gonzalez 1985), and greedy MAP inference for DPPs
 (Kulesza & Taskar 2012; Chen, Zhang & Zhou 2018).
 
-## 4. Two objectives, and how they relate
+## 4. Which measure, and what changes with it
 
 
-The two objectives are stated above on the same footing. This section asks what
-their relationship actually is, since the answer changes with the budget.
+Everything so far has been about improving *a* measure. Which one is not a detail
+that can be left until evaluation, because the measure changes the method. This
+section states the two we study, shows where they agree, and shows where a loop
+tuned for one is actively worse at the other.
+
+The two are chosen because they sit at opposite ends of what practitioners
+actually ask for. Coverage is the right question when the corpus is an evaluation
+suite or a training set meant to represent a population: what fraction of the
+space has an exemplar? Max-min is the right question when any single collision is
+a defect, as in an exam bank where two items testing the same rule are a security
+failure whatever the rest of the bank looks like. Other measures sit between them
+— duplicate rate, mean-centered Vendi, precision against a reference, the
+worst-case nearest-neighbour distance — and the machinery below applies to those
+too, since what changes from one to the next is the scoring rule and the
+selection rule, not the loop that carries them.
 
 
-### 4.1 The packing objective
+### 4.1 Max-min, stated
 
 
 Let *M* ⊂ ℝ<sup>*D*</sup> be the reachable semantic manifold, dim *M* = *d*: the set of embeddings of texts the generator could produce under *some* prompt. For a fixed prompt *x*, let *S<sub>x</sub>* ⊆ *M* be the support of *E*<sub>#</sub>*p*(· | *x*), with dim *S<sub>x</sub>* = *m*.
@@ -242,7 +263,7 @@ The empirical claim behind everything below is that **_m_ ≪ _d_**. A prompt fi
 
 Throughout, *B*(*x*, *r*) is the ball of radius *r* and we write *g<sub>n</sub>* for the min-gap of a fresh draw against a corpus of size *n*.
 
-### 4.2 The covering objective
+### 4.2 Coverage, stated
 
 
 Fix an embedding map φ into R^D (we use unit-normalized 768-d embeddings), and a radius ε > 0. The generator, prompted in

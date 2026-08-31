@@ -20,9 +20,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 SRC = REPO.parent / "research" / "infinite_horizon_diversity"
 
-TITLE = "Coverage and Max-Min Diversity in Synthetic Data Generation"
-SUBTITLE = ("One method for two objectives, and the conditional dimension "
-            "that limits both")
+TITLE = "Improving Diversity Metrics in Synthetic Data Generation"
+SUBTITLE = ("One conditioning method, the metrics it can be pointed at, and "
+            "the conditional dimension that limits all of them")
 
 PREAMBLE = r"""
 % ICLR-style page: 5.5in text block on US letter, Times, 10pt
@@ -97,47 +97,50 @@ PREAMBLE = r"""
 """
 
 ABSTRACT = """
-Synthetic corpora are generated under a fixed budget of *n* model calls, and two
-different things are wanted from that budget. **Coverage** asks to reach as much
-of the space as possible in *n* turns. **Max-min** asks that no two of the *n*
-items resemble each other. They pull in different directions: coverage will
-place two items near each other if between them they reach a large region, and
-max-min will leave most of the space empty provided nothing collides. We build
-one method for both, **Recursive Axis Conditioning** (RAC), and show that the
-objective needs to enter it at only two points.
+A synthetic corpus is built to be good at something measurable, and the measure
+is chosen before the corpus is. **Coverage** asks the corpus to reach as much of
+the space as possible in *n* generator calls. **Max-min** asks that no two of the
+*n* items resemble each other. Duplicate rate, mean-centered Vendi, precision
+against a reference and worst-case nearest-neighbour distance are all in use, and
+a corpus that scores well on one can score badly on another. This paper is about
+how to build a generator loop that improves such a measure, and about how much of
+that loop has to change when the measure does.
 
-We assume an embedding oracle and, critically, **no inverse**. We can compute
-exactly where the next item ought to land and have no way to decode that point
-into text. Every architectural choice follows: the system must propose, measure
-and select rather than solve, and its only steering handles are language-valued.
-RAC asks the generator to name the axes along which its own outputs can differ,
-ranks them, selects their most-different values, and splits an axis with nothing
-transverse left to offer into finer sub-axes that apply only inside the region
-that exhausted it.
+The method is **Recursive Axis Conditioning** (RAC). We assume an embedding oracle
+and, critically, **no inverse**: we can compute exactly where the next item ought
+to land and have no way to decode that point into text. Every architectural choice
+follows. RAC asks the generator to name the axes along which its own outputs can
+differ, ranks those axes, selects their most-different values, and splits an axis
+with nothing new left to offer into finer sub-axes that apply only inside the
+region that exhausted it. We study two measures in depth, coverage and max-min,
+and find that the loop is shared and the measure enters at two points: how a
+candidate axis is scored, and how one of K candidates is selected. Those two
+points are enough to reverse the ranking of methods, so a measure has to be named
+before a diversity number means anything.
 
-Neither objective is limited by its own optimizer. Both are limited by the
-**support**: conditioned on a fixed prompt, a language model's output
-concentrates on a submanifold of dimension *m* far below the dimension *d* of the
-space it could reach. Fifteen numerical checks establish the consequences.
-Novelty at fixed prompt decays as $n^{-1/m}$, not $n^{-1/d}$; one prompt
-ε-covers a vanishing $ε^{d-m}$ fraction; only prompt motion *transverse* to the
-already-occupied span raises the ceiling; and the optimal number of samples per
-prompt is set by the ratio of prompt-switching cost to sampling cost.
+No measure here is limited by its own optimizer. All of them are limited by the
+**support**: conditioned on a fixed prompt, a language model's output concentrates
+on a submanifold of dimension *m* far below the dimension *d* of the space it
+could reach. Fifteen numerical checks establish the consequences. Novelty at fixed
+prompt decays as $n^{-1/m}$, not $n^{-1/d}$; one prompt ε-covers a vanishing
+$ε^{d-m}$ fraction; only prompt motion *transverse* to the already-occupied span
+raises the ceiling; and the optimal number of samples per prompt is set by the
+ratio of prompt-switching cost to sampling cost.
 
 On ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered images and
 ~200 rendered instrumentals, RAC places first among twelve corpora against the
-released Alpaca, PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722
-at matched evaluated-*n* on a human-written reference no corpus was aimed at, on
-one twentieth of Alpaca's generation budget — and wins every literal and latent
-measure against five published methods on the max-min side. Along the way: a
-psychometric corpus that is 73.6% exact duplicates with one item repeated 2,726
+released Alpaca, PersonaHub and WizardLM sets — 0.4441 against Alpaca's 0.3722 at
+matched evaluated-*n* on a human-written reference no corpus was aimed at, on one
+twentieth of Alpaca's generation budget — and wins every literal and latent
+measure against five published methods under the max-min objective. Along the way:
+a psychometric corpus that is 73.6% exact duplicates with one item repeated 2,726
 times, which temperature barely dents (71.0%) and conditioning nearly eliminates
 (0.0%); literal and latent diversity moving in opposite directions as *n* grows;
 and text-embedding similarity predicting rendered-image similarity at only
-***r* = 0.170**. The two objectives resist being served by one tool: applying
-the packing side's orthogonalized conditioning to the covering objective scores
-below plain conditioning, because steering away from the occupied span steers
-away from where the reference measure is densest.
+***r* = 0.170**. The two measures also resist being served by one tool: applying
+the max-min side's orthogonalized conditioning to the coverage objective scores
+below plain conditioning, because steering away from the occupied span steers away
+from where the reference measure is densest.
 """
 
 

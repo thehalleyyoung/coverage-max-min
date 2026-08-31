@@ -91,11 +91,13 @@ denominator, and count your duplicates before computing anything else.
 
 # ---------------------------------------------------------------- section 1
 LEAD = """
-Two things are wanted from a fixed budget of *n* generator calls, and they are
-not the same thing. **Coverage** asks the corpus to reach as much of the space
-as possible in *n* turns. **Max-min** asks that no two of the *n* items resemble
-each other. This paper builds one method for both, **Recursive Axis
-Conditioning** (RAC), and reports what it achieves on each.
+Synthetic corpora are judged by a measure, and the measure is chosen before the
+corpus is. This paper is about building a generator loop that improves such a
+measure. The method is **Recursive Axis Conditioning** (RAC), and the two
+measures we take it furthest on are **coverage**, which asks the corpus to reach
+as much of the space as possible in *n* generator calls, and **max-min**, which
+asks that no two of the *n* items resemble each other. What the method achieves
+on each:
 
 **Coverage of a held-out human-written reference.** Twelve corpora, matched
 evaluated *n* = 450, scored by the Naeem et al. (2020) estimator with
@@ -139,25 +141,41 @@ different scoring rules, and what limits both of them.
 """
 
 CONTRIB = """
-- **One method for two objectives** (§6). Language-valued axes elicited from the
-  generator, ranked by a scoring rule, with the exhausted ones split
-  recursively into conditional sub-axes. The objective enters at two points
-  only: how an axis is scored, and how one of K candidates is selected.
+- **A generator loop that improves a chosen measure** (§6). Language-valued axes
+  elicited from the generator, ranked by a scoring rule, with the exhausted ones
+  split recursively into conditional sub-axes. The measure enters at two points
+  only: how an axis is scored, and how one of K candidates is selected, so
+  pointing the loop at a different measure means changing those two and nothing
+  else.
 - **A theory of what limits both** (§5). Conditioned on a fixed prompt, the
   output concentrates on a submanifold of dimension *m* far below the dimension
   *d* of the reachable space, and the consequences are the same for packing and
   for covering.
-- **The two objectives measured against each other** (§4). Greedy k-center wins
-  min-gap in both domains and finishes last on coverage; each objective's
-  characteristic tool damages the other's score.
+- **Evidence that the measure has to be named** (§4). Greedy k-center wins min-gap
+  in both domains and finishes last on coverage, and each measure's characteristic
+  tool damages the other's score, so "diverse" without a named measure carries no
+  information.
 - **Head-to-head against released corpora** (§7), on a scale-free estimator
   against a reference no corpus was aimed at, and against a human-written exam
   bank under a judged enemy-item radius.
 """
 
 BRIDGE_REL = """
-The two objectives are stated above on the same footing. This section asks what
-their relationship actually is, since the answer changes with the budget.
+Everything so far has been about improving *a* measure. Which one is not a detail
+that can be left until evaluation, because the measure changes the method. This
+section states the two we study, shows where they agree, and shows where a loop
+tuned for one is actively worse at the other.
+
+The two are chosen because they sit at opposite ends of what practitioners
+actually ask for. Coverage is the right question when the corpus is an evaluation
+suite or a training set meant to represent a population: what fraction of the
+space has an exemplar? Max-min is the right question when any single collision is
+a defect, as in an exam bank where two items testing the same rule are a security
+failure whatever the rest of the bank looks like. Other measures sit between them
+— duplicate rate, mean-centered Vendi, precision against a reference, the
+worst-case nearest-neighbour distance — and the machinery below applies to those
+too, since what changes from one to the next is the scoring rule and the
+selection rule, not the loop that carries them.
 """
 
 BRIDGE_THEORY = """
@@ -179,10 +197,10 @@ OUTLINE = [
         ("mm", "2"),
         ("cv", "8"),
     ]),
-    ("Two objectives, and how they relate", [
+    ("Which measure, and what changes with it", [
         ("text", BRIDGE_REL),
-        ("sub", "The packing objective", "mm", "3.1"),
-        ("sub", "The covering objective", "cv", "2"),
+        ("sub", "Max-min, stated", "mm", "3.1"),
+        ("sub", "Coverage, stated", "cv", "2"),
         ("sub", "Where they coincide", "iii", "2b"),
         ("sub", "Coverage is not packing", "cv", "3.4"),
         ("sub", "Where they part, measured", "iii", "1"),

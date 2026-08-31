@@ -47,21 +47,28 @@ NAV_JS = """
 (function () {
   var links = [].slice.call(document.querySelectorAll('.toc a'));
   var targets = links.map(function (a) {
-    return document.getElementById(a.getAttribute('href').slice(1));
+    return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
   });
+  var current = -1;
   function mark() {
     var best = 0;
     for (var i = 0; i < targets.length; i++) {
       if (targets[i] && targets[i].getBoundingClientRect().top <= 90) best = i;
     }
-    links.forEach(function (a, i) { a.classList.toggle('here', i === best); });
+    if (best === current) return;
+    if (current >= 0) links[current].classList.remove('here');
+    links[best].classList.add('here');
+    current = best;
+    var a = links[best];
+    var rail = a.closest('.toc');
+    if (rail && rail.scrollHeight > rail.clientHeight) {
+      var t = a.offsetTop - rail.clientHeight / 2;
+      if (Math.abs(rail.scrollTop - t) > 40) rail.scrollTop = t;
+    }
   }
-  var tick = false;
-  addEventListener('scroll', function () {
-    if (tick) return;
-    tick = true;
-    requestAnimationFrame(function () { mark(); tick = false; });
-  }, {passive: true});
+  addEventListener('scroll', mark, {passive: true});
+  addEventListener('resize', mark, {passive: true});
+  addEventListener('load', mark);
   mark();
 })();
 </script>
