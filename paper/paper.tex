@@ -770,7 +770,7 @@ finite budget against a fixed μ the two objectives pull apart:
   μ puts almost nothing near it.
 \end{itemize}
 
-§7.14 isolates the contrast with no generator in the loop: on one shared
+§7.15 isolates the contrast with no generator in the loop: on one shared
 candidate set, greedy-coverage covered 0.528 of a held-out pool where
 farthest-point packing covered 0.143, while packing\textquotesingle s
 min-gap (1.44) beat greedy\textquotesingle s (0.577) by 2.5×. Neither is
@@ -1103,7 +1103,7 @@ is itself a finite coverage function (item x covers the fixed subset
 \(N_\varepsilon(x) = \{p : \lVert p - x\rVert \le \varepsilon\}\) of the
 pool, and \(\hat F(S) = |\bigcup_{x \in S} N_\varepsilon(x)|/P\)) so F̂
 is monotone submodular exactly, at every sample of the pool. Our
-implementation check (§7.13) found 0 violations of either property in
+implementation check (§7.14) found 0 violations of either property in
 5,000 randomized nested-chain trials, as it must if the code is right.
 
 \subsubsection{5.7 Greedy and its
@@ -1138,7 +1138,7 @@ stream can starve it) but stronger on exchangeable streams like ours,
 where each batch is iid from the current proposal distribution and
 thresholding would only discard budget. Empirically the K = 4 stream
 rule retains most of full greedy\textquotesingle s value over an
-identical ground set (0.484 vs 0.528 covered fraction; §7.14) at a
+identical ground set (0.484 vs 0.528 covered fraction; §7.15) at a
 per-item cost that never touches the whole ground set. What matters for
 scaling is that the marginal-gain oracle is O(K · P) per step against a
 fixed-size pool with an incrementally maintained covered mask --- O(1)
@@ -1828,14 +1828,14 @@ rather than genre labels, each expressible as something audible.
 
 \textbf{Poetry.} A smaller pilot corpus, used to elicit and inspect the
 axis machinery on a domain where craft rather than content carries the
-variation, and to illustrate what the attractor mining recovers (§7.16).
+variation, and to illustrate what the attractor mining recovers (§7.17).
 
 \textbf{Prompt length.} A text-to-music model honours concrete,
 performable direction (named instruments, room character, register,
 articulation, rhythmic feel, how it ends), and ignores paragraphs of
 abstract compositional theory. Long prompts therefore inflate every
 text-side diversity metric while changing the audio far less, which is
-the proxy gap §7.15 measures. Prompts are held to 2--4 sentences
+the proxy gap §7.16 measures. Prompts are held to 2--4 sentences
 (\textasciitilde300 characters target, 423--449 mean in the corpora
 below) of specifically audible, instrumental-only direction, and the
 audio metrics decide.
@@ -1868,7 +1868,7 @@ of personas × attributes, sampled uniformly \\
 elicited axes, spec-level orthogonalization, capped repulsion behind a
 typicality gate, append-only attractor ledger \\
 \texttt{rac+vision} & RAC, plus steering on the \emph{rendered image}
-(§7.15) \\
+(§7.16) \\
 \end{longtable}}
 
 \texttt{persona} is the load-bearing comparison. It has language-valued
@@ -2366,7 +2366,8 @@ objective, whereas both are load-bearing under max-min.
 \emph{Figure 8. Selection benchmark: coverage-greedy against five
 literature baselines.}
 
-\subsubsection{7.11 Notes}\label{711-notes}
+\subsubsection{7.11 What the coverage score buys
+downstream}\label{711-what-the-coverage-score-buys-downstream}
 
 A coverage number earns its place only if something a practitioner wants
 depends on it. Three measurements say what does, on nine instruction
@@ -2482,15 +2483,82 @@ does not reproduce it, and the plausible reading is that greedy-maximum
 selection favours outlying items, which fill holes in the space while
 making poor demonstrations.
 
-\subsubsection{7.12 A live coverage
-pilot}\label{712-a-live-coverage-pilot}
+\subsubsection{7.12 Notes}\label{712-notes}
+
+\textbf{Reference-sample asymmetry.} Our method consumes a sample of the
+target distribution, as embeddings, on the steering side; the released
+corpora had no such input. This is the method\textquotesingle s designed
+capability (coverage is always coverage \emph{of} something, and a
+method that may specify the something should), but the like-for-like
+no-reference comparison is rows 2--5 of the ablation, where our no-STEER
+configurations sit at parity with the Self-Instruct family. The precise
+claim: given a specification of the space to cover, even one the
+generator never reads, retrieval-aimed density-adaptive conditioning
+covers it substantially better than the strongest seeded baseline covers
+it at twenty times the budget.
+
+Coverage and internal diversity are different objectives. The winning
+corpus has the lowest mean-centered Vendi of its cohort (62.1; density
+1.69): it spends items where the reference measure is, near-duplicates
+included, exactly as facility location prescribes. Ranking these corpora
+by a single internal-diversity score would rank the coverage winner
+last.
+
+\textbf{Duplicates, and what removing them does.} Two arms keep every
+candidate that clears the gate, and both carry the
+generator\textquotesingle s repeats: at full corpus size the
+retrieval-aimed arm is 21.1\% exact duplicates (2,398 items, 1,893
+distinct) and the few-shot-from-seeds baseline is 20.6\% (2,399 items,
+1,905 distinct). Every arm that selects at all sits at exactly 0.000 ---
+conditioning keep-all, orthogonalized conditioning, and selective 1-of-8
+alike. The duplication tracks the discard-nothing policy rather than any
+conditioning scheme, which is why a baseline shows it as strongly as we
+do.
+
+Since a repeated instruction covers a ball that is already covered,
+those repeats spend evaluated slots for nothing, and the question is
+what the ranking looks like without them. Re-scoring every corpus after
+collapsing it to its distinct instructions, on the same reference half
+at the same radii and the same evaluated \emph{n} = 450:
+
+{\footnotesize
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.5780\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1992\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2228\linewidth-2\tabcolsep\relax}@{}}
+\toprule\noalign{}
+corpus & as generated & deduplicated \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{RAC-coverage, retrieval-aimed} & 0.4532 & \textbf{0.4752} \\
+Alpaca (52k) & 0.3919 & 0.3919 \\
+RAC-coverage, selective 1-of-8 (304) & 0.2591 & 0.2591 \\
+WizardLM Evol-Instruct (143k) & 0.2494 & 0.2505 \\
+PersonaHub (50k) & 0.2486 & 0.2486 \\
+Self-Instruct (reimplemented) & 0.2263 & 0.2243 \\
+few-shot from seeds & 0.1970 & 0.2149 \\
+RAC, conditioning keep-all & 0.2139 & 0.2139 \\
+RAC, orthogonalized conditioning & 0.1999 & 0.1999 \\
+\end{longtable}}
+
+Only the two keep-everything arms move. Removing their repeats raises
+the retrieval-aimed arm from 0.4532 to 0.4752 and widens its margin over
+Alpaca from 16\% to 21\%, so the duplicates were costing coverage rather
+than manufacturing it and the headline number is the conservative one.
+The ordering is otherwise unchanged, and orthogonalized conditioning
+finishes last of the nine seeded arms with nothing to remove.
+
+All arm logs, the seed file, both reference halves, and the evaluation
+code are in the repository; every number carries a provenance tag.
+
+\subsubsection{7.13 A live coverage
+pilot}\label{713-a-live-coverage-pilot}
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 9. Live pilot: coverage and quality against budget.}]{figures/fig_live_pilot.png}}
 
 \emph{Figure 9. Live pilot: coverage and quality against budget.}
 
-\subsubsection{7.13 Setup and what it
-cost}\label{713-setup-and-what-it-cost}
+\subsubsection{7.14 Setup and what it
+cost}\label{714-setup-and-what-it-cost}
 
 The pilot builds a red-team \emph{evaluation} prompt suite on the real
 stack: gpt-5.6-luna via OpenRouter for generation, judging, attractor
@@ -2522,8 +2590,8 @@ usage ledger and are not included in that figure; total pilot spend was
 well under the \$3 budget but only the final segment is \emph{measured},
 so we report that number rather than an estimate.
 
-\subsubsection{7.14 Literal versus latent diversity, and a kernel
-caveat}\label{714-literal-versus-latent-diversity-and-a-kernel-caveat}
+\subsubsection{7.15 Literal versus latent diversity, and a kernel
+caveat}\label{715-literal-versus-latent-diversity-and-a-kernel-caveat}
 
 Tracking both n-gram and embedding diversity as the corpus grows
 reproduces a divergence reported at much larger scale on this model
@@ -2580,9 +2648,9 @@ cone\textquotesingle s width, and the resulting "coverage" would have
 been a restatement of the embedding geometry. Any coverage result
 computed on cosine distances should publish this check.
 
-\subsubsection{7.15 The proxy problem: text diversity is nearly blind to
+\subsubsection{7.16 The proxy problem: text diversity is nearly blind to
 image
-diversity}\label{715-the-proxy-problem-text-diversity-is-nearly-blind-to-image-diversity}
+diversity}\label{716-the-proxy-problem-text-diversity-is-nearly-blind-to-image-diversity}
 
 We rendered the first 199 DALL·E instructions from the naive corpus to
 actual images and embedded them with CLIP. The result is the most
@@ -2623,7 +2691,7 @@ image model and by the fact that much of what varies in the text
 (c) Pairwise similarities in the two spaces correlate at only r =
 0.170.}
 
-\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 11. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §7.15 and §7.20 quantify.}]{figures/fig13_contact_sheet.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 11. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §7.16 and §7.21 quantify.}]{figures/fig13_contact_sheet.png}}
 
 \emph{Figure 11. Sixteen renders per policy, same generator, same
 budget, same image model. Rows 1--2, naive prompting: a corpus with a
@@ -2637,7 +2705,7 @@ composition all move, across a medieval triptych, a botanical cabinet, a
 photographed sculpture installation, a torn-paper abstract and a civic
 notice. Tiling survives the steering: 38\% of the steered renders still
 score as literal tilings and 42\% still share a palette with a nearest
-neighbour, which §7.15 and §7.20 quantify.}
+neighbour, which §7.16 and §7.21 quantify.}
 
 A reader looking at rows 3 and 4 of Figure 11 will notice that they
 still favour grids, panels and tiled compositions more than a human art
@@ -2669,8 +2737,8 @@ paper\textquotesingle s mechanism applied one level down: the ledger
 already repels against what the model keeps saying, and now also against
 what it keeps showing. It is the best arm in the table.
 
-\subsubsection{7.16 Attractor mining works, and is
-legible}\label{716-attractor-mining-works-and-is-legible}
+\subsubsection{7.17 Attractor mining works, and is
+legible}\label{717-attractor-mining-works-and-is-legible}
 
 The mining step produces findings specific enough to act on. From the
 poetry pilot, round 1 (\emph{n} = 25): \emph{"self-correction and
@@ -2692,8 +2760,8 @@ system\textquotesingle s own conditioning becomes the next attractor.}
 The ledger catches the system\textquotesingle s own habits alongside the
 model\textquotesingle s.
 
-\subsubsection{7.17 The exam bank: a judged enemy-item
-radius}\label{717-the-exam-bank-a-judged-enemy-item-radius}
+\subsubsection{7.18 The exam bank: a judged enemy-item
+radius}\label{718-the-exam-bank-a-judged-enemy-item-radius}
 
 Exam items invert the semantics of the other two domains. Two
 operational items closer than δ are \emph{enemy items} (seeing one gives
@@ -2742,8 +2810,8 @@ axis-conditioned bank contains no enemy pair at all at the judged
 radius, though it is measured at 1,058 items rather than 2,500 and the
 comparison should be read at that size.
 
-\subsubsection{7.18 Head-to-head against a human-written exam
-bank}\label{718-head-to-head-against-a-human-written-exam-bank}
+\subsubsection{7.19 Head-to-head against a human-written exam
+bank}\label{719-head-to-head-against-a-human-written-exam-bank}
 
 The comparisons above are against our own reimplementations, which is
 the right experiment for isolating mechanisms and the wrong one for the
@@ -2809,8 +2877,8 @@ about how much genuinely different subject matter the generator can be
 induced to reach, which is precisely the reachable-dimension question of
 §5, not a tuning problem.
 
-\subsubsection{7.19 Which metrics are independent of the
-objective}\label{719-which-metrics-are-independent-of-the-objective}
+\subsubsection{7.20 Which metrics are independent of the
+objective}\label{720-which-metrics-are-independent-of-the-objective}
 
 Our selection rule maximizes a weighted sum of embedding-space
 orthogonality and embedding-space min-gap. We then report
@@ -2845,16 +2913,16 @@ weight they can bear:
 \item
   \textbf{Rendered-artifact measures (CLIP, CLAP, MERT):} the most
   independent, living downstream of a second generative model the method
-  never sees, which is why §7.15 matters more than its length suggests.
+  never sees, which is why §7.16 matters more than its length suggests.
 \end{itemize}
 
 A reader who trusts only the third category still has the \emph{r} =
 0.170 result, which is a finding about every method in the table rather
 than a comparison between them.
 
-\subsubsection{7.20 Literal-space repulsion: fixing what the embeddings
+\subsubsection{7.21 Literal-space repulsion: fixing what the embeddings
 cannot
-see}\label{720-literal-space-repulsion-fixing-what-the-embeddings-cannot-see}
+see}\label{721-literal-space-repulsion-fixing-what-the-embeddings-cannot-see}
 
 Embedding metrics miss an entire class of repetition: tiled grids of one
 cell, prominent typography, a single shared palette, the same
@@ -2879,8 +2947,8 @@ renders tiled. Rerun at matched budget, palette twins halved (0.78 →
 0.33) --- a partial improvement, with the residue attributable to the
 image model\textquotesingle s own prior resisting text-side instruction.
 
-\subsubsection{7.21 Audio: prompts, the steered corpus, and embedder
-dependence}\label{721-audio-prompts-the-steered-corpus-and-embedder-dependence}
+\subsubsection{7.22 Audio: prompts, the steered corpus, and embedder
+dependence}\label{722-audio-prompts-the-steered-corpus-and-embedder-dependence}
 
 \textbf{Prompt-level diversity.} At matched \emph{n}, matched prompt
 length and the same generator, the conditioned arm reaches centered
@@ -2938,7 +3006,7 @@ nominates a different most-redundant pair. Two prescriptions follow:
 steer music with MuQ-MuLan rather than CLAP, and never publish an
 audio-diversity number without naming its embedder.
 
-\subsubsection{7.22 Scale and cost}\label{722-scale-and-cost}
+\subsubsection{7.23 Scale and cost}\label{723-scale-and-cost}
 
 The text corpora comprise 43,171 real generations for roughly \$8.50 of
 OpenRouter spend, plus 690 rendered images across seven arms at two
