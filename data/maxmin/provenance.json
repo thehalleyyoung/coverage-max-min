@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T21:55:18",
+  "generated": "2026-08-30T22:29:00",
   "git_rev": "7b4df73",
   "procedures": {
     "P1": {
@@ -200,6 +200,13 @@
       "note": "four-quadrant repulsion, coverage objective; ref coverage 0.206->0.247",
       "bytes": 2948,
       "modified": "2026-08-30T20:43:19"
+    },
+    "figures/audio_embedder_compare.json": {
+      "procedure": "P3",
+      "script": "audio_embedders.py",
+      "note": "CLAP-fused vs CLAP-music vs MuQ-MuLan vs MERT: agreement 0.22-0.84, steerability MuQ 0.68/0.47 vs CLAP 0.50/0.21 vs CLAP-music 0.18/0.06; verdicts embedder-relative",
+      "bytes": 3304,
+      "modified": "2026-08-30T22:27:39"
     },
     "real/lyria_online/run_summary.json": {
       "procedure": "P2.5",

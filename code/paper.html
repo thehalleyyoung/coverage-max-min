@@ -1705,11 +1705,25 @@ text→audio alignment is <strong>+0.05</strong> — no usable pre-render
 signal, now measured rather than corrupted. Cross-modal steering that
 works for images (per-arm text→image correlations of +0.17 to +0.43)
 has, with this embedder, essentially nothing to steer with for music.
-Whether a music-specialized text-audio embedder (CLAP-music, MuQ-MuLan)
-recovers a usable gradient is measured in the repository's embedder
-comparison; the framework-level conclusion stands either way — for
-artifacts whose text-embedding alignment is this weak, the calculus must
-operate post-render, in the real space.</p>
+The embedder comparison answers this, and the answer is a rescue:
+<strong>MuQ-MuLan</strong> — the open MuLan-style music-text model, the
+nearest available analogue of MusicCoCa — shows prompt→track alignment
+of <strong>0.68</strong> on the naive corpus and <strong>0.47</strong>
+on the conditioned one, against CLAP-fused's 0.50/0.21; the
+music-specialized CLAP variant is paradoxically the <em>worst</em>
+(0.18/0.06), and its median within-corpus nearest-neighbour distance of
+0.004 says why — it hears every track in this corpus as nearly the same
+track. Three further facts from the same comparison: cross-embedder
+agreement on pairwise similarity spans 0.22 to 0.84, so any
+audio-diversity number is meaningless without its embedder named; the
+per-arm diversity verdicts flip between embedders (conditioned beats
+naive under CLAP-fused and MuQ-MuLan, ties or loses under MERT and
+CLAP-music); and each embedder nominates a <em>different</em>
+most-redundant pair. The practical prescription is concrete: swap the
+steering embedder from CLAP to MuQ-MuLan, and state the embedder next to
+every number. The framework-level conclusion survives in refined form —
+cross-modal pre-render steering is not impossible for music; it was
+impossible <em>with the embedder we happened to pick first</em>.</p>
 <hr />
 </section>
 </section>
