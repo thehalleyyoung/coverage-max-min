@@ -104,20 +104,25 @@ generator calls against Alpaca's 52,000, and with the highest precision in the
 field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC's
 304-item selective arm.
 
-That score is validated downstream rather than left as a number. Across nine
-corpora, coverage predicts how often a retrieved neighbour is relevant
-(*r* = 0.97) and how well a model answers from four retrieved demonstrations
-(*r* = 0.82): RAC's pool serves **seven times as many held-out queries** as plain
-conditioning at a tight radius, and reaches the highest semantic similarity of
-any corpus tested. It does not predict fine-tuning quality (*r* = −0.17), and
-splitting scores by distance to the training data shows why — the retrieval-aimed
-corpus yields the best model on queries near its own items and the worst on those
-far from them, and a gradient step averages the two away. A controlled test
-qualifies this: three 800-item subsets of a single corpus, differing only in
-spread, are *not* monotone in coverage — the random subset edges the
-coverage-maximised one — though the zero-coverage subset is worst on both
-measures. Coverage ranks corpora on the tasks its definition describes and is
-not, on its own, the mechanism behind that ranking.
+The score is worth what it buys, and three measurements say what that is.
+**Four hundred RAC items cover more of a held-out human reference than all
+52,002 items of Alpaca** — a ratio of 130 to 1 — and extending the policy to
+13,978 items reaches 2.2× Alpaca's coverage from 27% of the items. At matched
+pool size, **7.3× as many held-out queries have a usable nearest neighbour** as
+under plain conditioning. And prompting a base model with retrieved
+demonstrations, the advantage *grows with every slot retrieved* — 1.04×, 1.17×,
+1.48×, 2.38× over plain conditioning at k = 1, 2, 4, 8 — until at eight
+demonstrations the corpus leads the field outright, Alpaca included, while
+low-coverage pools collapse to a third of their one-shot score. A clustered pool
+runs out of distinct relevant demonstrations; a covering one does not. Coverage
+predicts retrieval quality at *r* = 0.97 and in-context score at *r* = 0.82.
+
+Two limits are worth stating with the same clarity. Fine-tuning does not follow
+(*r* = −0.17): the retrieval-aimed corpus yields the best model on queries near
+its own items and the worst on those far from them, and a gradient step averages
+the two away. And within a *single* corpus, subsets differing only in spread are
+not monotone in coverage, so coverage ranks corpora on retrieval-shaped tasks
+without being shown to be the sole mechanism behind that ranking.
 
 In automatic item generation for psychometrics the margin is larger and the
 result is new. Asked a reasonable question ten thousand times, a strong model

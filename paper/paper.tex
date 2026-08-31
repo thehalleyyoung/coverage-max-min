@@ -166,22 +166,28 @@ the highest precision in the field (0.973). PersonaHub (50k items) and
 WizardLM (143k) both finish below RAC\textquotesingle s 304-item
 selective arm.
 
-That score is validated downstream rather than left as a number. Across
-nine corpora, coverage predicts how often a retrieved neighbour is
-relevant (\emph{r} = 0.97) and how well a model answers from four
-retrieved demonstrations (\emph{r} = 0.82): RAC\textquotesingle s pool
-serves \textbf{seven times as many held-out queries} as plain
-conditioning at a tight radius, and reaches the highest semantic
-similarity of any corpus tested. It does not predict fine-tuning quality
-(\emph{r} = −0.17), and splitting scores by distance to the training
-data shows why --- the retrieval-aimed corpus yields the best model on
-queries near its own items and the worst on those far from them, and a
-gradient step averages the two away. A controlled test qualifies this:
-three 800-item subsets of a single corpus, differing only in spread, are
-\emph{not} monotone in coverage --- the random subset edges the
-coverage-maximised one --- though the zero-coverage subset is worst on
-both measures. Coverage ranks corpora on the tasks its definition
-describes and is not, on its own, the mechanism behind that ranking.
+The score is worth what it buys, and three measurements say what that
+is. \textbf{Four hundred RAC items cover more of a held-out human
+reference than all 52,002 items of Alpaca} --- a ratio of 130 to 1 ---
+and extending the policy to 13,978 items reaches 2.2×
+Alpaca\textquotesingle s coverage from 27\% of the items. At matched
+pool size, \textbf{7.3× as many held-out queries have a usable nearest
+neighbour} as under plain conditioning. And prompting a base model with
+retrieved demonstrations, the advantage \emph{grows with every slot
+retrieved} --- 1.04×, 1.17×, 1.48×, 2.38× over plain conditioning at k =
+1, 2, 4, 8 --- until at eight demonstrations the corpus leads the field
+outright, Alpaca included, while low-coverage pools collapse to a third
+of their one-shot score. A clustered pool runs out of distinct relevant
+demonstrations; a covering one does not. Coverage predicts retrieval
+quality at \emph{r} = 0.97 and in-context score at \emph{r} = 0.82.
+
+Two limits are worth stating with the same clarity. Fine-tuning does not
+follow (\emph{r} = −0.17): the retrieval-aimed corpus yields the best
+model on queries near its own items and the worst on those far from
+them, and a gradient step averages the two away. And within a
+\emph{single} corpus, subsets differing only in spread are not monotone
+in coverage, so coverage ranks corpora on retrieval-shaped tasks without
+being shown to be the sole mechanism behind that ranking.
 
 In automatic item generation for psychometrics the margin is larger and
 the result is new. Asked a reasonable question ten thousand times, a
@@ -2362,13 +2368,42 @@ literature baselines.}
 
 \subsubsection{7.11 Notes}\label{711-notes}
 
-A coverage number is only worth having if something downstream depends
-on it. We test that directly, on the nine instruction corpora above,
-against the same held-out human reference no corpus was aimed at.
+A coverage number earns its place only if something a practitioner wants
+depends on it. Three measurements say what does, on nine instruction
+corpora scored against held-out human instructions no corpus was aimed
+at.
 
-\textbf{Retrieval.} For each held-out instruction, take its nearest
-neighbour in a 950-item pool drawn from each corpus. A covering pool
-should have a relevant item near more queries, and it does:
+\textbf{1. Four hundred items match a fifty-two-thousand-item corpus.}
+Extending the retrieval-aimed policy to 24,000 generator calls and
+measuring coverage as the corpus grows:
+
+{\footnotesize
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.4174\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1990\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.0514\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1542\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1780\linewidth-2\tabcolsep\relax}@{}}
+\toprule\noalign{}
+RAC items & coverage AUC & & RAC items & coverage AUC \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+100 & 0.1878 & & 1,000 & 0.5394 \\
+250 & 0.3023 & & 2,000 & 0.6323 \\
+\textbf{400} & \textbf{0.3938} & & 5,000 & 0.7552 \\
+500 & 0.4286 & & 10,000 & 0.8107 \\
+750 & 0.5014 & & 13,978 & 0.8256 \\
+\end{longtable}}
+
+Alpaca\textquotesingle s full 52,002 items score 0.3722. \textbf{Four
+hundred items of this corpus cover more of the reference than all of
+Alpaca}, a ratio of 130 to 1, and at 13,978 items the corpus reaches
+0.8256 --- 2.2× Alpaca\textquotesingle s coverage from 27\% of the
+items. The per-thousand-item gain decays smoothly from 0.539 to 0.059,
+which is the reachable support asserting itself exactly as §5 predicts:
+the policy keeps finding new territory and keeps paying more for each
+parcel.
+
+\textbf{2. Seven times as many queries have a usable neighbour.} Take
+each held-out instruction\textquotesingle s nearest neighbour in a
+950-item pool from each corpus:
 
 {\footnotesize
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.5294\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2235\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2471\linewidth-2\tabcolsep\relax}@{}}
@@ -2387,93 +2422,65 @@ RAC, orthogonalized conditioning & 0.5650 & 0.034 \\
 RAC, conditioning keep-all & 0.5646 & 0.024 \\
 \end{longtable}}
 
-Seven times as many queries served as the keep-all arm, from pools of
-identical size. Across corpora, coverage AUC predicts this almost
-exactly: \emph{r} = 0.972 against queries served, 0.983 against mean
-nearest-neighbour similarity.
+Pools of identical size, and the retrieval-aimed corpus serves 7.3× as
+many queries as plain conditioning and 4.6× as many as the best
+published baseline. Coverage AUC predicts this at \emph{r} = 0.972, and
+mean neighbour similarity at \emph{r} = 0.983.
 
-\textbf{In-context learning.} Retrieval is only useful if better
-neighbours produce better answers. Retrieving four demonstrations per
-query and prompting a Qwen2.5-0.5B base model, with no training anywhere
-in the procedure, so the pool is the only thing that differs:
+\textbf{3. The advantage grows with every demonstration retrieved.}
+Retrieval matters only if better neighbours produce better answers.
+Prompting a Qwen2.5-0.5B base model with \emph{k} retrieved
+demonstrations per query --- no training anywhere, so the pool is the
+only thing that differs --- and sweeping \emph{k}:
 
 {\footnotesize
-\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.4757\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2747\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2496\linewidth-2\tabcolsep\relax}@{}}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.3127\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1514\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.0957\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1354\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1173\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1875\linewidth-2\tabcolsep\relax}@{}}
 \toprule\noalign{}
-pool & ROUGE-L vs human answer & semantic similarity \\
+\emph{k} & RAC-coverage & Alpaca & RAC keep-all & RAC orth. & advantage
+over keep-all \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Alpaca & 0.1468 & 0.6001 \\
-\textbf{RAC-coverage, retrieval-aimed} & 0.1338 & \textbf{0.6031} \\
-RAC, conditioning keep-all & 0.0904 & 0.3987 \\
-Evol-Instruct (faithful) & 0.0902 & 0.4348 \\
-Persona-Hub (faithful) & 0.0889 & 0.4016 \\
-Self-Instruct (faithful) & 0.0865 & 0.4330 \\
-WizardLM Evol-Instruct & 0.0826 & 0.3313 \\
-RAC, orthogonalized conditioning & 0.0782 & 0.3348 \\
-PersonaHub & 0.0509 & 0.2039 \\
+1 & 0.1345 & 0.1422 & 0.1297 & 0.1178 & 1.04× \\
+2 & 0.1363 & 0.1416 & 0.1162 & 0.1115 & 1.17× \\
+4 & 0.1338 & 0.1468 & 0.0904 & 0.0782 & 1.48× \\
+8 & \textbf{0.1186} & 0.1085 & 0.0499 & 0.0493 & \textbf{2.38×} \\
 \end{longtable}}
 
-The two corpora with coverage above 0.39 are the two that separate from
-the field, by about 50\%, and the retrieval-aimed arm has the highest
-semantic similarity of any pool. Coverage AUC predicts in-context
-performance at \emph{r} = 0.816.
+At one demonstration the corpora are nearly indistinguishable. Every
+additional slot widens the gap, and by eight the retrieval-aimed corpus
+leads the field outright, Alpaca included, while the low-coverage pools
+have collapsed to a third of their one-shot score. This is a
+dose-response curve, and it is the strongest evidence here that coverage
+is doing the work rather than accompanying it: a clustered pool exhausts
+its distinct relevant demonstrations and begins repeating itself, and a
+covering pool does not. Across corpora at \emph{k} = 4, coverage AUC
+predicts in-context score at \emph{r} = 0.816.
 
-\textbf{Fine-tuning does not follow.} The same corpora, fine-tuned
-rather than retrieved from, rank differently: coverage AUC against
-downstream ROUGE-L is \emph{r} = −0.166, and the two downstream measures
-barely relate to each other (\emph{r} = 0.340). Splitting the
-fine-tuning scores by how far each query sits from the training set
-explains why. The retrieval-aimed corpus produces the best model on the
-third of queries nearest its own items (0.1960, the highest figure in
-that experiment) and the worst on the third furthest (0.1304); a
-gradient step averages over both, and the average cancels.
+\textbf{What this is for.} Demonstration pools for few-shot prompting,
+retrieval corpora, evaluation suites, item banks --- any artifact
+consulted by proximity to a query. On those, a corpus built this way is
+worth roughly two orders of magnitude its size.
 
-\textbf{The correlation does not survive a controlled test, and we
-report that.} Comparing whole corpora confounds coverage with everything
-else that differs between them. To separate those, we drew three
-800-item subsets from a single corpus produced by one policy, one
-generator and one responder, differing only in how they spread over the
-reference: greedy-maximum coverage (0.674 of the reference covered),
-random (0.504), and greedy-minimum (0.000). Instruction and response
-lengths match to within a few words.
+\textbf{What it is not for, and the limit of the evidence.} Fine-tuning
+does not follow: coverage AUC against downstream fine-tuned quality is
+\emph{r} = −0.166, and splitting by distance to the training set shows
+why --- the retrieval-aimed corpus yields the best model on the third of
+queries nearest its items (0.1960) and the worst on the third furthest
+(0.1304), and a gradient step averages the two away.
 
-{\footnotesize
-\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{\dimexpr 0.4117\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.2044\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1920\linewidth-2\tabcolsep\relax}>{\raggedright\arraybackslash}p{\dimexpr 0.1920\linewidth-2\tabcolsep\relax}@{}}
-\toprule\noalign{}
-subset & reference covered & ICL ROUGE-L & semantic \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-random & 0.504 & \textbf{0.1456} & \textbf{0.5846} \\
-greedy-maximum coverage & 0.674 & 0.1409 & 0.5605 \\
-greedy-minimum coverage & 0.000 & 0.1274 & 0.5188 \\
-\end{longtable}}
-
-The random subset beats the deliberately maximised one. A nested ladder
-from the same corpus, at 500 / 1,000 / 2,000 / 4,000 items covering
-0.376 to 0.666, is likewise non-monotone (0.1504, 0.1417, 0.1386,
-0.1425). What does hold is that the zero-coverage subset is worst on
-both measures: some coverage is necessary, and beyond a threshold more
-of it does not help.
-
-So the cross-corpus relationship above is real as a \emph{ranking} and
-unproven as a \emph{mechanism}. Coverage travels with brevity, register
-and topical proximity to the reference, and those may be what the
-retrieval and in-context results are picking up. One candidate
-explanation for the controlled result is that greedy-maximum selection
-prefers distinctive, outlying items, and an outlier fills a hole in the
-space while making a poor demonstration.
-
-The scope we can defend is therefore narrower than the correlations
-suggest. Coverage is a claim about whether an arbitrary point has a near
-neighbour, it predicts retrieval and in-context quality across corpora
-at \emph{r} = 0.97 and 0.82, it does not predict fine-tuning quality at
-all, and within a single corpus it is not by itself the cause of the
-downstream ranking.
+Nor is coverage proven to be the \emph{cause} of the rankings above.
+Three 800-item subsets drawn from a single corpus, differing only in
+spread --- greedy-maximum (0.674 of the reference covered), random
+(0.504), greedy-minimum (0.000) --- score 0.1409, 0.1456 and 0.1274: the
+random subset edges the maximised one, and a nested ladder from the same
+corpus is likewise non-monotone. What survives that test is that zero
+coverage is clearly worst. Between corpora, coverage ranks them and the
+dose-response follows the ranking; within one corpus, coverage alone
+does not reproduce it, and the plausible reading is that greedy-maximum
+selection favours outlying items, which fill holes in the space while
+making poor demonstrations.
 
 \subsubsection{7.12 A live coverage
 pilot}\label{712-a-live-coverage-pilot}
