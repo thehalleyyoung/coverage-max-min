@@ -40,44 +40,6 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-\usepackage{color}
-\usepackage{fancyvrb}
-\newcommand{\VerbBar}{|}
-\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
-\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
-% Add ',fontsize=\small' for more characters per line
-\newenvironment{Shaded}{}{}
-\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
-\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
-\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
-\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
-\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
-\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
-\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
-\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
-\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
-\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
-\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
-\newcommand{\ExtensionTok}[1]{#1}
-\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
-\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
-\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
-\newcommand{\NormalTok}[1]{#1}
-\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
-\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
-\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
-\newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
-\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
-\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
-\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
-\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
-\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
 \usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
@@ -195,11 +157,11 @@ that asymmetry: the system must propose, measure, and select rather than
 solve, and the only steering handles are language-valued.
 
 We therefore build the generation stack around latent behaviors elicited
-from the generator itself, organized by a \textbf{calculus of diversity}
+from the generator itself, organized by an \textbf{axis-scoring rule}
 that ranks candidate latent variables by the product of four measurable
 factors --- spread, transversality, independence, and headroom --- and
 selects each variable\textquotesingle s most-different values by
-farthest-point search in level space. When the calculus reports that no
+farthest-point search in level space. When the score reports that no
 available variable clears a promise floor, it emits a \emph{refine}
 decision, and the generator is asked to split the exhausted variable
 into finer sub-variables. The recursion is the only mechanism in the
@@ -315,9 +277,9 @@ All of our leverage is therefore in step 1, in the choice of \emph{x},
 and that choice is expressible only in language. This is why the latent
 variables in our system are \emph{language-valued} --- named axes with
 named levels --- rather than continuous codes: they are the only handles
-that reach the generator. It is also why the calculus of §4 exists.
-\textbf{The calculus is a surrogate for the missing inverse.} Since we
-cannot decode the direction we want to travel, we instead score the
+that reach the generator. It is also why the axis scoring of §4 exists.
+\textbf{The axis scoring is a surrogate for the missing inverse.} Since
+we cannot decode the direction we want to travel, we instead score the
 language-valued conditions we \emph{can} write by how nearly their
 induced output distributions point that way.
 
@@ -332,7 +294,7 @@ induced output distributions point that way.
   The practically important one is that saturation is governed by
   \emph{m}, which is small, and not by \emph{d}.
 \item
-  \textbf{A calculus of diversity} (§4). A decision procedure for which
+  \textbf{An axis-scoring rule} (§4). A decision procedure for which
   latent variable to condition on next and which of its values to use,
   together with a principled termination/recursion signal. Includes an
   estimator bug we consider instructive enough to document (§4.3).
@@ -396,10 +358,9 @@ direct analogue, and our §3.5 result is a formal statement of a hazard
 that community knows well in practice: unconstrained novelty pressure
 discovers degenerate behaviors, because degeneracy is genuinely novel.
 
-\textbf{Coverage.} A companion paper treats the dual problem ---
-maximizing the volume of a union of ε-balls at a \emph{finite} budget,
-which is a covering rather than packing objective and is submodular
-where ours is not. §9 relates the two.
+\textbf{Coverage.} Part II treats the covering objective --- maximizing
+the volume of a union of ε-balls at a \emph{finite} budget --- which is
+submodular where max--min is not. §8 relates the two.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -519,11 +480,11 @@ displacements give 11.18.
 draw decays as n\^{}(-1/k), with fitted slopes matching theory for k =
 3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}
 
-This is the theorem that makes the calculus of §4 possible. It measures
-the value of conditioning on a new latent variable as \textbf{how much
-of its variation lies outside what the corpus already spans} --- a
-computable quantity, in place of the intuition of how different it
-sounds.
+This is the theorem that makes the axis scoring of §4 possible. It
+measures the value of conditioning on a new latent variable as
+\textbf{how much of its variation lies outside what the corpus already
+spans} --- a computable quantity, in place of the intuition of how
+different it sounds.
 
 \subsubsection{3.5 Novelty pressure leaves the
 manifold}\label{35-novelty-pressure-leaves-the-manifold}
@@ -614,10 +575,10 @@ candidate set drawn from an \emph{m}-dimensional slice.}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\subsection{4. A calculus of diversity}\label{4-a-calculus-of-diversity}
+\subsection{4. Scoring candidate axes}\label{4-scoring-candidate-axes}
 
-\subsubsection{4.1 The question the calculus
-answers}\label{41-the-question-the-calculus-answers}
+\subsubsection{4.1 The question the axis scoring
+answers}\label{41-the-question-the-axis-scoring-answers}
 
 Theorem 3 says progress requires moving the prompt transversely to what
 the corpus already spans. Theorem 5 says move often. Together they pose
@@ -704,14 +665,14 @@ the \textbf{max--min subset} of its level embeddings by greedy
 farthest-point search, seeded deterministically at the level furthest
 from the level centroid --- the packing problem again, one level down.
 
-When the best available promise falls below a floor, the calculus emits
-\texttt{decision:\ "refine"} instead of \texttt{"condition"}. This is
-the \textbf{exhaustion signal}, and it is the honest one: it says the
+When the best available promise falls below a floor, the axis scoring
+emits \texttt{decision:\ "refine"} instead of \texttt{"condition"}. This
+is the \textbf{exhaustion signal}, and it is the honest one: it says the
 current lattice has nothing transverse left to offer, and no amount of
 further sampling will change that. The system then asks the generator to
 split the exhausted level into finer sub-levels (§5.2), producing a
-child axis scored by this same calculus. On the ground-truth test with
-only in-span axes available, the calculus correctly returns
+child axis scored by this same axis scoring. On the ground-truth test
+with only in-span axes available, the axis scoring correctly returns
 \texttt{refine}.
 
 Cost is \emph{O}(\textbar{}\emph{A}\textbar{} · \emph{D}²) per decision
@@ -822,12 +783,12 @@ policy & Vendi & quality & reach dim & lattice & inability \\
 \endlastfoot
 fixed prompt & \textbf{1.06} & 0.668 & 13 & 1.0e3 & −0.104 \\
 random spec & 6.70 & 0.724 & 13 & 1.0e3 & 0.867 \\
-calculus spec & 7.93 & 0.716 & 13 & 1.0e3 & 0.817 \\
+axis scoring spec & 7.93 & 0.716 & 13 & 1.0e3 & 0.817 \\
 random spec + refinement & 7.33 & 0.727 & \textbf{24} & 3.3e4 & 0.681 \\
-calculus + refinement & 10.60 & 0.740 & \textbf{24} & 2.9e4 &
+axis scoring + refinement & 10.60 & 0.740 & \textbf{24} & 2.9e4 &
 \textbf{0.598} \\
-calculus + guided refinement & \textbf{11.23} & 0.722 & \textbf{24} &
-2.9e4 & 0.696 \\
+axis scoring + guided refinement & \textbf{11.23} & 0.722 & \textbf{24}
+& 2.9e4 & 0.696 \\
 \end{longtable}
 
 A fixed prompt yields a Vendi Score of \textbf{1.06} from 1,250 accepted
@@ -848,9 +809,8 @@ Refinement direction matters: children displaced isotropically from
 saturated modes reduce self-headroom (1.20 versus 1.38 unrefined), since
 tighter spread near the parent concentrates mass where the corpus
 already sits. Refinement pays only along directions transverse to the
-occupied span, which is what the calculus\textquotesingle s
-transversality term selects (Vendi 11.23 versus 10.60 for unguided
-refinement).
+occupied span, which is what the transversality term selects (Vendi
+11.23 versus 10.60 for unguided refinement).
 
 Note that lattice size and reachable dimension \textbf{come apart}.
 Refinement multiplies the lattice 30-fold, but what buys diversity is
@@ -1187,10 +1147,10 @@ mean direction the same corpus reads 3.79 → 65.30, which is the honest
 curve and the one in the table. We report both, and we suggest any
 embedding-based diversity result publish the corpus\textquotesingle s
 pairwise-similarity distribution alongside it, because the number is
-meaningless without it. Our companion coverage paper measured a mean
-pairwise cosine of 0.444 on its own pool with the same embedder --- the
-cone is corpus-dependent, not a fixed property of the embedder, which is
-exactly why it has to be reported rather than assumed.
+meaningless without it. Part II measured a mean pairwise cosine of 0.444
+on its own pool with the same embedder --- the cone is corpus-dependent,
+not a fixed property of the embedder, which is exactly why it has to be
+reported rather than assumed.
 
 \pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. The decoupling, normalised to each series\textquotesingle{} value at n = 5: literal diversity falls while latent diversity rises.}]{figures/fig11_literal_vs_latent.png}}
 
@@ -1481,10 +1441,10 @@ orthogonality term climbs, and the median nearest-neighbour distance
 \texttt{embed\_vendi\_centered} and \texttt{median\_nn\_cos\_dist} are
 partly tautological --- we optimized them, and the baselines did not.
 
-We flag this rather than let it pass, because the companion coverage
-paper found a sharper version of the same error in its own benchmark (a
-selector scored against the very reference set it had optimized against)
-and had to revise its headline number downward after fixing it.
+We flag this rather than let it pass, because Part II found a sharper
+version of the same error in its own benchmark (a selector scored
+against the very reference set it had optimized against) and had to
+revise its headline number downward after fixing it.
 
 The defence is that our method never observes the \emph{literal} metrics
 at all. It reads embeddings; it has no access to token counts,
@@ -1598,19 +1558,22 @@ audio-diversity number without naming its embedder.
 \subsection{8. Relation to the coverage
 problem}\label{8-relation-to-the-coverage-problem}
 
-This paper\textquotesingle s objective is a \textbf{packing} objective:
-max--min spacing, \emph{k}-center-like, driven by the worst-case nearest
-pair. The dual problem --- given a finite budget, maximize the volume of
-a union of ε-balls --- is a \textbf{covering} objective, closer to
-facility location, and it is monotone submodular, so greedy selection
-carries a (1 − 1/\emph{e}) guarantee. Ours has no such guarantee.
+Two objectives share the generation budget. \textbf{Max--min} is a
+packing objective: \emph{k}-center-like, driven by the worst-case
+nearest pair, with no approximation guarantee under greedy selection.
+\textbf{Coverage} --- given a finite budget, maximize the volume of a
+union of ε-balls --- is a covering objective, closer to facility
+location, and monotone submodular, so greedy selection carries a (1 −
+1/\emph{e}) guarantee. The sections above develop the max--min side;
+Part II develops the coverage side across two further domains.
 
-The distinction is not cosmetic. Packing objectives spread points toward
-the boundary and over-invest in outliers, which is precisely why
-max--min is so vulnerable to the Theorem 4 pathology: outliers are what
-it is designed to seek. Covering objectives weight regions by measure
-and fill the bulk. A companion paper treats coverage at a finite budget
-across two further domains.
+Each objective\textquotesingle s strength is the other\textquotesingle s
+failure mode. Packing spreads points toward the boundary and
+over-invests in outliers, which is why max--min is vulnerable to the
+Theorem 4 pathology: outliers are what it is designed to seek. Covering
+weights regions by measure and fills the bulk, which is why it leaves
+the frontier sparse. Neither reduces to the other, and the tools that
+serve one degrade the other.
 
 Both problems share this paper\textquotesingle s structural constraints,
 and we expect the conditional-dimension results to be \emph{more}
@@ -1673,9 +1636,9 @@ than exploring it.
 
 Given an embedding oracle and no inverse, the system cannot compute its
 way to the next item. It can only choose what to condition on. The
-calculus of diversity --- spread, transversality, independence, headroom
---- is our answer to that choice, and its most valuable output is not
-the ranking but the \textbf{refine} signal: the moment it reports that
+axis-scoring rule --- spread, transversality, independence, headroom ---
+is our answer to that choice, and its most valuable output is not the
+ranking but the \textbf{refine} signal: the moment it reports that
 nothing available is transverse any more is the moment the horizon has
 actually been reached, and the only remaining move is to ask the
 generator to subdivide its own vocabulary of variation.
@@ -1701,58 +1664,5 @@ publish the similarity distribution your kernel is operating on, and
 count your duplicates before you compute anything else.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\subsection{Reproduction}\label{reproduction}
-
-Theory and simulation (no API keys, no network):
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\BuiltInTok{cd}\NormalTok{ research/infinite\_horizon\_diversity}
-\ExtensionTok{python3}\NormalTok{ verify\_theory.py        }\CommentTok{\# 8/8 core theorem checks}
-\ExtensionTok{python3}\NormalTok{ verify\_slices.py        }\CommentTok{\# 7/7 conditional{-}dimension checks}
-\ExtensionTok{python3}\NormalTok{ calculus.py             }\CommentTok{\# calculus self{-}test on ground{-}truth axes}
-\ExtensionTok{python3}\NormalTok{ simulate.py             }\CommentTok{\# 6 policies, n=10,000}
-\ExtensionTok{python3}\NormalTok{ simulate\_exam.py        }\CommentTok{\# hard{-}floor bank, finite packing}
-\ExtensionTok{python3}\NormalTok{ experiment\_budget.py    }\CommentTok{\# budget{-}matched baselines + ablations}
-\ExtensionTok{python3}\NormalTok{ coverage\_horizon.py     }\CommentTok{\# inability{-}to{-}be{-}novel, 5 {-}\textgreater{} 10,000}
-\ExtensionTok{python3}\NormalTok{ simulate\_slices.py      }\CommentTok{\# conditional world (the central simulation)}
-\ExtensionTok{python3}\NormalTok{ make\_figures.py}
-\end{Highlighting}
-\end{Shaded}
-
-Real runs (needs \texttt{OPENROUTER\_API\_KEY}, a local Ollama with
-\texttt{nomic-embed-text}; images need \texttt{OPENAI\_API\_KEY}, audio
-needs \texttt{MUREKA\_API\_KEY}):
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\ExtensionTok{python3}\NormalTok{ real\_run.py dalle naive 10000 4.0}
-\ExtensionTok{python3}\NormalTok{ real\_run.py dalle ihd 10000 7.0}
-\ExtensionTok{python3}\NormalTok{ baselines.py dalle persona 2500 2.5}
-\ExtensionTok{python3}\NormalTok{ render\_images.py both dalle\_naive 200}
-\ExtensionTok{python3}\NormalTok{ vision\_loop.py 200 5.0 100}
-\ExtensionTok{python3}\NormalTok{ audio\_domain.py prompts ihd 100 3.0 }\KeywordTok{\&\&} \ExtensionTok{python3}\NormalTok{ audio\_domain.py audio ihd 20 }\KeywordTok{\&\&} \ExtensionTok{python3}\NormalTok{ audio\_domain.py embed ihd}
-\ExtensionTok{python3}\NormalTok{ metrics.py }\KeywordTok{\&\&} \ExtensionTok{python3}\NormalTok{ compare\_arms.py }\KeywordTok{\&\&} \ExtensionTok{python3}\NormalTok{ head\_to\_head.py 1000}
-\ExtensionTok{python3}\NormalTok{ figures\_real.py}
-\end{Highlighting}
-\end{Shaded}
-
-Every run is append-only JSONL, checkpointed, and resumable after a
-kill.
-
-Build the paper in all formats:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\ExtensionTok{python3}\NormalTok{ build\_outputs.py}
-\end{Highlighting}
-\end{Shaded}
-
-Figures: \texttt{figures/fig1\_*.png} \ldots{} \texttt{fig14\_arms.png}.
-Numbers quoted here: \texttt{figures/*.json}. Generated corpora,
-rendered images, and rendered audio:
-\texttt{real/\textless{}domain\textgreater{}\_\textless{}arm\textgreater{}/}.
-The companion coverage paper is in \texttt{coverage/}.
 
 \end{document}

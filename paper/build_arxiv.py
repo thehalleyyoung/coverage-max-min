@@ -1,7 +1,7 @@
 """
 Assemble the single arXiv submission from the two papers.
 
-The two halves were written separately and share a theory section, a calculus,
+The two halves were written separately and share a theory section, a axis scoring,
 a generator, an embedder stack and several findings. Concatenating them would
 repeat all of that. So this script builds ONE paper with a shared front matter
 and theory, then the two objectives as parallel parts, then a joint discussion
@@ -125,12 +125,11 @@ We assume an embedding oracle and, critically, **no inverse**. We can compute
 exactly where the next item ought to land and have no way to decode that point
 into text. Every architectural choice follows: the system must propose, measure
 and select rather than solve, and its only steering handles are language-valued.
-We therefore elicit latent axes from the generator itself and rank them with a
-**calculus of diversity** — spread × transversality × independence × headroom —
+We therefore elicit latent axes from the generator itself and rank them with an
+**axis-scoring rule** — spread × transversality × independence × headroom —
 which takes two forms, one per objective, differing on exactly the two terms the
-objectives differ on. The calculus is evaluated recursively, in the space the
-artifact actually occupies, and the latent lattice refines itself where it
-saturates.
+objectives differ on. The scoring is evaluated recursively, in the space the artifact actually
+occupies, and the latent lattice refines itself where it saturates.
 
 We validate on ~46,000 real generations from `openai/gpt-5.6-luna`, ~700 rendered
 images, and ~200 rendered instrumentals, measuring diversity at three levels:
@@ -186,7 +185,7 @@ are the two worst covering ones. A practitioner who reads "diversity" off a Vend
 score and deploys the selector that maximizes it will get a corpus that covers
 less of the space than picking at random.
 
-## III.2 Why the calculus has to fork
+## III.2 Why the scoring rule has to fork
 
 The four factors are shared but two of them invert:
 
@@ -205,7 +204,7 @@ The behavioural difference is visible on a two-line test. Given an axis with thr
 tightly-clustered common levels and one rare outlying level, `farthest_levels`
 picks the outlier **first** and `coverage_levels` picks a cluster centre first and
 the outlier second. That is k-center versus facility location, reproduced inside
-the axis calculus, and it is the mechanism behind the table above.
+the axis axis scoring, and it is the mechanism behind the table above.
 
 ## III.2b The duality, taken seriously
 
@@ -256,7 +255,7 @@ actionable.
 
 ## III.2c The comparison that proves the fork
 
-Part II's §10 compares our coverage method with the released Alpaca, PersonaHub
+Part II's §11 compares our coverage method with the released Alpaca, PersonaHub
 and WizardLM corpora under a controlled protocol (same 175 human seeds, same
 generator, budget matched in generator calls, evaluation on a reference half
 nothing ever read). Ours places first of twelve — 0.4441 against Alpaca's
@@ -269,7 +268,7 @@ orthogonalized conditioning to the coverage objective scores 0.2941, below
 plain conditioning's 0.3147: orthogonalization steers generation away from the
 occupied span, which is away from the reference-dense core coverage is paid to
 fill. Each part's load-bearing tool, applied to the other's objective, reduces
-performance. The calculi fork because they must.
+performance. The two scoring rules fork because they must.
 
 Second, **the Vendi row**. The winning coverage corpus has the *lowest*
 mean-centered Vendi of any configuration in its cohort (62.1; density 1.69):
