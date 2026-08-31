@@ -146,6 +146,10 @@ The pipeline is Part I's stack with the selection objective and its bookkeeping 
 \textbf{Recursive refinement + pool refresh.} When recent accepted items' marginal gains saturate (the region's balls mostly re-cover covered ground), the responsible region of spec-space is described back to the generator, which either splits an axis level into finer sub-levels or mints a new axis meaningful inside that cell --- conditional axes forming a tree, exactly as in Part I. The budgeted setting adds one obligation the infinite-horizon setting does not have: refinement changes the reachable distribution, so the reference pool must be refreshed with draws from the newly opened region, or the selector will see zero gain precisely where the new territory is (its balls cover no \emph{old} pool points). This pool-refresh step is the operational face of the honest-denominator problem (\S{}7).
 
 \section{Simulation study}
+![Coverage growth against budget for each policy, at several radii.](figures/fig\_coverage\_growth.png)
+
+\emph{Coverage growth against budget for each policy, at several radii.}
+
 \subsection{Worlds}
 Both domains instantiate Part I's MixtureWorld pattern with a spec layer added between policy and world, so that policies only ever touch the handles a real pipeline has. A world has M latent modes (mixture of anisotropic Gaussians, centers at norm 1.5, per-mode $\sigma$ $\in$ [0.10, 0.22]) with skewed Dirichlet(0.6) weights, latent per-mode quality in [0.5, 0.9], a noisy judge ($\sigma$ = 0.10) over it, and a rare diffuse junk component (weight 0.8\%, $\sigma$ = 3.0, quality $\approx$ 0.05) representing off-manifold text. The policy addresses the generator through \emph{specs}: opaque handles that map (invisibly) to modes. Crucially, base specs reach only a subset of modes --- 25 of 60 (redteam), 20 of 40 (persona) --- because a real generator's unconditioned repertoire does not span its latent space; refinement is the only way to grow reach.
 
@@ -253,6 +257,10 @@ The junk column isolates the novelty--junk conflation at a finite budget. Max-mi
 \end{figure}
 
 \section{Numerical verification of the theory}
+![Coverage against min-gap: the two objectives trade off across selectors.](figures/fig\_tradeoff.png)
+
+\emph{Coverage against min-gap: the two objectives trade off across selectors.}
+
 All numbers in \texttt{figures/summary\_theory.json}.
 
 \textbf{6.1 Submodularity (exact).} 200 candidates, 5,000-point pool, $\varepsilon$ = 1.0. Over 5,000 random nested chains S $\subset$ T with a fresh x: 0 violations of diminishing returns, 0 of monotonicity, worst violation 0.0.
@@ -312,6 +320,10 @@ Three regimes, as \S{}3.6 predicts. At large $\varepsilon$ every rule saturates 
 \textbf{6.8 Refinement direction: density vs reach.} Part I's negative result --- naive refinement hurt, because tight children near saturated parents concentrate mass where the corpus already sits --- ports to coverage, with a measurement subtlety worth recording. Nearest-neighbor distance CANNOT distinguish density-refinement from reach-refinement: in our first version of this check, child draws sat $\approx$ 1.04 from the nearest corpus point whether they had moved in-span or off-span, because a 1,500-item corpus is sparse in its own 13-dim occupied span. Density-vs-reach is a \emph{span} property. Measured with span-level metrics: \emph{local} children (tight, 0.25$\times$ displacement --- the naive move) produce draws of which 36.7\% are already covered by the pre-refinement corpus at the coverage radius, and add +0.02 effective dimensions --- almost pure density. Full-length \emph{isotropic} displacement produces 0\% pre-covered draws and +0.13 effective dimensions; \emph{transversality-guided} displacement 0\% and +0.14, with off-span displacement energy 0.915 vs 0.823 unguided. The honest reading: (i) the damning comparison is local-vs-far, and ``split the saturated cell into tighter sub-levels'' is only worth its cost if the children actually move; (ii) guidance beats unguided displacement, but by little \emph{here}, because this corpus occupies only a thin span (6 of 64 dimensions at the 95\% energy level) and a random direction is already 82\% transverse to it --- guidance matters most when the corpus has already spread, which is exactly the late-run regime where refinement fires.
 
 \section{The honest denominator}
+![The same run scored against three defensible denominators.](figures/fig\_denominator.png)
+
+\emph{The same run scored against three defensible denominators.}
+
 Recursive refinement creates an accounting problem that a coverage paper must not paper over: \emph{refinement changes the measure being covered}. The refine policy's single run admits three defensible coverage numbers (mid radius, redteam / persona):
 
 \begin{table}[htbp]
@@ -341,6 +353,10 @@ The operational face of the problem is the pool refresh of \S{}4: when refinemen
 Our reporting rule, followed in every table above: state the denominator next to every coverage number, and report at least (i) the fixed pre-refinement pool, which is comparable across policies and cannot be gamed by growing the space, and (ii) the policy's own final reachable pool, labeled as self-referential, with the growth of the reachable set (modes reached, spec count) reported alongside. A single ``we covered X\%'' from a self-expanding pipeline reflects a choice of denominator.
 
 \section{Live pilot}
+![Live pilot: coverage and quality against budget.](figures/fig\_live\_pilot.png)
+
+\emph{Live pilot: coverage and quality against budget.}
+
 \subsection{Setup and what it cost}
 The pilot builds a red-team \emph{evaluation} prompt suite on the real stack: gpt-5.6-luna via OpenRouter for generation, judging, attractor mining and axis elicitation; local \texttt{nomic-embed-text} (768-d, unit-normalized) for embeddings. Severity is deliberately mild --- the items are benign user messages that probe whether an assistant adds disclaimers, resists sycophancy and leading questions, and stays calibrated --- and the judge scores a \texttt{benign} dimension that hard-gates acceptance. All state is append-only JSONL under \texttt{live\_logs/} and the run is resumable; it was in fact resumed mid-flight after a directory move, which is what the checkpointing is for.
 
@@ -388,6 +404,10 @@ Literal diversity falls monotonically (distinct-2 0.944 $\to$ 0.770) while laten
 \end{figure}
 
 \section{Related work}
+![Selection benchmark: coverage-greedy against five literature baselines.](figures/fig\_benchmark.png)
+
+\emph{Selection benchmark: coverage-greedy against five literature baselines.}
+
 \textbf{Submodular maximization.} The (1 $-$ 1/e) greedy guarantee for monotone submodular objectives is Nemhauser, Wolsey \& Fisher (1978); hardness of beating it for max-coverage is Feige (1998). Lazy greedy (Minoux 1978) and stochastic greedy (Mirzasoleiman et al. 2015) make greedy cheap; sieve-streaming (Badanidiyuru et al. 2014) gives the single-pass regime our sequential setting approximates. Facility location --- of which our pool objective is the thresholded special case --- is the standard submodular model of ``representativeness'' in data summarization (Lin \& Bilmes 2011).
 
 \textbf{Packing vs covering, k-center vs k-median.} Farthest-point traversal (Gonzalez 1985) 2-approximates k-center --- the packing objective the sibling paper streams --- while k-median/facility-location minimizes \emph{average} service distance and behaves like our coverage objective (measure-weighted, bulk-first, outlier-indifferent). Coreset constructions (Har-Peled \& Mazumdar 2004) make the same distinction: an $\varepsilon$-coreset for k-median weights by mass, a k-center net does not. Our contribution is not new theory for these objects but the identification of \emph{which one the corpus-construction product requirement actually is}, plus measurement of what optimizing the wrong one costs.
@@ -452,9 +472,9 @@ All twelve corpora, evaluation half, matched \emph{n} = 450:
 \toprule
 \textbf{rank} & \textbf{corpus} & \textbf{AUC} & \textbf{precision} \\
 \midrule
-1 & \textbf{ours (coverage-retrieval conditioning)} & \textbf{0.4441} & \textbf{0.973} \\
+1 & \textbf{ours, coverage-retrieval conditioning (2.4k)} & \textbf{0.4441} & \textbf{0.973} \\
 2 & Alpaca (Self-Instruct, 52k) & 0.3722 & 0.87 \\
-3 & ours: selective (1-of-8) & 0.2591 & 0.93 \\
+3 & ours, selective 1-of-8 (304) & 0.2591 & 0.93 \\
 4 & PersonaHub (50k) & 0.2532 & 0.78 \\
 5 & WizardLM Evol-Instruct (143k) & 0.2329 & 0.77 \\
 6 & Self-Instruct (reimpl., same seeds/budget) & 0.2188 &  \\
@@ -516,7 +536,5 @@ All arm logs, the seed file, both reference halves, and the evaluation harness a
 At a finite budget, corpus construction is a covering problem, and treating it as one pays: the coverage functional is exactly submodular in its Monte-Carlo form, greedy selection is near-optimal in theory and measurement, and the resulting suites blanket the reachable space instead of decorating its boundary. Packing --- the right shape for an unbounded stream --- is measurably the wrong one here, sacrificing 2--4$\times$ covered fraction to win a min-gap metric no budgeted product requirement asks for. The sibling stack's scaffolding (elicited axes, gates, ledger, recursive refinement) transfers whole; what does not transfer is innocence about denominators: a method that grows the space it is covering must say so when it reports how much of that space it covered.
 
 \bigskip\hrule\bigskip
-
-py\texttt{, the accompanying code, and the accompanying code in this directory and recorded in }figures/summary\_sim.json\texttt{, }figures/summary\_theory.json\texttt{, and }figures/summary\_live.json\texttt{.  Reproduction: }README.md`.*
 
 \end{document}

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T22:29:00",
+  "generated": "2026-08-31T07:19:02",
   "git_rev": "7b4df73",
   "procedures": {
     "P1": {
@@ -122,7 +122,7 @@
       "script": "figures_real.py",
       "note": "text vs CLIP on 199 low-quality renders",
       "bytes": 244,
-      "modified": "2026-08-30T16:32:06"
+      "modified": "2026-08-31T07:14:05"
     },
     "figures/vision_compare.json": {
       "procedure": "P2",
@@ -207,6 +207,13 @@
       "note": "CLAP-fused vs CLAP-music vs MuQ-MuLan vs MERT: agreement 0.22-0.84, steerability MuQ 0.68/0.47 vs CLAP 0.50/0.21 vs CLAP-music 0.18/0.06; verdicts embedder-relative",
       "bytes": 3304,
       "modified": "2026-08-30T22:27:39"
+    },
+    "figures/exam_real.json": {
+      "procedure": "P3",
+      "script": "exam_real.py",
+      "note": "enemy-item radius calibrated by blind adjudication of 236 stratified MMLU pairs (delta=0.0354), applied to 6 generated banks + the human bank; usable-capacity after the floor",
+      "bytes": 2138,
+      "modified": "2026-08-31T07:18:16"
     },
     "real/lyria_online/run_summary.json": {
       "procedure": "P2.5",

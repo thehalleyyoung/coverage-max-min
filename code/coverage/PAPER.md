@@ -420,6 +420,11 @@ step is the operational face of the honest-denominator problem (§7).
 
 ## 5. Simulation study
 
+![Coverage growth against budget for each policy, at several radii.](figures/fig_coverage_growth.png)
+
+*Coverage growth against budget for each policy, at several radii.*
+
+
 ### 5.1 Worlds
 
 Both domains instantiate Part I's MixtureWorld pattern with a
@@ -569,6 +574,11 @@ and mean quality drifts with whatever the proposal distribution emits.
 
 ## 6. Numerical verification of the theory
 
+![Coverage against min-gap: the two objectives trade off across selectors.](figures/fig_tradeoff.png)
+
+*Coverage against min-gap: the two objectives trade off across selectors.*
+
+
 All numbers in
 `figures/summary_theory.json`.
 
@@ -687,6 +697,11 @@ late-run regime where refinement fires.
 
 ## 7. The honest denominator
 
+![The same run scored against three defensible denominators.](figures/fig_denominator.png)
+
+*The same run scored against three defensible denominators.*
+
+
 Recursive refinement creates an accounting problem that a coverage paper
 must not paper over: *refinement changes the measure being covered*. The
 refine policy's single run admits three defensible coverage numbers
@@ -731,6 +746,11 @@ reached, spec count) reported alongside. A single "we covered X%" from a
 self-expanding pipeline reflects a choice of denominator.
 
 ## 8. Live pilot
+
+![Live pilot: coverage and quality against budget.](figures/fig_live_pilot.png)
+
+*Live pilot: coverage and quality against budget.*
+
 
 ### 8.1 Setup and what it cost
 
@@ -827,6 +847,11 @@ should publish this check.
 <!--FIG:fig_literal_vs_latent.png|Figure 7. Left: literal (n-gram) and latent (embedding) diversity move in opposite directions as the corpus grows. Right: uncentered versus mean-centered Vendi on the same sets -- the shared mean direction compresses the uncentered score by roughly 2.7x, so only relative comparisons at fixed n are trustworthy.-->
 
 ## 9. Related work
+
+![Selection benchmark: coverage-greedy against five literature baselines.](figures/fig_benchmark.png)
+
+*Selection benchmark: coverage-greedy against five literature baselines.*
+
 
 **Submodular maximization.** The (1 − 1/e) greedy guarantee for monotone
 submodular objectives is Nemhauser, Wolsey & Fisher (1978); hardness of
@@ -971,9 +996,9 @@ All twelve corpora, evaluation half, matched *n* = 450:
 
 | rank | corpus | AUC | precision |
 |---|---|---|---|
-| 1 | **ours (coverage-retrieval conditioning)** | **0.4441** | **0.973** |
+| 1 | **ours, coverage-retrieval conditioning (2.4k)** | **0.4441** | **0.973** |
 | 2 | Alpaca (Self-Instruct, 52k) | 0.3722 | 0.87 |
-| 3 | ours: selective (1-of-8) | 0.2591 | 0.93 |
+| 3 | ours, selective 1-of-8 (304) | 0.2591 | 0.93 |
 | 4 | PersonaHub (50k) | 0.2532 | 0.78 |
 | 5 | WizardLM Evol-Instruct (143k) | 0.2329 | 0.77 |
 | 6 | Self-Instruct (reimpl., same seeds/budget) | 0.2188 | |
@@ -1064,9 +1089,3 @@ grows the space it is covering must say so when it reports how much of that
 space it covered.
 
 ---
-
-py`,
-the accompanying code, and the accompanying code in this directory and recorded in
-`figures/summary_sim.json`, `figures/summary_theory.json`, and
-`figures/summary_live.json`.  Reproduction:
-`README.md`.*

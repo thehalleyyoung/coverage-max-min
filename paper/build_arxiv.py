@@ -206,11 +206,7 @@ picks the outlier **first** and `coverage_levels` picks a cluster centre first a
 the outlier second. That is k-center versus facility location, reproduced inside
 the axis axis scoring, and it is the mechanism behind the table above.
 
-## III.2b The duality, taken seriously
-
-Calling coverage "the dual of max-min" is exactly right in one sense and
-importantly wrong in another, and both halves have algorithmic consequences we
-verified on real embeddings.
+## III.2b Are these dual problems?
 
 **Where they are dual.** For radius ε, a *maximal* ε-packing is automatically an
 ε-covering: any uncovered point could have been added to the packing. We confirm

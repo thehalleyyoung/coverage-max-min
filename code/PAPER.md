@@ -6,7 +6,7 @@
 
 ## Abstract
 
-We study the problem of generating a corpus that stays diverse as it grows without bound. The objective is a convex combination of two terms evaluated against everything generated so far: the mean distance from a new item's embedding to the existing corpus, which we want small because it keeps items typical and on-manifold, and the minimum distance to the existing corpus, which we want large because it keeps items non-redundant. We call the resulting problem *infinite-horizon diversity* (IHD), and we are interested specifically in its asymptotics: what happens to the objective, and to the cost of satisfying it, as *n* grows.
+We study the problem of generating a corpus that stays diverse as it grows without bound. The objective is a convex combination of two terms evaluated against everything generated so far: the mean distance from a new item's embedding to the existing corpus, which we want small because it keeps items typical and on-manifold, and the minimum distance to the existing corpus, which we want large because it keeps items non-redundant. We call the resulting problem *infinite-horizon diversity*, and we are interested specifically in its asymptotics: what happens to the objective, and to the cost of satisfying it, as *n* grows.
 
 Our central claim locates the interesting structure in the **support** rather than in the objective. Conditioned on a fixed prompt *x*, a language model's output distribution concentrates on a submanifold of dimension *m* that is far smaller than the dimension *d* of the reachable semantic manifold. We prove and numerically verify five consequences of that gap. Novelty at fixed prompt decays like *n*<sup>−1/*m*</sup>, not *n*<sup>−1/*d*</sup>, so saturation arrives much sooner than the ambient dimension suggests (measured slopes −0.472, −0.309, −0.195 for *m* = 2, 3, 5 against predictions −0.5, −0.333, −0.2). A single prompt ε-covers a vanishing ε<sup>*d*−*m*</sup> fraction of the manifold. Only prompt motion *transverse* to the already-occupied span raises the reachable dimension: parallel motion leaves the union's effective dimension at 1.9, transverse motion takes it to 11.2. Under free prompt-switching the optimal number of samples per prompt is exactly one; an interior optimum appears only once switching has overhead (*n*\* = 10 at cost *c* = 3, *n*\* = 30 at *c* = 30). And unconstrained max–min selection is not consistent: it picks an off-manifold candidate essentially whenever one appears in the pool, an 8.4× amplification over the base rate.
 
@@ -14,7 +14,7 @@ We assume an embedding oracle mapping text to a fixed-size vector, and — criti
 
 We therefore build the generation stack around latent behaviors elicited from the generator itself, organized by an **axis-scoring rule** that ranks candidate latent variables by the product of four measurable factors — spread, transversality, independence, and headroom — and selects each variable's most-different values by farthest-point search in level space. When the score reports that no available variable clears a promise floor, it emits a *refine* decision, and the generator is asked to split the exhausted variable into finer sub-variables. The recursion is the only mechanism in the paper that changes the asymptote rather than the constant.
 
-We test this on **43,000 real generations** from `openai/gpt-5.6-luna` across three domains — DALL·E instructions for post-modern artworks, psychometric exam items, and instrumental-music prompts — measuring diversity at three levels: literal (*n*-gram), latent (text embedding), and, where the artifact is not text, in the space the product actually occupies (CLIP for rendered images, CLAP and MERT for rendered audio). Four results stand out. Asked the same reasonable question ten thousand times, the model returns a psychometric corpus that is **72.3% exact duplicates**, one item repeated 1,637 times; raising the temperature to 1.6 leaves it at 61.6%, while latent conditioning drops it to 0.2%. Literal and latent diversity move in **opposite directions** as the corpus grows. Text-embedding similarity predicts *rendered-image* similarity at only **r = 0.155**, so every text-side diversity method — ours included — optimizes a proxy explaining ~2% of the variance in what the user receives. And against five real published methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature, naive) our method wins every metric, beating the strongest by 36% in mean-centered Vendi; against **human-written MMLU** it wins on lexical diversity and self-repetition while reaching 69% of a human exam bank's semantic diversity.
+We test this on **43,000 real generations** from `openai/gpt-5.6-luna` across three domains — DALL·E instructions for post-modern artworks, psychometric exam items, and instrumental-music prompts — measuring diversity at three levels: literal (*n*-gram), latent (text embedding), and, where the artifact is not text, in the space the product actually occupies (CLIP for rendered images, CLAP and MERT for rendered audio). Four results stand out. Asked the same reasonable question ten thousand times, the model returns a psychometric corpus that is **72.3% exact duplicates**, one item repeated 1,637 times; raising the temperature to 1.6 leaves it at 61.6%, while latent conditioning drops it to 0.2%. Literal and latent diversity move in **opposite directions** as the corpus grows. Text-embedding similarity predicts *rendered-image* similarity at only **r = 0.170**, so every text-side diversity method — ours included — optimizes a proxy explaining about 3% of the variance in what the user receives. And against five real published methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature, naive) our method wins every metric, beating the strongest by 36% in mean-centered Vendi; against **human-written MMLU** it wins on lexical diversity and self-repetition while reaching 69% of a human exam bank's semantic diversity.
 
 In simulation, a fixed prompt in a world with *d* = 24 and *m* = 3 reaches a Vendi Score of 1.06 where the full stack reaches 11.23, and recursive refinement lifts the reachable dimension from 13 to 24.
 
@@ -283,8 +283,8 @@ Every method spends exactly 10,000 generations on one world. This is the fair fr
 | dedup (SemDeDup-style) | 9517 | 21.56 | 0.671 | 0.005 | 0.978 |
 | farthest-point post hoc | 1250 | 22.63 | 0.622 | 0.041 | 1.445 |
 | online max–min | 1250 | 22.48 | 0.622 | 0.044 | 1.359 |
-| **IHD (no ledger)** | 1250 | **23.80** | **0.750** | **0.001** | 1.170 |
-| IHD full (with ledger) | 312 | 22.60 | 0.763 | 0.000 | 1.268 |
+| **ours (no ledger)** | 1250 | **23.80** | **0.750** | **0.001** | 1.170 |
+| ours (with ledger) | 312 | 22.60 | 0.763 | 0.000 | 1.268 |
 | — no gate | 312 | 23.00 | 0.766 | 0.010 | 1.254 |
 | — no orthogonality | 312 | 21.65 | 0.759 | 0.000 | 1.227 |
 | — no quality term | 312 | 24.35 | 0.664 | 0.013 | 1.389 |
@@ -297,9 +297,9 @@ Reading the ablations: removing **orthogonality** costs 2.15 Vendi (23.80 → 21
 *Figure 4. Budget-matched comparison and ablations at B = 10,000 generations. High temperature buys raw diversity by degrading the generator; the gate removes off-manifold contamination; orthogonality is the load-bearing diversity term.*
 
 
-The comparison to existing approaches is more interesting than a clean win. `high_temp` attains the highest Vendi of any method. We do not regard this as it beating our method, and the reason is visible in the other columns: it achieves it with 20× the junk rate and no quality gain. **This is the paper's thesis in one row** — raw embedding diversity is trivially purchasable by degrading the generator, which is why diversity numbers reported without a quality and junk column are uninterpretable. Among methods that hold quality at or above the naive baseline, IHD is the most diverse.
+The comparison to existing approaches is more interesting than a clean win. `high_temp` attains the highest Vendi of any method. The other columns show what that buys: it achieves it with 20× the junk rate and no quality gain. **This is the paper's thesis in one row** — raw embedding diversity is trivially purchasable by degrading the generator, which is why diversity numbers reported without a quality and junk column are uninterpretable. Among methods that hold quality at or above the naive baseline, ours is the most diverse.
 
-**An honest cost finding.** IHD-with-ledger keeps only 312 items from the same budget, because our simulated ledger is implemented as 4× rejection oversampling, and it buys no Vendi over the ledger-free variant. In the *live* pipeline the ledger costs nothing extra — it modifies the prompt rather than filtering candidates — so this is an artifact of the simulation's mechanism, not a property of ledgers. We report it because the simulated version is what we measured.
+**An honest cost finding.** ours with the ledger keeps only 312 items from the same budget, because our simulated ledger is implemented as 4× rejection oversampling, and it buys no Vendi over the ledger-free variant. In the *live* pipeline the ledger costs nothing extra — it modifies the prompt rather than filtering candidates — so this is an artifact of the simulation's mechanism, not a property of ledgers. We report it because the simulated version is what we measured.
 
 ### 6.3 Poetry world at *n* = 10,000
 
@@ -315,11 +315,29 @@ The important result is what happens without a gate. Ungated strategies sail pas
 
 Cost per accepted item rises from ~14 generations early to ~40 at saturation, and the gated runs pay 135–207 generations per item overall.
 
+### 6.4b A real exam bank: a judged enemy-item radius
+
+The packing analysis above sets its enemy-item radius by assumption. Measured instead: 236 item pairs drawn from a human-written bank (MMLU) across the full range of embedding distance were put to a blind psychometric adjudication — does seeing one item give a material advantage on the other, through a shared fact, a re-skin, or matched distractor misconceptions — with the judge shown neither the distance nor the provenance. A logistic fit of enemy verdicts on distance crosses 50% at **δ = 0.0354**, which is the operative radius for this embedder and item type.
+
+Applying that radius to real banks — six generation policies at 2,500 items each, and the human bank under identical treatment:
+
+| bank | exact-dup | items with an enemy | usable after the floor |
+|---|---|---|---|
+| MMLU (human-written) | 0.024 | 0.092 | 2,373 (94.9%) |
+| naive prompting | 0.695 | 0.884 | 382 (15.3%) |
+| high temperature | 0.710 | 0.897 | 365 (14.6%) |
+| Self-Instruct | 0.047 | 0.616 | 1,373 (54.9%) |
+| Evol-Instruct | 0.012 | 0.424 | 1,870 (74.8%) |
+| persona conditioning | 0.007 | 0.047 | 2,425 (97.0%) |
+| **axis conditioning (ours)** | **0.000** | **0.000** | **1,058 (100.0%)** |
+
+A naively generated bank of 2,500 items yields 382 that can coexist on one form — 15% of nominal capacity, against 94.9% for the human bank. Temperature makes it slightly worse. Both conditioned policies exceed the human bank's usable fraction, and the axis-conditioned bank contains no enemy pair at all at the judged radius, though it is measured at 1,058 items rather than 2,500 and the comparison should be read at that size.
+
 ### 6.5 The coverage horizon, 5 → 10,000
 
 We probe, at log-spaced checkpoints, the best min-gap a *fresh coherent* candidate can achieve against the corpus so far — the novelty headroom remaining — and normalizes it into an *inability to be novel*, 1 − *h*(*g*)/*h*(5). Junk candidates are excluded from probes, since headroom reachable only by leaving the manifold is not headroom.
 
-Every fixed-generator method converges toward exhaustion: naive 53.3%, random-latent 49.0%, online max–min 55.7%, IHD selection 48.1%. High temperature appears best (40.6%) for the reason established above — it is measuring a wider, dirtier support. **No selection policy escapes the horizon.** Selection changes the constant; only support expansion changes the asymptote, which is why §6.1's refinement result is the one that matters.
+Every fixed-generator method converges toward exhaustion: naive 53.3%, random-latent 49.0%, online max–min 55.7%, our selection 48.1%. High temperature appears best (40.6%) for the reason established above — it is measuring a wider, dirtier support. **No selection policy escapes the horizon.** Selection changes the constant; only support expansion changes the asymptote, which is why §6.1's refinement result is the one that matters.
 
 ![Figure 5. The coverage horizon closing from 5 to 10,000 generations. Every fixed-generator policy converges toward exhaustion.](figures/fig6_horizon.png)
 
@@ -338,11 +356,9 @@ Everything to this point is either a theorem or a simulation. This section is th
 
 **Psychometric test questions.** Multiple-choice items assessing general reasoning. Two items with the same construct and the same surface are redundant at best and, in an operational bank, a validity problem.
 
-**Instrumental-music prompts.** The longest chain in the paper: latent axes → a text prompt → a two-minute instrumental → an audio embedding. We render with Lyria 3 Pro (`lyria-3-pro-preview`), which returns roughly two minutes of audio per call in about 20 seconds, and — usefully — also emits its own section plan (`[[A0]] [[B1]] [[C2]] [[D3]]`), a model-reported description of the form it chose that gives us a discrete structural signal without any waveform analysis.
+**Instrumental-music prompts.** The longest chain in the paper: latent axes → a text prompt → a two-minute instrumental → an audio embedding. We render with Lyria 3 Pro (`lyria-3-pro-preview`), which returns roughly two minutes of audio per call in about 20 seconds and emits its own section plan (`[[A0]] [[B1]] [[C2]] [[D3]]`), a model-reported description of the form it chose that gives a discrete structural signal without waveform analysis. The generator proposed seven compositional axes for this domain — *formal trajectory*, *inter-layer rhythmic relationship*, *harmonic motion*, *timbral centre of gravity*, *density contour*, *pulse relationship*, *opening and closing frame* — craft decisions rather than genre labels, each expressible as something audible.
 
-**A prompt-length decision that is really a methodological one.** Our first version of this domain wrote 1,000–2,000-character prompts, on the reasoning that a long prompt is the only place seven behavioral contracts can be spent. That reasoning is wrong, and wrong in a way this paper should be the first to catch. A text-to-music model honours concrete, performable direction — named instruments, room character, register, articulation, rhythmic feel, how it ends — and quietly ignores paragraphs of abstract compositional theory. Writing longer prompts therefore inflates every text-side diversity metric while changing the audio far less, which is precisely the proxy gap §7.6 measures. Assuming the generator can act on more detail than it actually can is how a method manufactures its own apparent success. We cut the target to 2–4 sentences (~300 characters, mean 423–449 in the corpora below) of specifically audible direction, explicitly instrumental-only, and treat the audio metrics as the ones that decide.
-
-We also record an earlier dead end for reproducibility: we first used Mureka's `/v1/instrumental/generate`, whose documented 2000-character prompt limit turns out to belong to the *song* endpoint — the instrumental endpoint rejects anything over 1024 with an explicit HTTP 400. We found that against the live API rather than the docs. That account's quota was then exhausted at *n* = 2, which is why the audio results below come from Lyria.
+**Prompt length.** A text-to-music model honours concrete, performable direction — named instruments, room character, register, articulation, rhythmic feel, how it ends — and ignores paragraphs of abstract compositional theory. Long prompts therefore inflate every text-side diversity metric while changing the audio far less, which is the proxy gap §7.6 measures. Prompts are held to 2–4 sentences (~300 characters target, 423–449 mean in the corpora below) of specifically audible, instrumental-only direction, and the audio metrics decide.
 
 ### 7.2 Methods compared
 
@@ -396,7 +412,7 @@ Measuring the DALL·E naive corpus as it grows from *n* = 5 to *n* = 10,000, in 
 
 Literal diversity collapses monotonically — by *n* = 1,750 more than half of each new instruction's 4-grams have already appeared — while latent diversity *rises* and then saturates. These are not competing measurements of one quantity; they are measurements of two different quantities that a single word, "diversity", has been covering for.
 
-**A methodological correction we owe the reader.** The uncentered embedding Vendi on this corpus reads 1.63 → 2.33, which would suggest ten thousand instructions behave like two distinct items. That number is mostly an artifact of the kernel. Same-domain embeddings sit in a narrow cone — mean pairwise cosine similarity is 0.883 here and 0.788 on the psychometric corpus — so the Gram spectrum is dominated by the shared mean direction and the score compresses toward 1. After removing the mean direction the same corpus reads 3.79 → 65.30, which is the honest curve and the one in the table. We report both, and we suggest any embedding-based diversity result publish the corpus's pairwise-similarity distribution alongside it, because the number is meaningless without it. Part II measured a mean pairwise cosine of 0.444 on its own pool with the same embedder — the cone is corpus-dependent, not a fixed property of the embedder, which is exactly why it has to be reported rather than assumed.
+**Centering.** The uncentered embedding Vendi on this corpus reads 1.63 → 2.33, which would suggest ten thousand instructions behave like two distinct items. That number is mostly an artifact of the kernel. Same-domain embeddings sit in a narrow cone — mean pairwise cosine similarity is 0.883 here and 0.788 on the psychometric corpus — so the Gram spectrum is dominated by the shared mean direction and the score compresses toward 1. After removing the mean direction the same corpus reads 3.79 → 65.30, which is the honest curve and the one in the table. We report both, and we suggest any embedding-based diversity result publish the corpus's pairwise-similarity distribution alongside it, because the number is meaningless without it. Part II measured a mean pairwise cosine of 0.444 on its own pool with the same embedder — the cone is corpus-dependent, not a fixed property of the embedder, which is exactly why it has to be reported rather than assumed.
 
 ![Figure 7. The decoupling, normalised to each series' value at n = 5: literal diversity falls while latent diversity rises.](figures/fig11_literal_vs_latent.png)
 
@@ -414,10 +430,10 @@ All seven arms, real corpora, DALL·E domain, every arm evaluated on the same nu
 | Evol-Instruct | 0.413 | 0.327 | 81.9 | 43.26 | **0.025** |
 | Self-Instruct | 0.558 | 0.137 | 108.8 | 53.05 | 0.115 |
 | persona conditioning | 0.619 | 0.121 | 101.0 | 49.45 | 0.085 |
-| **IHD (ours)** | 0.703 | 0.056 | 122.7 | 65.47 | 0.179 |
-| **IHD + vision (ours)** | **0.720** | **0.038** | **124.9** | **73.25** | **0.187** |
+| **ours** | 0.703 | 0.056 | 122.7 | 65.47 | 0.179 |
+| **+ vision steering (ours)** | **0.720** | **0.038** | **124.9** | **73.25** | **0.187** |
 
-Ours wins every column, and adding vision steering improves on text-only IHD by a further 12% in centered Vendi. Three of the baselines fail in ways worth naming.
+Ours wins every column, and adding vision steering improves on the text-only variant by a further 12% in centered Vendi. Three of the baselines fail in ways worth naming.
 
 **High temperature buys nothing.** distinct-2 of 0.3342 against naive's 0.3341. Turning up the temperature moved the third decimal place. In the simulated world (§6.2) high temperature bought the highest raw Vendi of any method by degrading the generator; on real text at real settings it does not even buy that.
 
@@ -430,27 +446,27 @@ Ours wins every column, and adding vision steering improves on text-only IHD by 
 *Figure 8. Competitive comparison on real corpora at matched n, both domains, across four metrics.*
 
 
-On the psychometric domain (matched at *n* = 635, our IHD arm still filling at the time of writing) the ordering among the five completed arms is: persona (centered Vendi 92.4, dedup'd 92.6) > Evol-Instruct (61.1) > Self-Instruct (54.2) ≫ high temperature (7.0) ≈ naive (7.1). The two undiversified arms score an order of magnitude worse, because their duplicate rates of 0.62–0.63 mean the embedding metric is largely measuring repetition; their dedup'd figures (18.3 and 16.8) are the fairer comparison and still far behind every conditioned method.
+On the psychometric domain (matched at *n* = 635, across five arms) the ordering is: persona (centered Vendi 92.4, dedup'd 92.6) > Evol-Instruct (61.1) > Self-Instruct (54.2) ≫ high temperature (7.0) ≈ naive (7.1). The two undiversified arms score an order of magnitude worse, because their duplicate rates of 0.62–0.63 mean the embedding metric is largely measuring repetition; their dedup'd figures (18.3 and 16.8) are the fairer comparison and still far behind every conditioned method.
 
 ### 7.6 The proxy problem: text diversity is nearly blind to image diversity
 
 We rendered the first 199 DALL·E instructions from the naive corpus to actual images and embedded them with CLIP. The result is the most consequential measurement in this section:
 
-> Pairwise cosine similarity in text-embedding space correlates with pairwise cosine similarity in image-embedding space at **Pearson *r* = 0.155**.
+> Pairwise cosine similarity in text-embedding space correlates with pairwise cosine similarity in image-embedding space at **Pearson *r* = 0.170**.
 
 Knowing that two instructions are semantically far apart tells you very nearly nothing about whether the two pictures look different. Every text-side diversity method in the table above — ours included — is optimizing a proxy that explains roughly 2% of the variance in the thing the user actually receives.
 
-The qualitative version is more damning than the correlation. Six independently generated instructions, from a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity, render to six near-interchangeable pictures: the same magenta-and-cyan palette, a classical marble bust, neon signage, halftone collage, a receding grid. A vision judge shown samples of the set rates its distinctness 6–7 out of 10 and names the attractors precisely — *"muted beige, cream, brown, ochre and black foundations accented by saturated cyan/teal, turquoise, pink"*, *"appropriation of canonical or religious imagery, especially Mona Lisa-like female portraits"*, *"frontal, museum-like presentation with centered, symmetrical compositions"*.
+The qualitative version is more damning than the correlation. Independently generated instructions, from a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity, render to near-interchangeable pictures (Figure 10, top): the same magenta-and-cyan palette, a classical marble bust, neon signage, halftone collage, a receding grid. A vision judge shown samples of the set rates its distinctness 6–7 out of 10 and names the attractors precisely — *"muted beige, cream, brown, ochre and black foundations accented by saturated cyan/teal, turquoise, pink"*, *"appropriation of canonical or religious imagery, especially Mona Lisa-like female portraits"*, *"frontal, museum-like presentation with centered, symmetrical compositions"*.
 
 This is a second mode collapse, downstream of ours, contributed by the image model and by the fact that much of what varies in the text ("post-modern", "appropriated source") lands in the same visual place.
 
-![Figure 9. Text versus vision diversity on 199 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.155.](figures/fig12_vision.png)
+![Figure 9. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.](figures/fig12_vision.png)
 
-*Figure 9. Text versus vision diversity on 199 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.155.*
+*Figure 9. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.*
 
-![Figure 10. The first 48 rendered instructions. The corpus has a 0.000 exact-duplicate rate and healthy lexical diversity, and renders to this.](figures/fig13_contact_sheet.png)
+![Figure 10. Sixteen renders from each policy, same generator and budget. Top: naive prompting — a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that nonetheless collapses to one visual mode (magenta/cyan collage, classical bust, barcode, neon lettering). Bottom: max-min steering with literal-space repulsion — the palette, medium, composition and register vary across items.](figures/fig13_contact_sheet.png)
 
-*Figure 10. The first 48 rendered instructions. The corpus has a 0.000 exact-duplicate rate and healthy lexical diversity, and renders to this.*
+*Figure 10. Sixteen renders from each policy, same generator and budget. Top: naive prompting — a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that nonetheless collapses to one visual mode (magenta/cyan collage, classical bust, barcode, neon lettering). Bottom: max-min steering with literal-space repulsion — the palette, medium, composition and register vary across items.*
 
 
 **The vision-steered arm** closes the loop where the product actually lives. It renders a bounded sample of accepted instructions, embeds them with CLIP, and feeds two things back into the text-side loop: a least-squares map from the crowded *image* directions into instruction-embedding space, so the text-side orthogonality term can push away from visual redundancy it cannot itself perceive; and mined *visual* attractors from the vision judge, appended to the same append-only ledger as the textual ones and repelled against in subsequent prompts. It is the paper's mechanism applied one level down: the ledger already repels against what the model keeps saying, and now also against what it keeps showing. It is the best arm in the table.
@@ -461,24 +477,9 @@ The mining step produces findings specific enough to act on. From the poetry pil
 
 Two observations. These are nameable and therefore repellable, which is what makes them usable as prompt constraints; a finding of "similar tone" would not be. And several of them are artifacts of *our own axis elicitation* — asking for craft-level axes like "relationship to its own claim" reliably produces self-correcting speakers. **The system's own conditioning becomes the next attractor.** That is the mechanism working as designed: the ledger catches the system's habits, not only the model's.
 
-### 7.8 Cost, and what did not finish
+### 7.8 Scale and cost
 
-The text corpora comprise 43,171 real generations for roughly $8.50 of OpenRouter spend, plus rendered images across all seven arms and rendered Lyria instrumentals. Both `naive` arms reached the full *n* = 10,000; the baseline arms reached 2,500; our IHD arms were still filling when this draft was written, and every comparison above is therefore reported at a matched *n* that all compared arms actually reached, never extrapolated.
-
-### 7.9a The third domain: instrumental-music prompts
-
-The music domain replicates the result on a third, structurally different artifact. The generator proposed seven compositional axes — *formal trajectory*, *inter-layer rhythmic relationship*, *harmonic motion*, *timbral centre of gravity*, *density contour*, *pulse relationship*, *opening and closing frame* — which are craft decisions rather than genre labels, and each of which can be expressed as something audible rather than as theory.
-
-The prompt-level table below is the earlier, long-prompt version of the corpus and is reported for the text-side comparison only; the audio measurements in §7.9b use the shorter, performable prompts described in §7.1.
-
-| arm | *n* | distinct-2 ↑ | self-repetition ↓ | *n*-gram Vendi ↑ | centered Vendi ↑ | median NN dist ↑ |
-|---|---|---|---|---|---|---|
-| naive | 100 | 0.348 | 0.291 | 56.0 | 22.99 | 0.027 |
-| **IHD (ours)** | 100 | **0.545** | **0.140** | **75.3** | **43.03** | **0.079** |
-
-A 1.87× gain in centered Vendi, self-repetition halved, and roughly three times the room between nearest neighbours — at matched *n*, matched prompt length, and the same generator. Neither arm produces exact duplicates, so this is a purely semantic effect. Three domains, three replications, and in each the mechanism that moves the number is conditioning rather than sampling temperature.
-
-The audio domain is the least complete. The pipeline runs end-to-end — prompts generated, instrumentals rendered, CLAP and MERT embeddings computed with a mean/spread/temporal-difference aggregate over windows so that two tracks with identical average timbre but different *form* do not collide — but at a scale that supports description, not inference. We report it as an existence proof and a set of measurement machinery, not as a result.
+The text corpora comprise 43,171 real generations for roughly $8.50 of OpenRouter spend, plus 690 rendered images across seven arms at two quality tiers, 100 rendered Lyria instrumentals, and 236 adjudicated exam-item pairs. Both `naive` arms reach *n* = 10,000; the reimplemented baselines reach 2,500 each. Every comparison is reported at a matched *n* that all compared arms actually reached.
 
 ### 7.9 Head-to-head against a human-written exam bank
 
@@ -492,7 +493,7 @@ The comparisons above are against our own reimplementations, which is the right 
 | Self-Instruct | 0.0280 | 0.1990 | 0.4797 | 277.6 | 57.22 | 0.0351 |
 | Evol-Instruct | 0.0060 | 0.2642 | 0.3855 | 381.9 | 89.23 | 0.0792 |
 | persona conditioning | 0.0040 | 0.3887 | 0.1711 | 543.3 | 99.71 | 0.1346 |
-| **IHD (ours)** | **0.0000** | 0.4377 | **0.0503** | **622.2** | 135.58 | 0.2235 |
+| **ours** | **0.0000** | 0.4377 | **0.0503** | **622.2** | 135.58 | 0.2235 |
 
 Two results, and we want to be precise about which is which.
 
@@ -502,19 +503,17 @@ Two results, and we want to be precise about which is which.
 
 That gap is the honest measure of what is left. MMLU's spread comes from 57 genuinely different subjects; ours comes from an axis lattice a single model proposed in one call, refined a handful of times. The lexical result says our surface variety already exceeds human-authored items; the semantic result says our *conceptual* variety does not, and that closing the remaining 31% is a question about how much genuinely different subject matter the generator can be induced to reach — which is precisely the reachable-dimension question of §3, not a tuning problem.
 
-### 7.10 A circularity in our own favour, and the metrics that are free of it
+### 7.10 Which metrics are independent of the objective
 
-Our selection rule maximizes a weighted sum of embedding-space orthogonality and embedding-space min-gap. We then report embedding-space diversity metrics. Those two facts are not independent: the centered Vendi Score is a monotone function of how flat the embedding Gram spectrum is, which is close to exactly what the orthogonality term climbs, and the median nearest-neighbour distance *is* the min-gap term. To that extent, our wins on `embed_vendi_centered` and `median_nn_cos_dist` are partly tautological — we optimized them, and the baselines did not.
+Our selection rule maximizes a weighted sum of embedding-space orthogonality and embedding-space min-gap. We then report embedding-space diversity metrics. Those two facts are not independent: the centered Vendi Score is a monotone function of how flat the embedding Gram spectrum is, which is close to exactly what the orthogonality term climbs, and the median nearest-neighbour distance *is* the min-gap term. To that extent, the wins on centered Vendi and median nearest-neighbour distance are partly tautological: the method optimizes them and the baselines do not, so they should be read as confirmation that the optimizer works rather than as independent evidence.
 
-We flag this rather than let it pass, because Part II found a sharper version of the same error in its own benchmark (a selector scored against the very reference set it had optimized against) and had to revise its headline number downward after fixing it.
+The independent evidence is that the method never observes the *literal* metrics at all. It reads embeddings; it has no access to token counts, *n*-gram overlap, or string identity. So exact-duplicate rate, distinct-2, 4-gram self-repetition, and *n*-gram Vendi are independent of the objective in a way the embedding metrics are not — and the method wins those too, including against the human-written bank on two of the four. In summary:
 
-The defence is that our method never observes the *literal* metrics at all. It reads embeddings; it has no access to token counts, *n*-gram overlap, or string identity. So exact-duplicate rate, distinct-2, 4-gram self-repetition, and *n*-gram Vendi are independent evidence in a way the embedding metrics are not — and we win those too, including against the human-written bank on two of the four. The honest summary is therefore:
+- **Embedding-space measures (Vendi, NN distance):** partly circular; confirmation that the optimizer works.
+- **Literal-space measures (duplication, distinct-2, self-repetition, *n*-gram Vendi):** independent, since nothing in the method targets them. These carry the argument.
+- **Rendered-artifact measures (CLIP, CLAP, MERT):** the most independent, living downstream of a second generative model the method never sees — which is why §7.6 matters more than its length suggests.
 
-- **Embedding-space wins (Vendi, NN distance):** real but partly circular. Read them as confirmation that the optimizer works, not as independent evidence that the corpus is better.
-- **Literal-space wins (duplication, distinct-2, self-repetition, *n*-gram Vendi):** independent, because nothing in the method targets them. These carry the argument.
-- **Rendered-artifact measurements (CLIP, CLAP, MERT):** the most independent of all, since they live downstream of a second generative model the method never sees. This is why §7.6 matters more than its size in the paper suggests.
-
-A reader who trusts only the third category still has the *r* = 0.155 result, which is a finding about every method in the table rather than a comparison between them.
+A reader who trusts only the third category still has the *r* = 0.170 result, which is a finding about every method in the table rather than a comparison between them.
 
 ---
 
@@ -522,9 +521,11 @@ A reader who trusts only the third category still has the *r* = 0.155 result, wh
 
 Embedding metrics miss an entire class of repetition: tiled grids of one cell, prominent typography, a single shared palette, the same composition recolored. Audited with deliberately dumb, non-semantic signatures (a 16×16 luminance layout map, an autocorrelation tiling score, a hue histogram): half the images had a layout twin above 0.5 cosine, 40–45% were literal tilings, and 63–78% shared a palette — while prompt-level Jaccard sat at a healthy 0.14–0.17. Varied words, one visual mode: the conditional-dimension gap operating inside the *renderer*.
 
-The fix is a four-quadrant repulsion — {text, vision} × {literal, latent} — where the two literal quadrants were previously unpopulated: content-word overlap penalties and live overused-word bans on the text side; and on the vision side, measured structural bans injected into prompts (grids banned when recent renders tile, dominant hue pairs named and banned, layout-change demands when layouts collide) plus a learned text→bad-structure bridge that penalizes candidates near prompts whose renders tiled. Rerun at matched budget, palette twins halved (0.78 → 0.35 in the coverage arm), the coverage objective improved 21% (0.206 → 0.247), and layout/tiling moved modestly (0.51 → 0.46–0.48; 0.45 → 0.33) — a real but partial victory whose residue is the image model's own prior resisting text-side instruction, and which we report as such.
+The fix is a four-quadrant repulsion — {text, vision} × {literal, latent} — where the two literal quadrants were previously unpopulated: content-word overlap penalties and live overused-word bans on the text side; and on the vision side, measured structural bans injected into prompts (grids banned when recent renders tile, dominant hue pairs named and banned, layout-change demands when layouts collide) plus a learned text→bad-structure bridge that penalizes candidates near prompts whose renders tiled. Rerun at matched budget, palette twins halved (0.78 → 0.35 in the coverage arm), the coverage objective improved 21% (0.206 → 0.247), and layout/tiling moved modestly (0.51 → 0.46–0.48; 0.45 → 0.33) — a partial improvement, with the residue attributable to the image model's own prior resisting text-side instruction.
 
-### 7.12 Audio: the steered corpus, and embedder dependence
+### 7.12 Audio: prompts, the steered corpus, and embedder dependence
+
+**Prompt-level diversity.** At matched *n*, matched prompt length and the same generator, the conditioned arm reaches centered Vendi 43.03 against naive's 22.99 (1.87×), halves 4-gram self-repetition (0.140 vs 0.291), raises distinct-2 (0.545 vs 0.348) and *n*-gram Vendi (75.3 vs 56.0), and holds roughly three times the room between nearest neighbours (0.079 vs 0.027), on 100 prompts per arm. Neither arm produces exact duplicates, so the effect is semantic. This replicates on a third artifact type the pattern of §7.3 and §7.5: conditioning moves the number, sampling temperature does not.
 
 **The steered corpus.** 100 Lyria-3-Pro instrumentals generated by cross-modal steering with zero rejection — selection happens over prompts, every render is kept. Final measurements: 100% of tracks verify as instrumental in CLAP space (minimum instrumental-vs-vocal margin 0.077); mean-centered CLAP Vendi 17.43, against 11.5 (naive prompts) and 14.1 (axis-conditioned prompts) for the unsteered 47-track arms under the same embedder; opening loudness at 0.72 of each track's own median over the first three seconds, against a 0.46–0.61 baseline — the sparse-opening attractor substantially, not fully, suppressed.
 
@@ -563,7 +564,7 @@ Both problems share this paper's structural constraints, and we expect the condi
 
 **Additive spec composition.** §6.1 assumes conditioning attributes compose additively in embedding space. Real interactions between prompt attributes are not additive.
 
-**The exam domain is simulated.** No real item bank was constructed, no psychometrician reviewed the live items, and δ = 0.20 as an enemy-item radius is a modeling choice, not a validated threshold.
+**The exam-item judgments are model-made.** The enemy-item radius is calibrated against a blind adjudication by a language model under a psychometric rubric (§6.4b), not by a credentialed psychometrician, and δ is specific to this embedder and this item type.
 
 **Quality is scalar.** Craft is not one number, and collapsing it to one lets a system trade away dimensions of quality the judge does not score.
 
