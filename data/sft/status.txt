@@ -1,0 +1,17 @@
+=== 2026-08-31T16:02:19Z ===
+runs complete: 12
+
+arm                   items    tokens seeds  superni_macro
+coverage-selected       300     20929     1  0.2950 ±0.0000
+coverage-selected       600     43762     1  0.2892 ±0.0000
+coverage-selected      1200     86562     1  0.2992 ±0.0000
+random                  300     23608     1  0.2967 ±0.0000
+random                  600     45014     1  0.3058 ±0.0000
+random                 1200     90934     1  0.2983 ±0.0000
+
+chart: figures/sweep.png
+--- generation ---
+alpaca_tokmatch    alpaca_tokmatch: 13400/25923  calls=13412 tok_out=2533810
+personahub         personahub: 4600/14000  calls=4601 tok_out=3114189
+wizardlm           wizardlm: 6200/8000  calls=6208 tok_out=3317014
+faithful           self_instruct: 1728/2400 calls, pool=6457
