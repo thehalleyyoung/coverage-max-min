@@ -318,7 +318,7 @@ testing the same rule are a security failure whatever the other items look like.
 Both are named below, and then measured against each other.
 
 
-### 4.1 Max-min, stated
+### 4.1 Max-min
 
 
 Under an unbounded horizon the objective is a two-term score evaluated against
@@ -351,7 +351,7 @@ The empirical claim behind everything below is that **_m_ ≪ _d_**. A prompt fi
 
 Throughout, *B*(*x*, *r*) is the ball of radius *r* and we write *g<sub>n</sub>* for the min-gap of a fresh draw against a corpus of size *n*.
 
-### 4.3 Coverage, stated
+### 4.3 Coverage
 
 
 Fix an embedding map φ into R^D (we use unit-normalized 768-d embeddings), and a radius ε > 0. The generator, prompted in

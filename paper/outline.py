@@ -334,9 +334,9 @@ OUTLINE = [
     ]),
     ("What helps one objective hurts the other", [
         ("text", BRIDGE_REL),
-        ("sub", "Max-min, stated", "text", MAXMIN_DEF),
+        ("sub", "Max-min", "text", MAXMIN_DEF),
         ("sub", "The reachable manifold and the conditional slice", "mm", "Setup"),
-        ("sub", "Coverage, stated", "cv", "Problem statement"),
+        ("sub", "Coverage", "cv", "Problem statement"),
         ("sub", "Where they coincide", "iii", "Are these dual problems?"),
         ("sub", "Coverage is not packing", "cv", "Coverage is not packing"),
         ("sub", "The reversal, measured", "iii", "The dissociation, measured"),
