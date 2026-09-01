@@ -105,7 +105,6 @@ generator calls against Alpaca's 52,000, and with the highest precision in the
 field (0.973). PersonaHub (50k items) and WizardLM (143k) both finish below RAC's
 304-item selective arm.
 
-The score is worth what it buys, and three measurements say what that is.
 **Four hundred RAC items cover more of a held-out human reference than all
 52,002 items of Alpaca** — a ratio of 130 to 1 — and a completed 24,000-call
 run reaches 0.8501, 2.3× Alpaca's coverage, for $4.64. That run also shows

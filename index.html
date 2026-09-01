@@ -483,6 +483,34 @@ h2,h3{scroll-margin-top:1.5rem}
   .toc li.sub{display:none}
 }
 @media print{.toc{display:none}.layout{display:block}}
+
+/* --- section navigation, generated from the paper's own headings --- */
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,46rem);gap:2.6rem;
+justify-content:center;padding:2.4rem 1.2rem 6rem}
+.toc{position:sticky;top:2rem;align-self:start;max-height:calc(100vh - 4rem);
+overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+font-size:.83rem;line-height:1.45;border-right:1px solid var(--rule);padding-right:1.1rem}
+.toc h2{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+margin:0 0 .7rem;border:0;padding:0}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:.12rem 0}
+.toc li.sub{padding-left:.85rem;font-size:.79rem}
+.toc a{display:block;padding:.2rem .35rem;border-radius:3px;color:var(--muted);
+text-decoration:none;border-left:2px solid transparent}
+.toc a:hover{color:var(--fg);background:var(--stripe)}
+.toc a.here{color:var(--accent);border-left-color:var(--accent);background:var(--stripe)}
+.toc .sec{color:var(--fg)}
+main{max-width:none;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:target{scroll-margin-top:1.5rem}
+h2,h3{scroll-margin-top:1.5rem}
+@media (max-width:62rem){
+  .layout{display:block;max-width:46rem;margin:0 auto}
+  .toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);
+  padding:0 0 1rem;margin-bottom:2rem;columns:2;column-gap:1.6rem}
+  .toc li.sub{display:none}
+}
+@media print{.toc{display:none}.layout{display:block}}
 </style>
 </head>
 <body>
@@ -504,8 +532,7 @@ against Alpaca's 0.3722</strong> at matched evaluated <em>n</em>, from
 2,400 generator calls against Alpaca's 52,000, and with the highest
 precision in the field (0.973). PersonaHub (50k items) and WizardLM
 (143k) both finish below RAC's 304-item selective arm.</p>
-<p>The score is worth what it buys, and three measurements say what that
-is. <strong>Four hundred RAC items cover more of a held-out human
+<p><strong>Four hundred RAC items cover more of a held-out human
 reference than all 52,002 items of Alpaca</strong> — a ratio of 130 to 1
 — and a completed 24,000-call run reaches 0.8501, 2.3× Alpaca's
 coverage, for $4.64. That run also shows the ceiling arriving: marginal

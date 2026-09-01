@@ -166,24 +166,22 @@ the highest precision in the field (0.973). PersonaHub (50k items) and
 WizardLM (143k) both finish below RAC\textquotesingle s 304-item
 selective arm.
 
-The score is worth what it buys, and three measurements say what that
-is. \textbf{Four hundred RAC items cover more of a held-out human
-reference than all 52,002 items of Alpaca} --- a ratio of 130 to 1 ---
-and a completed 24,000-call run reaches 0.8501, 2.3×
-Alpaca\textquotesingle s coverage, for \$4.64. That run also shows the
-ceiling arriving: marginal coverage per thousand items collapses
-fortyfold and the generator\textquotesingle s duplicate rate climbs to
-0.544, so more than half the budget ends up buying text it has already
-produced. At matched pool size, \textbf{7.3× as many held-out queries
-have a usable nearest neighbour} as under plain conditioning. And
-prompting a base model with retrieved demonstrations, the advantage
-\emph{grows with every slot retrieved} --- 1.04×, 1.17×, 1.48×, 2.38×
-over plain conditioning at k = 1, 2, 4, 8 --- until at eight
-demonstrations the corpus leads the field outright, Alpaca included,
-while low-coverage pools collapse to a third of their one-shot score. A
-clustered pool runs out of distinct relevant demonstrations; a covering
-one does not. Coverage predicts retrieval quality at \emph{r} = 0.97 and
-in-context score at \emph{r} = 0.82.
+\textbf{Four hundred RAC items cover more of a held-out human reference
+than all 52,002 items of Alpaca} --- a ratio of 130 to 1 --- and a
+completed 24,000-call run reaches 0.8501, 2.3× Alpaca\textquotesingle s
+coverage, for \$4.64. That run also shows the ceiling arriving: marginal
+coverage per thousand items collapses fortyfold and the
+generator\textquotesingle s duplicate rate climbs to 0.544, so more than
+half the budget ends up buying text it has already produced. At matched
+pool size, \textbf{7.3× as many held-out queries have a usable nearest
+neighbour} as under plain conditioning. And prompting a base model with
+retrieved demonstrations, the advantage \emph{grows with every slot
+retrieved} --- 1.04×, 1.17×, 1.48×, 2.38× over plain conditioning at k =
+1, 2, 4, 8 --- until at eight demonstrations the corpus leads the field
+outright, Alpaca included, while low-coverage pools collapse to a third
+of their one-shot score. A clustered pool runs out of distinct relevant
+demonstrations; a covering one does not. Coverage predicts retrieval
+quality at \emph{r} = 0.97 and in-context score at \emph{r} = 0.82.
 
 Two limits deserve the same clarity. Fine-tuning does not follow
 (\emph{r} = −0.17): the retrieval-aimed corpus yields the best model on
