@@ -455,14 +455,7 @@ nearly their induced output distributions point that way.
 \textbf{Diversity metrics.} The Vendi Score (Friedman \& Dieng, 2022) is
 the exponential of the von Neumann entropy of a normalized similarity
 matrix, interpretable as an effective number of distinct items. We use
-it throughout, with a computational note: under a linear kernel on
-unit-normalized embeddings, the \emph{n} × \emph{n} Gram matrix and the
-\emph{D} × \emph{D} second-moment matrix share their nonzero spectrum,
-so the score costs \emph{O}(\emph{nD}² + \emph{D}³), rather than
-\emph{O}(\emph{n}³). We verify this to machine precision (max eigenvalue
-mismatch 1.1 × 10−16). This matters for our setting specifically: an
-infinite-horizon method needs an evaluation whose cost does not grow
-superlinearly in the thing it is evaluating.
+it throughout.
 
 \textbf{Selection and subset choice.} Determinantal point processes
 model repulsion via volume in feature space. Farthest-point /

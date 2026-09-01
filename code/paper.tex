@@ -1,0 +1,1696 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+\documentclass[
+  11pt,
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+  \setmainfont[]{Palatino}
+  \setmonofont[]{Menlo}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{microtype}
+\usepackage[table]{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,
+            citecolor=blue!50!black]{hyperref}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}{Assumption}
+\setlength{\emergencystretch}{3em}
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\section{Infinite-Horizon Diversity}\label{infinite-horizon-diversity}
+
+\subsubsection{Why a fixed prompt has a finite novelty budget, and what
+to spend
+instead}\label{why-a-fixed-prompt-has-a-finite-novelty-budget-and-what-to-spend-instead}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Abstract}\label{abstract}
+
+We study the problem of generating a corpus that stays diverse as it
+grows without bound. The objective is a convex combination of two terms
+evaluated against everything generated so far: the mean distance from a
+new item\textquotesingle s embedding to the existing corpus, which we
+want small because it keeps items typical and on-manifold, and the
+minimum distance to the existing corpus, which we want large because it
+keeps items non-redundant. We call the resulting problem
+\emph{infinite-horizon diversity}, and we are interested specifically in
+its asymptotics: what happens to the objective, and to the cost of
+satisfying it, as \emph{n} grows.
+
+Our central claim locates the interesting structure in the
+\textbf{support} rather than in the objective. Conditioned on a fixed
+prompt \emph{x}, a language model\textquotesingle s output distribution
+concentrates on a submanifold of dimension \emph{m} that is far smaller
+than the dimension \emph{d} of the reachable semantic manifold. We prove
+and numerically verify four consequences of that gap. Novelty at fixed
+prompt decays like \emph{n}−1/\emph{m}, not \emph{n}−1/\emph{d}, so
+saturation arrives much sooner than the ambient dimension suggests
+(measured slopes −0.472, −0.309, −0.195 for \emph{m} = 2, 3, 5 against
+predictions −0.5, −0.333, −0.2). A single prompt ε-covers a vanishing
+ε\emph{d}−\emph{m} fraction of the manifold. Only prompt motion
+\emph{transverse} to the already-occupied span raises the reachable
+dimension: parallel motion leaves the union\textquotesingle s effective
+dimension at 1.9, transverse motion takes it to 11.2. Under free
+prompt-switching the optimal number of samples per prompt is exactly
+one; an interior optimum appears only once switching has overhead
+(\emph{n}* = 10 at cost \emph{c} = 3, \emph{n}* = 30 at \emph{c} = 30).
+
+We assume an embedding oracle mapping text to a fixed-size vector, and
+--- critically --- \textbf{no reverse oracle}. We can compute exactly
+where we would like the next item to land and still have no way to
+decode that point into text. Every architectural choice follows from
+that asymmetry: the system must propose, measure, and select rather than
+solve, and the only steering handles are language-valued.
+
+We therefore build the generation stack (\textbf{Recursive Axis
+Conditioning}, RAC) around latent behaviors elicited from the generator
+itself, organized by an \textbf{axis-scoring rule} that ranks candidate
+latent variables by the product of four measurable factors (spread,
+transversality, independence, and headroom), and selects each
+variable\textquotesingle s most-different values by farthest-point
+search in level space. When the score reports that no available variable
+clears a promise floor, it emits a \emph{refine} decision, and the
+generator is asked to split the exhausted variable into finer
+sub-variables. The recursion is the only mechanism in the paper that
+changes the asymptote rather than the constant.
+
+We test this on \textbf{43,000 real generations} from
+\texttt{openai/gpt-5.6-luna} across three domains --- DALL·E
+instructions for post-modern artworks, psychometric exam items, and
+instrumental-music prompts --- measuring diversity at three levels:
+literal (\emph{n}-gram), latent (text embedding), and, where the
+artifact is not text, in the space the product actually occupies (CLIP
+for rendered images, CLAP and MERT for rendered audio). Four results
+stand out. Asked the same reasonable question ten thousand times, the
+model returns a psychometric corpus that is \textbf{72.3\% exact
+duplicates}, one item repeated 1,637 times; raising the temperature to
+1.6 leaves it at 61.6\%, while latent conditioning drops it to 0.2\%.
+Literal and latent diversity move in \textbf{opposite directions} as the
+corpus grows. Text-embedding similarity predicts \emph{rendered-image}
+similarity at only \textbf{r = 0.170}, so every text-side diversity
+method (ours included) optimizes a proxy explaining about 3\% of the
+variance in what the user receives. And against five real published
+methods (Self-Instruct, Evol-Instruct, Persona-Hub, high-temperature,
+naive) our method wins every metric, beating the strongest by 36\% in
+mean-centered Vendi; against \textbf{human-written MMLU} it wins on
+lexical diversity and self-repetition while reaching 69\% of a human
+exam bank\textquotesingle s semantic diversity.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{1. Introduction}\label{1-introduction}
+
+Ask a language model for a poem ten times and you get ten poems. Ask it
+ten thousand times and you do not get ten thousand poems; you get a few
+hundred poems and a great deal of paraphrase. Any fixed conditional
+distribution behaves this way under repeated sampling, whatever model
+supplies it. The distribution has a shape, and repeated sampling traces
+that shape ever more densely rather than expanding it.
+
+The practical version of this problem is now everywhere. Synthetic
+training data is valuable in proportion to how much it is \emph{not}
+already in the training set. Evaluation suites that cluster in a few
+families give false assurance. Test-item banks, red-team prompt sets,
+persona corpora, and augmentation pipelines all consume generated text
+in bulk, and all of them degrade in a way that standard quality metrics
+do not detect: every individual item is fine, and the collection is
+redundant.
+
+The natural formalization is a two-term objective. Let \emph{E} be an
+embedding oracle and let \emph{Xn} = \{\emph{x}1, \ldots, \emph{xn}\} be
+the corpus so far. For a candidate \emph{c},
+
+\[
+J_\lambda(c \mid X_n) \;=\; \lambda \cdot \underbrace{\frac{1}{n}\sum_{i=1}^{n}\lVert E(c) - E(x_i)\rVert}_{\text{anchor: keep it typical}} \;-\; (1-\lambda)\cdot \underbrace{\min_{i \le n} \lVert E(c) - E(x_i)\rVert}_{\text{repulsion: keep it new}}
+\]
+
+and we accept the candidate minimizing \emph{J}λ. The anchor term keeps
+generation on the manifold; the repulsion term pushes it away from what
+already exists. The interesting question is what happens to this as
+\emph{n} → ∞.
+
+Our answer is that the objective is not where the difficulty lives. Both
+terms are cheap to maintain online and both behave predictably. The
+difficulty is that \textbf{the set of things the generator can propose
+is much smaller than it appears}, and the objective is powerless to
+enlarge it. Selection can only choose among what is offered. If the
+offering is confined to a thin slice, no selection rule (however clever,
+however well-tuned its λ) can produce diversity that the proposal
+distribution does not contain. Worse, as we show, aggressive selection
+under a fixed proposal distribution systematically degrades quality,
+because the only way to keep winning a novelty contest inside an
+exhausted region is to leave the manifold.
+
+\subsubsection{1.1 The oracle asymmetry}\label{11-the-oracle-asymmetry}
+
+We assume throughout:
+
+\begin{quote}
+\textbf{Assumption (embedding oracle, no inverse).} We have access to
+\emph{E}: Text → ℝ\emph{D}, computable on demand. We have \textbf{no}
+\emph{E}−1: ℝ\emph{D} → Text.
+\end{quote}
+
+This is the structural fact that shapes the entire design, and it is
+worth dwelling on because it is easy to forget when writing down
+objectives. Given \emph{Xn} we can compute, exactly and cheaply, the
+point in ℝ\emph{D} that would most improve any of our diversity measures
+--- the direction of least occupied spectral energy, the centre of the
+largest empty ball, the point maximizing marginal coverage. Knowing that
+point is worth nothing on its own. There is no procedure that turns a
+target embedding back into a poem.
+
+Consequently the system cannot \emph{solve} for its next item. It can
+only:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{propose} (sample from \emph{p}(· \textbar{} \emph{x}) for some
+  prompt \emph{x} we are able to write;
+\item
+  \textbf{measure}) embed the proposals and score them;
+\item
+  \textbf{select} --- keep one.
+\end{enumerate}
+
+All of the control we have is therefore in step 1, in the choice of
+\emph{x}, and that choice is expressible only in language. This is why
+the latent variables in our system are \emph{language-valued} (named
+axes with named levels), rather than continuous codes: they are the only
+handles that reach the generator. It is also why the axis scoring of §4
+exists. \textbf{The axis scoring is a surrogate for the missing
+inverse.} Since we cannot decode the direction we want to travel, we
+instead score the language-valued conditions we \emph{can} write by how
+nearly their induced output distributions point that way.
+
+\subsubsection{1.2 Contributions}\label{12-contributions}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{A conditional-dimension theory of generative saturation} (§3).
+  Four theorems relating the conditional support dimension \emph{m} to
+  the reachable manifold dimension \emph{d}, each verified numerically.
+  The practically important one is that saturation is governed by
+  \emph{m}, which is small, and not by \emph{d}.
+\item
+  \textbf{An axis-scoring rule} (§4). A decision procedure for which
+  latent variable to condition on next and which of its values to use,
+  together with a principled termination/recursion signal.
+\item
+  \textbf{A budget-matched evaluation protocol} (§6). Every method
+  receives the same generator, the same seed material, and the same
+  number of generator calls. This is the fair frame for selection-based
+  diversity methods, which buy diversity by discarding.
+\item
+  \textbf{Three domains with different diversity semantics} (§6):
+  instructions for image generation and prompts for instrumental music,
+  where diversity is a soft objective, and psychometric exam items,
+  where two items closer than δ are a test-security failure and the
+  floor is hard.
+\item
+  \textbf{43,000 real generations} on \texttt{openai/gpt-5.6-luna} with
+  locally-computed embeddings, across three domains and seven methods
+  (§6).
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{2. Related work}\label{2-related-work}
+
+\textbf{Diversity metrics.} The Vendi Score (Friedman \& Dieng, 2022) is
+the exponential of the von Neumann entropy of a normalized similarity
+matrix, interpretable as an effective number of distinct items. We use
+it throughout.
+
+\textbf{Selection and subset choice.} Determinantal point processes
+model repulsion via volume in feature space. Farthest-point /
+\emph{k}-center greedy is the classical max--min packing heuristic and
+we use it as a baseline (\texttt{fps\_post}) and, at the level of axis
+values, as a component (§4.3). SemDeDup-style near-duplicate removal at
+a fixed radius appears as \texttt{dedup\_post}. All of these are
+\emph{post hoc} selectors over a fixed pool, which is exactly their
+limitation in our setting: they cannot change what is in the pool.
+
+\textbf{Quality-diversity.} MAP-Elites and its descendants maintain an
+archive indexed by hand-designed behavior descriptors, seeking an elite
+per cell. Our axis lattice is a close relative, with two differences
+that matter here: the descriptors are \emph{elicited from the generator
+rather than designed by us}, and the lattice \emph{refines itself} when
+a cell saturates, so the archive\textquotesingle s resolution is not
+fixed in advance.
+
+\textbf{Mode collapse in instruction-tuned models.} Repeated sampling
+from aligned models is well documented to produce low lexical and
+semantic entropy relative to base models. We take this as our empirical
+starting point and model it explicitly as skewed mixture weights over
+style modes.
+
+\textbf{Novelty search.} Novelty search in evolutionary computation
+rewards behavioral distance from an archive. Our repulsion term is a
+direct analogue, operating over an archive of embeddings rather than of
+behavior descriptors.
+
+\textbf{Coverage.} Part II treats the covering objective (maximizing the
+volume of a union of ε-balls at a \emph{finite} budget), which is
+submodular where max--min is not. §7 relates the two.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{3. Theory: conditional dimension governs
+saturation}\label{3-theory-conditional-dimension-governs-saturation}
+
+\subsubsection{3.1 Setup}\label{31-setup}
+
+Let \emph{M} ⊂ ℝ\emph{D} be the reachable semantic manifold, dim
+\emph{M} = \emph{d}: the set of embeddings of texts the generator could
+produce under \emph{some} prompt. For a fixed prompt \emph{x}, let
+\emph{Sx} ⊆ \emph{M} be the support of \emph{E}\#\emph{p}(· \textbar{}
+\emph{x}), with dim \emph{Sx} = \emph{m}.
+
+The empirical claim behind everything below is that \textbf{\emph{m} ≪
+\emph{d}}. A prompt fixes topic, stance, form, register, and rhetorical
+strategy; what remains free is a low-dimensional residue --- some
+lexical choice, some ordering, some surface variation. Our live pilot
+supports this directly: 60 poems generated from an identical naive
+prompt have a median nearest-neighbour cosine similarity of 0.911 and a
+Vendi Score of 2.55, meaning sixty samples behave like roughly two and a
+half distinct items.
+
+Throughout, \emph{B}(\emph{x}, \emph{r}) is the ball of radius \emph{r}
+and we write \emph{gn} for the min-gap of a fresh draw against a corpus
+of size \emph{n}.
+
+\subsubsection{3.2 Fixed-prompt
+saturation}\label{32-fixed-prompt-saturation}
+
+\begin{quote}
+\textbf{Theorem 1.} Let \emph{Xn} be \emph{n} i.i.d. draws from a
+distribution with density bounded above and below on an
+\emph{m}-dimensional manifold \emph{S}. For a fresh draw \emph{c} from
+the same distribution, 𝔼{[}\emph{gn}{]} = Θ(\emph{n}−1/\emph{m}).
+\end{quote}
+
+\emph{Proof sketch.} ℙ(\emph{gn} \textgreater{} \emph{r}) = ℙ(no sample
+in \emph{B}(\emph{c}, \emph{r})) = (1 − μ(\emph{B}(\emph{c},
+\emph{r})))\emph{n}, and μ(\emph{B}(\emph{c}, \emph{r})) =
+Θ(\emph{r}\emph{m}) by density bounds on an \emph{m}-manifold. So
+ℙ(\emph{gn} \textgreater{} \emph{r}) ≈ exp(−\emph{n}Θ(\emph{rm})), which
+transitions at \emph{r} = Θ(\emph{n}−1/\emph{m}); integrating the tail
+gives the expectation. ∎
+
+The content is the exponent. With \emph{d} = 32, a naive reading
+predicts \emph{n}−1/32 --- essentially flat, novelty never exhausted.
+The true rate at \emph{m} = 3 is \emph{n}−1/3, which is roughly a 10×
+loss of headroom per 1000× of corpus. Measured slopes: −0.472 (\emph{m}
+= 2), −0.309 (\emph{m} = 3), −0.195 (\emph{m} = 5), against −0.5,
+−0.333, −0.2. The \emph{m} = 2 case sits slightly above its asymptote at
+these \emph{n}, as expected for a rate with logarithmic corrections.
+
+\begin{quote}
+\textbf{Corollary 1.1 (oversampling is not a strategy).} Drawing
+\emph{K} candidates and keeping the most novel multiplies the expected
+gap by Θ(\emph{K}1/\emph{m}) at best. To recover the headroom lost by a
+1000× larger corpus, \emph{K} must grow by 1000.
+\end{quote}
+
+Verified at \emph{m} = 3: best-of-8 yields a gain of 2.19 against
+\emph{K}1/3 = 2.00. Selection is a constant-factor fix to an asymptotic
+problem.
+
+\subsubsection{3.3 The slice deficit}\label{33-the-slice-deficit}
+
+\begin{quote}
+\textbf{Theorem 2.} If \emph{m} \textless{} \emph{d}, then
+vol\emph{d}(\emph{Sx}) = 0, and the fraction of \emph{M} within ε of
+\emph{Sx} is Θ(ε\emph{d}−\emph{m}).
+\end{quote}
+
+\emph{Proof sketch.} The ε-neighbourhood of an \emph{m}-dimensional set
+in \emph{d} dimensions is a tube of volume Θ(ε\emph{d}−\emph{m}) ·
+vol\emph{m}(\emph{Sx}) for ε below the reach of \emph{Sx}. Dividing by
+vol\emph{d}(\emph{M}) gives the claim. ∎
+
+Measured at \emph{d} = 8, \emph{m} = 2: fitted exponent 5.06 against a
+predicted 6, with covered fractions falling 0.051 → 0.0001 as ε goes 0.5
+→ 0.12. The fitted exponent sits below prediction because at the larger
+ε the tube is no longer thin relative to the manifold, which flattens
+the low-ε end of the fit; the qualitative claim (coverage collapsing
+polynomially in ε with a large exponent) is unambiguous.
+
+The practical reading is severe. \textbf{A single prompt, sampled
+infinitely often, covers essentially none of what the model could
+write.} Not "less than we would like" --- a fraction that goes to zero
+polynomially as the resolution of interest sharpens.
+
+\subsubsection{3.4 Transversality: which prompt motion
+helps}\label{34-transversality-which-prompt-motion-helps}
+
+Let a prompt schedule induce slices \emph{S}1, \ldots, \emph{SP}. Write
+\emph{V}occ for the span of the corpus\textquotesingle s dominant
+directions.
+
+\begin{quote}
+\textbf{Theorem 3.} dim(⋃\emph{j} \emph{Sj}) = min(\emph{d}, \emph{m} +
+rank\{\emph{cj} − \emph{c}1\}), where \emph{cj} is the centre of
+\emph{Sj}. In particular, displacements lying inside span(\emph{S}1)
+contribute nothing to the union\textquotesingle s dimension.
+\end{quote}
+
+\emph{Proof sketch.} The union is contained in the affine hull of the
+slice frame plus the span of the centre displacements; dimensions add up
+to that cap, and a displacement already inside the
+slice\textquotesingle s own span adds no new direction. ∎
+
+Measured via participation ratio of the union\textquotesingle s
+covariance spectrum: parallel displacements give effective dimension
+1.88 (the slices lie on top of each other, \emph{m} = 2), transverse
+displacements give 11.18.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 1. Measured saturation. (a) Expected min-gap of a fresh draw decays as n\^{}(-1/k), with fitted slopes matching theory for k = 3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}]{figures/fig5_scaling.png}}
+
+\emph{Figure 1. Measured saturation. (a) Expected min-gap of a fresh
+draw decays as n\^{}(-1/k), with fitted slopes matching theory for k =
+3, 8, 32. (b) Best-of-K oversampling buys only K\^{}(1/k).}
+
+This is the theorem that makes the axis scoring of §4 possible. It
+measures the value of conditioning on a new latent variable as
+\textbf{how much of its variation lies outside what the corpus already
+spans} --- a computable quantity, in place of the intuition of how
+different it sounds.
+
+\subsubsection{3.5 Breadth versus depth}\label{35-breadth-versus-depth}
+
+Given budget \emph{B}, split as \emph{P} prompts × \emph{n} samples
+each, with per-prompt switching cost \emph{c} (eliciting a spec,
+embedding it, occasionally refining), so \emph{B} = \emph{P}(\emph{c} +
+\emph{n}).
+
+\begin{quote}
+\textbf{Theorem 4.} With \emph{c} = 0 the coverage-optimal depth is
+\emph{n}* = 1. For \emph{c} \textgreater{} 0 the optimum is interior and
+increases with \emph{c}.
+\end{quote}
+
+Measured: with free switching, depth 1 achieves coverage 0.995 while
+spending the entire budget on one prompt achieves 0.091 --- a 10.9×
+difference. With \emph{c} = 3, \emph{n}* = 10; with \emph{c} = 30,
+\emph{n}* = 30.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 2. Breadth versus depth at fixed budget. With free prompt-switching the optimum is one sample per prompt; an interior optimum appears only once switching is priced.}]{figures/fig8_breadth_depth.png}}
+
+\emph{Figure 2. Breadth versus depth at fixed budget. With free
+prompt-switching the optimum is one sample per prompt; an interior
+optimum appears only once switching is priced.}
+
+The engineering reading is that \textbf{the ratio of prompt-switching
+cost to sampling cost sets your batch size}, and nothing else does. If
+constructing a new spec is as cheap as a generation, generate one item
+per spec.
+
+\subsubsection{3.6 What this means for the
+objective}\label{36-what-this-means-for-the-objective}
+
+Returning to \emph{J}λ: the anchor term is exactly computable from two
+running statistics. Writing μ*n* for the corpus centroid,
+
+\[
+\frac{1}{n}\sum_i \lVert c - x_i\rVert^2 = \lVert c - \mu_n\rVert^2 + \frac{1}{n}\sum_i \lVert x_i - \mu_n\rVert^2
+\]
+
+verified to zero relative error. The second term does not depend on
+\emph{c}, so ranking candidates by mean squared distance to the corpus
+is ranking by distance to the centroid: \emph{O}(\emph{D}) per
+candidate, \emph{O}(1) in \emph{n}. The repulsion term needs a
+nearest-neighbour query, which we bound by subsampling. Neither term is
+the bottleneck. \textbf{The bottleneck is that both are evaluated on a
+candidate set drawn from an \emph{m}-dimensional slice.}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{4. Scoring candidate axes}\label{4-scoring-candidate-axes}
+
+\subsubsection{4.1 The question the axis scoring
+answers}\label{41-the-question-the-axis-scoring-answers}
+
+Theorem 3 says progress requires moving the prompt transversely to what
+the corpus already spans. Theorem 4 says move often. Together they pose
+a concrete question at every step: \textbf{among the latent variables we
+could condition on next, which one moves the slice most transversely,
+per unit of budget?} Since we have no inverse oracle, this is the
+closest available substitute for computing the ideal next item.
+
+Each candidate axis \emph{a} has language-valued levels
+\emph{L}(\emph{a}). We embed the level descriptions and read off four
+quantities.
+
+\subsubsection{4.2 The four factors}\label{42-the-four-factors}
+
+\textbf{Spread} --- mean pairwise distance between
+\emph{a}\textquotesingle s level embeddings. Are this
+axis\textquotesingle s values actually different \emph{from each other}?
+An axis whose levels are near-synonyms cannot separate outputs however
+it is sampled. This catches the most common failure of LLM-proposed
+axes: plausible-sounding dimensions whose levels all mean the same
+thing.
+
+\textbf{Transversality} --- the fraction of \emph{a}\textquotesingle s
+level-to-level variation lying outside the corpus\textquotesingle s
+occupied eigenspace (top eigenvectors of the second-moment matrix
+carrying 80\% of spectral energy). This is Theorem 3 made into a number.
+An axis whose levels differ only along directions the corpus already
+spans adds density, not reach.
+
+\textbf{Independence} --- 1 − max principal-angle cosine between
+\emph{a}\textquotesingle s variation subspace and those of the axes
+\textbf{already in use}. An axis that restates an active axis is
+redundant however transverse it looks alone. Independence is measured
+against the active set and never against rival candidates: two equally
+good candidates would otherwise drive each other\textquotesingle s score
+to zero and rank below a useless axis with no near-twin. Redundancy
+\emph{among} candidates is a selection problem, handled by greedy
+selection that re-scores after every pick, so a duplicate is penalized
+at the point where the redundancy comes into existence.
+
+\textbf{Headroom} --- a normalized entropy deficit of how unevenly the
+corpus has sampled \emph{a}\textquotesingle s levels, plus the fraction
+of levels never used. This is the only time-varying factor; it is what
+makes the ranking change as generation proceeds rather than being a
+fixed property of the axis set. An axis can be excellent and already
+spent.
+
+The \textbf{promise} of an axis is the product:
+
+\[
+\mathrm{promise}(a) = \mathrm{spread}(a)\cdot\mathrm{transversality}(a)\cdot\mathrm{independence}(a)\cdot\mathrm{headroom}(a)
+\]
+
+Multiplicative, not additive, and deliberately so: an axis needs all
+four, and any one at zero should zero the score rather than be averaged
+away by the others. A high-spread axis with zero transversality is a
+distinction without a difference; a perfect axis with zero headroom is
+already spent.
+
+\subsubsection{4.3 Choosing values, and
+recursing}\label{43-choosing-values-and-recursing}
+
+Once an axis is chosen we do not sample its levels uniformly. We take
+the \textbf{max--min subset} of its level embeddings by greedy
+farthest-point search, seeded deterministically at the level furthest
+from the level centroid --- the packing problem again, one level down.
+
+When the best available promise falls below a floor, the axis scoring
+emits \texttt{decision:\ "refine"} instead of \texttt{"condition"}. This
+is the \textbf{exhaustion signal}, and it is the honest one: it says the
+current lattice has nothing transverse left to offer, and no amount of
+further sampling will change that. The system then asks the generator to
+split the exhausted level into finer sub-levels (§5.2), producing a
+child axis scored by this same axis scoring. On the ground-truth test
+with only in-span axes available, the axis scoring correctly returns
+\texttt{refine}.
+
+Cost is \emph{O}(\textbar{}\emph{A}\textbar{} · \emph{D}²) per decision
+and does not grow with \emph{n}.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{5. Method}\label{5-method}
+
+We call the method \textbf{Recursive Axis Conditioning} (RAC): the
+generator is asked for the language-valued axes along which its own
+outputs can differ, those axes are ranked and their most-different
+levels chosen, and an axis that runs out of transverse variation is
+split into finer conditional sub-axes. The recursion is what the name
+refers to, and it is the part that changes the asymptote rather than the
+constant.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 3. Recursive Axis Conditioning. Steps 1--7 are shared by both objectives. The objective enters at two points only: how a candidate axis is scored (step 2) and how one of the K candidates is chosen (step 5). Everything else --- elicitation, the contracts, the reject-only gate, the attractor ledger, the refinement trigger --- is the same machinery. Coverage adds one step max-min has no use for, since only coverage has a reference distribution to aim at.}]{figures/fig15_rac_diagram.png}}
+
+\emph{Figure 3. Recursive Axis Conditioning. Steps 1--7 are shared by
+both objectives. The objective enters at two points only: how a
+candidate axis is scored (step 2) and how one of the K candidates is
+chosen (step 5). Everything else --- elicitation, the contracts, the
+reject-only gate, the attractor ledger, the refinement trigger --- is
+the same machinery. Coverage adds one step max-min has no use for, since
+only coverage has a reference distribution to aim at.}
+
+Reading the diagram: the seven boxes down the centre run once per
+accepted item, and each carries its own colour so the text below can
+name it.
+
+The \textbf{violet} \emph{Elicit axes} step happens before any item is
+generated. The generator is asked to name the dimensions along which its
+own outputs in this domain could differ, each with a small set of
+discrete, language-valued levels. For instrumental music it returned
+\emph{formal trajectory}, \emph{timbral centre of gravity}, \emph{pulse
+relationship} and four others; for poetry, \emph{temporal stance} and
+\emph{the register the poem refuses}. These names are the entire
+steering vocabulary, because they are the only thing that can be written
+into a prompt.
+
+The \textbf{blue} \emph{Score axes, pick levels} step is the first of
+the two places the objective enters, and the arrows leaving it left and
+right are the fork. It answers which of the available axes to condition
+on next and which of that axis\textquotesingle s levels to use. The
+\textbf{teal} \emph{Spec → K candidates} step turns the chosen levels
+into one specification, states them to the generator as contracts the
+text must satisfy rather than as suggestions, attaches the current
+avoid-list, and draws K completions. The \textbf{amber} \emph{Judge
+gate} scores each candidate in a separate call and rejects those below
+the bar. The gate can only reject: a candidate that passes has not been
+endorsed, and nothing downstream treats passing as evidence of quality.
+
+The \textbf{crimson} \emph{Select among the survivors} step is the
+second place the objective enters, and the second fork. The
+\textbf{grey} \emph{Append, update bounded state} step commits the
+winner and rolls the running statistics forward; every piece of state it
+touches is fixed-size, which is what makes the ten-thousandth item cost
+what the hundredth cost. The \textbf{magenta} \emph{Mine attractors,
+refine axes} step closes the loop. Every twenty-five accepts it shows
+the model a sample of the corpus and asks what those items have in
+common, appending the answer to the ledger that becomes the next
+prompts\textquotesingle{} avoid-list. When the scoring step reports that
+no available axis has anything transverse left to offer, this step
+splits the exhausted axis into finer sub-axes that apply only inside the
+region that exhausted it, and the arrow running back up to the blue step
+is that recursion.
+
+The \textbf{orange} boxes on the left and the \textbf{green} boxes on
+the right are the only differences between the two objectives. At the
+scoring fork, max-min multiplies four measurable factors and chooses
+each axis\textquotesingle s most-different levels by farthest-point
+search in level space, while coverage replaces the product with the
+expected marginal ε-ball gain of conditioning on that axis, a single
+quantity that already contains all four and whose headroom term is
+weighted by measure rather than by counts. At the selection fork,
+max-min keeps one of the K by a weighted utility and carries a running
+centroid and second-moment matrix, while coverage keeps the candidate
+that newly covers the most reference points and carries a reference pool
+with an incremental covered mask. Coverage keeps every candidate that
+clears the gate, since covered measure only grows with items and a
+discard cannot be undone.
+
+The green box with no orange counterpart is \emph{Aim by retrieval}.
+Coverage is scored against a reference distribution, so it can pick a
+specific under-covered region to attack, sampling one in proportion to
+how sparse it is. Having no inverse oracle, it cannot turn that target
+point into text; instead it retrieves the nearest text it already owns
+and hands that to the generator as the exemplar to move away from or
+toward. Max-min has no such box because it has no reference distribution
+to aim at, which is the same absence that lets its steered image corpora
+settle into regions real artworks rarely occupy.
+
+The grey band along the bottom is the relationship between the two
+columns, and it is not a single answer. Run max-min to exhaustion and
+coverage comes free, because a maximal ε-packing is already an
+ε-covering. Stop at a finite budget and the two come apart far enough
+that each objective\textquotesingle s characteristic tool damages the
+other\textquotesingle s score.
+
+\subsubsection{5.1 The stack}\label{51-the-stack}
+
+Per accepted item, a bounded number of model calls regardless of corpus
+size:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Spec choice.} Sample a pool of specs from the current axis
+  lattice; embed their descriptions; keep the one with the largest
+  residual outside the corpus\textquotesingle s occupied eigenspace.
+  Orthogonalization at the level of \emph{conditions}, not outputs.
+\item
+  \textbf{Generation.} \emph{K} parallel completions conditioned on the
+  spec, with the spec\textquotesingle s levels stated as
+  \textbf{contracts} (behaviors the text must exhibit, not suggestions),
+  plus an explicit avoid-list from the ledger.
+\item
+  \textbf{Judging.} One separate call scores craft (or, for exam items,
+  validity), and checks each required behavior. Generation never grades
+  itself.
+\item
+  \textbf{Selection.} Utility = 0.4·quality + 0.35·orthogonality +
+  0.25·capped gap, behind a typicality gate: a hard rejection of
+  candidates lying beyond \emph{z} running radii from the corpus
+  centroid. The gate is negative supervision only (it may reject, never
+  endorse, and passing it is not evidence of quality), and the gap term
+  is \textbf{capped} at 2 running scales, so no candidate earns
+  unbounded credit for sitting far from everything.
+\item
+  \textbf{Mining.} Every 25 accepts, show the model 50 sampled items and
+  ask what they have in common. Append the answer to a JSONL ledger; a
+  bounded slice becomes the next prompts\textquotesingle{} avoid-list.
+\item
+  \textbf{Refinement.} On a saturation signal, ask the generator to
+  split the dominant saturated cell.
+\end{enumerate}
+
+Every state the policy reads is bounded: running centroid and
+second-moment, EMA scales, a fixed ledger slice, a recent window plus a
+bounded random subsample of older items. The marginal cost of item
+10,000 equals that of item 100.
+
+\subsubsection{5.2 Eliciting and refining latent
+behaviors}\label{52-eliciting-and-refining-latent-behaviors}
+
+We ask the generator for axes that are near-orthogonal, structural
+rather than topical, and whose levels are all usable --- explicitly
+steering away from subject matter, length, and rhyme toward craft
+decisions. On the live run this produced axes including \emph{temporal
+stance}, \emph{relationship to its own claim}, \emph{syntactic weather},
+and \emph{the register the poem refuses}.
+
+Refinement shows the model the saturated cell and the mined attractors
+and asks it either to split a level into finer sub-levels or to mint a
+new axis that applies only inside that cell. Refinement axes are
+\textbf{conditional} (they apply only when their parent level was
+chosen), so the lattice is a tree, and refining a saturated region does
+not inflate cost elsewhere.
+
+\subsubsection{5.3 Why "orthogonalize", not
+"randomize"}\label{53-why-orthogonalize-not-randomize}
+
+Forcing randomness (raising temperature, injecting random seed words)
+buys variance in the surface while leaving the mode structure intact,
+and degrades quality monotonically because temperature cannot
+distinguish \emph{surprising} from \emph{wrong}. The measurements bear
+this out: raising the sampling temperature to 1.6 moves distinct-2 from
+0.3341 to 0.3342 and leaves 71.0\% of the corpus byte-identical
+duplicates, against 73.6\% at the default setting.
+
+Forcing approximate orthogonality asks a different question (which
+direction is this corpus not yet spending energy on), which has a
+computable answer, improves rather than degrades quality when paired
+with a quality term, and stays informative as \emph{n} grows. "Be
+random" gets no harder to satisfy and no more useful.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{6. Experiments: 43,000 generations, three domains, seven
+methods}\label{6-experiments-43000-generations-three-domains-seven-methods}
+
+Generator: \texttt{openai/gpt-5.6-luna} via OpenRouter. Text embeddings:
+\texttt{nomic-embed-text} (768-d) served locally by Ollama, so embedding
+is free and the loop is never rate-limited by its own measuring
+instrument. Images: \texttt{gpt-image-1-mini}. Image embeddings: CLIP
+ViT-B/32. Audio: Lyria 3 Pro instrumentals. Audio embeddings: CLAP and
+MERT. Every corpus is append-only JSONL with embeddings checkpointed
+alongside, resumable after a kill.
+
+\subsubsection{6.1 Domains}\label{61-domains}
+
+\textbf{DALL·E instructions for post-modern artworks.} Diversity
+\emph{is} the product: a clustered instruction set renders to a
+clustered image set. Chosen also because it lets us measure the same
+corpus in three spaces --- words, text-embedding, and the rendered
+picture.
+
+\textbf{Psychometric test questions.} Multiple-choice items assessing
+general reasoning. Two items with the same construct and the same
+surface are redundant at best and, in an operational bank, a validity
+problem.
+
+\textbf{Instrumental-music prompts.} The longest chain in the paper:
+latent axes → a text prompt → a two-minute instrumental → an audio
+embedding. We render with Lyria 3 Pro (\texttt{lyria-3-pro-preview}),
+which returns roughly two minutes of audio per call in about 20 seconds
+and emits its own section plan
+(\texttt{{[}{[}A0{]}{]}\ {[}{[}B1{]}{]}\ {[}{[}C2{]}{]}\ {[}{[}D3{]}{]}}),
+a model-reported description of the form it chose that gives a discrete
+structural signal without waveform analysis. The generator proposed
+seven compositional axes for this domain --- \emph{formal trajectory},
+\emph{inter-layer rhythmic relationship}, \emph{harmonic motion},
+\emph{timbral centre of gravity}, \emph{density contour}, \emph{pulse
+relationship}, \emph{opening and closing frame} --- craft decisions
+rather than genre labels, each expressible as something audible.
+
+\textbf{Poetry.} A smaller pilot corpus, used to elicit and inspect the
+axis machinery on a domain where craft rather than content carries the
+variation, and to illustrate what the attractor mining recovers (§6.7).
+
+\textbf{Prompt length.} A text-to-music model honours concrete,
+performable direction (named instruments, room character, register,
+articulation, rhythmic feel, how it ends), and ignores paragraphs of
+abstract compositional theory. Long prompts therefore inflate every
+text-side diversity metric while changing the audio far less, which is
+the proxy gap §6.6 measures. Prompts are held to 2--4 sentences
+(\textasciitilde300 characters target, 423--449 mean in the corpora
+below) of specifically audible, instrumental-only direction, and the
+audio metrics decide.
+
+\subsubsection{6.2 Methods compared}\label{62-methods-compared}
+
+Five of these are real published approaches, implemented faithfully
+rather than as strawmen, each getting the same generator, the same
+embedder, and the same budget accounting as ours.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+arm & what it is \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{naive} & plain repeated prompting --- the honest floor \\
+\texttt{high\_temp} & temperature 1.6 --- the trivial diversity lever \\
+\texttt{self\_instruct} & \textbf{Self-Instruct / Alpaca}: few-shot
+exemplars sampled from the pool, plus ROUGE-L ≤ 0.7 rejection against
+it \\
+\texttt{evol\_instruct} & \textbf{Evol-Instruct (WizardLM)}: sample an
+existing item, apply a random evolution operator (deepen, concretize,
+add constraint, harder reasoning, mutate form) \\
+\texttt{persona} & \textbf{Persona-Hub / AttrPrompt}: a flat catalogue
+of personas × attributes, sampled uniformly \\
+\texttt{rac} & \textbf{Recursive Axis Conditioning} (ours): recursively
+elicited axes, spec-level orthogonalization, capped repulsion behind a
+typicality gate, append-only attractor ledger \\
+\texttt{rac+vision} & RAC, plus steering on the \emph{rendered image}
+(§6.6) \\
+\end{longtable}
+
+\texttt{persona} is the load-bearing comparison. It has language-valued
+latent conditioning (the same basic idea as ours), but no orthogonality
+selection, no ledger, and no recursive refinement. The gap between
+\texttt{persona} and \texttt{rac} isolates exactly what those three
+components buy.
+
+One faithfulness caveat we chose deliberately:
+Self-Instruct\textquotesingle s ROUGE filter compares a candidate
+against the entire pool, which is O(\emph{n}) longest-common-subsequence
+computations per candidate and comes to dominate the loop at \emph{n} in
+the thousands. We compare against a bounded random sample of 120 pool
+members. This makes our reimplementation \emph{weaker} than the original
+at large \emph{n}, and that is itself the point: the
+original\textquotesingle s redundancy check does not have an infinite
+horizon, because its cost grows linearly in the corpus it is protecting.
+
+\subsubsection{6.3 Duplication under repeated
+sampling}\label{63-duplication-under-repeated-sampling}
+
+Two 10,000-item corpora, one call each, no selection:
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+domain & \emph{n} & unique texts & exact-duplicate rate & most-repeated
+item \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DALL·E instructions & 10,000 & 10,000 & 0.000 & 1× \\
+psychometric items & 10,000 & 2,645 & \textbf{0.736} &
+\textbf{2,726×} \\
+\end{longtable}
+
+In the psychometric domain, 73.6\% of a ten-thousand-item corpus is
+exact duplicate text, and a single question accounts for 2,726 of them.
+The four most frequent items are these:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+copies & item \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+2,726 & What number comes next in the sequence: 2, 6, 12, 20, 30, ? (A.
+40 B. 42 C. 44 D. 46) \\
+655 & What number \emph{should} come next in the sequence: 2, 6, 12, 20,
+30, ? (A. 40 B. 42 C. 44 D. 46) \\
+467 & What number comes next in the sequence: 2, 6, 12, 20, 30, ? (A. 36
+B. 40 C. 42 D. 44) \\
+434 & What number comes next in the sequence: 3, 8, 15, 24, 35, ? (A. 46
+B. 48 C. 50 D. 52) \\
+\end{longtable}
+
+Deduplication does not rescue this corpus. Removing the 2,726 identical
+copies leaves the three paraphrases behind, and a paraphrase of a live
+item is an enemy item on any bank a psychometrician would sign off on.
+No embedding, no threshold, and no interpretation is required to see
+this; it is byte-identical repetition, and it is what a strong
+instruction-tuned model does when asked the same reasonable question ten
+thousand times.
+
+Temperature barely helps: at \emph{T} = 1.6 the duplicate rate is still
+0.710. Conditioning nearly eliminates it: persona conditioning drops it
+to 0.009, and axis conditioning to 0.000. Between those two numbers ---
+randomness does not buy diversity, conditioning does.
+
+It also shows the failure is domain-shaped and invisible from one
+vantage point. The identical pipeline, prompt style, and model produce
+zero duplicates on DALL·E instructions. A practitioner who validated
+their pipeline on the first domain and deployed it on the second would
+ship a bank that is three-quarters one question.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal measures (top row), and latent measures (bottom row) do not agree about what is happening.}]{figures/fig10_real_curves.png}}
+
+\emph{Figure 4. Real gpt-5.6-luna corpora, n = 5 to 10,000. Literal
+measures (top row), and latent measures (bottom row) do not agree about
+what is happening.}
+
+The same failure is visible in a corpus with no duplicates at all. The
+poetry pilot has an exact-duplicate rate of 0.000 under naive prompting
+and a distinct-2 of 0.610, so every literal counter reports a healthy
+corpus. Here are the opening lines of eight poems sampled at random from
+those sixty:
+
+\begin{itemize}
+\tightlist
+\item
+  \emph{At dawn, the river gathered up the stars}
+\item
+  \emph{At dusk, the windows gather fire}
+\item
+  \emph{At dusk, the rooftops gather amber light}
+\item
+  \emph{At dusk, the windows gather amber light}
+\item
+  \emph{At dawn, the windows gather up the rain}
+\item
+  \emph{At dusk, the river gathers every color}
+\item
+  \emph{At dusk, the river gathers up the day}
+\item
+  \emph{At dusk, the river gathers up the sky}
+\end{itemize}
+
+Eight of eight are the same sentence with two slots filled. The closest
+pair in that corpus sits at cosine similarity 0.946 and shares its first
+line verbatim (\emph{"At dusk, the windows gather gold,"}) before
+diverging into the same sparrow stitching the same thread across the
+same evening. Sixty samples from one prompt behave like two and a half
+distinct items by Vendi Score, and the duplicate counter sees none of
+it.
+
+Eight openings from the sixty RAC produced under the same generator and
+budget:
+
+\begin{itemize}
+\tightlist
+\item
+  \emph{Had you arrived at the registry after midnight, when the lamps
+  were still accountable}
+\item
+  \emph{We have tried to piece that evening together from what
+  remained.}
+\item
+  \emph{I am the conjurer in the green coat, stepping into the light.}
+\item
+  \emph{I have reconstructed the trench, Mara, from the surviving datum
+  points.}
+\item
+  \emph{I wore the cobalt pressure suit, and the regolith took my
+  weight}
+\item
+  \emph{We went back through that winter in our minds.}
+\item
+  \emph{"Attend, O citizens, beneath the unappeased sky:}
+\item
+  \emph{At the appointed hour, you will rise beneath the bells}
+\end{itemize}
+
+Counterfactual conditional, collective reconstruction, first-person
+performance, a report addressed to a named absent person, plain
+retrospect, public proclamation, prophecy. The closest pair RAC produces
+sits at 0.809 and shares a subject rather than a template: one poem is a
+nested incantation about a coal inside a chamber inside a breast, the
+other a kitchen-table conjuring trick performed for a child in a red
+coat.
+
+The exam domain shows the same contrast at the level of what an item
+asks. A representative item from each of four methods, same generator,
+same budget:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{naive} --- \emph{What number comes next in the sequence: 2, 6,
+  12, 20, 30, ? (A. 40 B. 42 C. 44 D. 46)}, generated 2,726 times.
+\item
+  \textbf{Self-Instruct} --- \emph{What number should come next in the
+  sequence? 3, 8, 15, 24, \_\_\_ (A. 32 B. 35 C. 36 D. 39)}. The ROUGE
+  filter blocks the byte-identical copy and admits the same item on new
+  numbers.
+\item
+  \textbf{persona conditioning} --- \emph{Of 120 rare books examined, 70
+  contain a particular watermark, 50 have documented provenance, and 30
+  have both. How many have neither?} A costume (rare-book forgery,
+  flood-risk pricing, restaurant scheduling) is drawn over a recurring
+  set-arithmetic skeleton.
+\item
+  \textbf{RAC} --- \emph{An incident report recorded the following
+  events. The pump had to be primed before the valve could be opened.
+  The technician was using a blue clipboard, and rain was visible
+  outside. The heater could be switched on only after the valve was
+  opened\ldots{} printing the label was independent of the
+  pump-and-heater process. Which sequence of events is consistent with
+  the report?}
+\end{itemize}
+
+Four more RAC items, with the axis levels that produced them:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+item & conditioned on \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+An imagined archive with a ventilation fan and three rooms; air reaches
+the East room only once it is already reaching the South room. Which
+rooms are ventilated? & model causal dependencies · counterfactual
+scenario · overgeneralized-rule distractors \\
+A sorting machine moves the leftmost crate to the right end, then adds 2
+to every number, wrapping 9 back to 1. Given {[}1, 4, 8{]}, {[}6, 1,
+3{]}, {[}3, 5, 8{]}, what comes next? & apply an explicit rule ·
+unfolding narrative · surface-feature-match distractors \\
+Identical seedlings wilt unevenly; the team suspects a newly painted
+wall, then varies moisture, airflow and fungus exposure. Pot-label
+colours are tabulated and have no effect. & evaluate competing
+explanations · reversed-relation distractors \\
+Rina claims no layout satisfies the rules; Omar replies that one valid
+layout would disprove her. Which layout is the counterexample? &
+evaluate competing explanations · dialogue with conflicting claims \\
+\end{longtable}
+
+The variation is in the cognitive operation being assessed and in how
+the wrong answers are built, rather than in the surface story. That is
+the axis structure showing through: two items wearing different costumes
+over one rule are still enemy items, and two items testing different
+operations are not, however similar they read.
+
+One cost is visible in the same examples. Several RAC items carry
+deliberate irrelevant detail, which the \emph{distractor logic} axis
+asks for and which real psychometric items use, and it makes them long.
+The RAC exam corpus reached 1,999 items on the budget that returned
+10,000 naive ones.
+
+The measurements follow the reading. Against the naive corpus, RAC holds
+2.7× the median nearest-neighbour distance (0.239 against 0.089), and
+cuts 4-gram self-repetition by a factor of 37 (0.0023 against 0.0855),
+at a distinct-2 of 0.774 against 0.610. Mean-centered Vendi moves very
+little in comparison, 38.81 against 37.00, and that is the honest
+reading of it: a spectral summary of sixty points in 768 dimensions is
+close to insensitive to the difference between sixty poems that begin
+the same way and sixty that do not. The nearest-neighbour statistic is
+what registers it, and the page registers it immediately.
+
+\subsubsection{6.4 Literal and latent diversity move in opposite
+directions}\label{64-literal-and-latent-diversity-move-in-opposite-directions}
+
+Measuring the DALL·E naive corpus as it grows from \emph{n} = 5 to
+\emph{n} = 10,000, in both spaces:
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+\emph{n} & distinct-2 & 4-gram self-repetition & \emph{n}-gram Vendi &
+centered embedding Vendi \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+5 & 0.870 & 0.031 & 4.9 & 3.79 \\
+40 & 0.492 & 0.211 & 30.2 & 24.13 \\
+300 & 0.252 & 0.384 & 142.5 & 55.70 \\
+1,000 & 0.145 & 0.520 & 246.6 & 63.05 \\
+1,750 & 0.112 & 0.577 & 283.3 & 65.30 \\
+\end{longtable}
+
+Literal diversity collapses monotonically (by \emph{n} = 1,750 more than
+half of each new instruction\textquotesingle s 4-grams have already
+appeared), while latent diversity \emph{rises} and then saturates. They
+are measurements of two different quantities that a single word,
+"diversity", has been covering for.
+
+\textbf{Centering.} The uncentered embedding Vendi on this corpus reads
+1.63 → 2.33, which would suggest ten thousand instructions behave like
+two distinct items. That number is mostly an artifact of the kernel.
+Same-domain embeddings sit in a narrow cone (mean pairwise cosine
+similarity is 0.883 here and 0.788 on the psychometric corpus), so the
+Gram spectrum is dominated by the shared mean direction and the score
+compresses toward 1. After removing the mean direction the same corpus
+reads 3.79 → 65.30, which is the honest curve and the one in the table.
+We report both, and we suggest any embedding-based diversity result
+publish the corpus\textquotesingle s pairwise-similarity distribution
+alongside it, because the number is meaningless without it. Part II
+measured a mean pairwise cosine of 0.444 on its own pool with the same
+embedder --- the cone is corpus-dependent, not a fixed property of the
+embedder, which is exactly why it has to be reported rather than
+assumed.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 5. The decoupling, normalised to each series\textquotesingle{} value at n = 5: literal diversity falls while latent diversity rises.}]{figures/fig11_literal_vs_latent.png}}
+
+\emph{Figure 5. The decoupling, normalised to each
+series\textquotesingle{} value at n = 5: literal diversity falls while
+latent diversity rises.}
+
+\subsubsection{\texorpdfstring{6.5 Competitive comparison at matched
+\emph{n}}{6.5 Competitive comparison at matched n}}\label{65-competitive-comparison-at-matched-n}
+
+All seven arms, real corpora, DALL·E domain, every arm evaluated on the
+same number of accepted items (\emph{n} = 200):
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+arm & distinct-2 ↑ & self-repetition ↓ & \emph{n}-gram Vendi ↑ &
+centered Vendi ↑ & median NN distance ↑ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+naive & 0.293 & 0.345 & 107.6 & 50.45 & 0.045 \\
+high temperature & 0.291 & 0.339 & 109.0 & 49.44 & 0.045 \\
+Evol-Instruct & 0.386 & 0.353 & 108.1 & 50.10 & \textbf{0.021} \\
+Self-Instruct & 0.545 & 0.131 & 140.4 & 67.45 & 0.121 \\
+persona conditioning & 0.582 & 0.130 & 124.7 & 56.50 & 0.080 \\
+\textbf{RAC} & 0.660 & 0.068 & 167.0 & 77.67 & 0.171 \\
+\textbf{RAC + vision steering} & \textbf{0.699} & \textbf{0.040} &
+\textbf{170.9} & \textbf{91.97} & \textbf{0.192} \\
+\end{longtable}
+
+RAC wins every column, and adding vision steering improves on the
+text-only variant by a further 18\% in centered Vendi. Three of the
+baselines fail in different ways.
+
+High temperature buys nothing here: distinct-2 of 0.291 against
+naive\textquotesingle s 0.293, and an identical median nearest-neighbour
+distance of 0.045. Turning the temperature up moved the third decimal
+place, and moved it downward.
+
+Evol-Instruct comes out worse than naive at the one thing a diversity
+method exists for. Its median nearest-neighbour distance is 0.021,
+against naive\textquotesingle s 0.045 --- it produces items
+\emph{closer} to the existing corpus than independent sampling does. The
+mechanism is working as designed: mutating an existing item produces a
+neighbour of that item. Evol-Instruct raises \emph{distinct-2} (0.386 vs
+0.293), because the mutations reword things, so a purely literal
+evaluation would score it as an improvement. Measuring both levels is
+what catches it.
+
+Self-Instruct\textquotesingle s guard is literal, and it defends the
+literal level only. It achieves the best self-repetition of any baseline
+(0.131) (its ROUGE filter is doing real work), while its centered Vendi
+(67.45) trails RAC by 10 points and RAC with vision steering by 24. A
+ROUGE-L threshold cannot see semantic redundancy, and semantic
+redundancy is what remains once the lexical kind is filtered.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 6. Competitive comparison on real corpora at matched n, both domains, across four metrics.}]{figures/fig14_arms.png}}
+
+\emph{Figure 6. Competitive comparison on real corpora at matched n,
+both domains, across four metrics.}
+
+The psychometric domain repeats the ordering on all six arms at matched
+\emph{n} = 1,058:
+
+\begin{longtable}[]{@{}lllllll@{}}
+\toprule\noalign{}
+arm & exact-dup ↓ & distinct-2 ↑ & self-repetition ↓ & \emph{n}-gram
+Vendi ↑ & centered Vendi ↑ & median NN distance ↑ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+naive & 0.668 & 0.114 & 0.855 & 11.8 & 7.1 & 0.000 \\
+high temperature & 0.660 & 0.119 & 0.845 & 12.2 & 7.0 & 0.000 \\
+Self-Instruct & 0.026 & 0.193 & 0.485 & 288.8 & 59.3 & 0.033 \\
+Evol-Instruct & 0.025 & 0.224 & 0.470 & 307.4 & 75.0 & 0.047 \\
+persona conditioning & 0.004 & 0.377 & 0.184 & 545.6 & 99.7 & 0.130 \\
+\textbf{RAC} & \textbf{0.000} & \textbf{0.429} & \textbf{0.053} &
+\textbf{644.3} & \textbf{124.8} & \textbf{0.210} \\
+\end{longtable}
+
+RAC wins every column here as well. The two undiversified arms score an
+order of magnitude worse on the latent measures because their duplicate
+rates of 0.66--0.67 mean the embedding metric is largely measuring
+repetition; deduplicating first raises them to 19.8 and 20.7, still far
+behind every conditioned method, and their median nearest-neighbour
+distance is exactly zero --- the median item has a perfect twin.
+
+\subsubsection{6.6 The proxy problem: text diversity is nearly blind to
+image
+diversity}\label{66-the-proxy-problem-text-diversity-is-nearly-blind-to-image-diversity}
+
+We rendered the first 199 DALL·E instructions from the naive corpus to
+actual images and embedded them with CLIP. The result is the most
+consequential measurement in this section:
+
+\begin{quote}
+Pairwise cosine similarity in text-embedding space correlates with
+pairwise cosine similarity in image-embedding space at \textbf{Pearson
+\emph{r} = 0.170}.
+\end{quote}
+
+Knowing that two instructions are semantically far apart tells you very
+nearly nothing about whether the two pictures look different. Every
+text-side diversity method in the table above (ours included) is
+optimizing a proxy that explains roughly 2\% of the variance in the
+thing the user actually receives.
+
+The qualitative version is more damning than the correlation.
+Independently generated instructions, from a corpus with a 0.000
+exact-duplicate rate and healthy lexical diversity, render to
+near-interchangeable pictures (Figure 8, top): the same magenta-and-cyan
+palette, a classical marble bust, neon signage, halftone collage, a
+receding grid. A vision judge shown samples of the set rates its
+distinctness 6--7 out of 10 and names the attractors precisely ---
+\emph{"muted beige, cream, brown, ochre and black foundations accented
+by saturated cyan/teal, turquoise, pink"}, \emph{"appropriation of
+canonical or religious imagery, especially Mona Lisa-like female
+portraits"}, \emph{"frontal, museum-like presentation with centered,
+symmetrical compositions"}.
+
+This is a second mode collapse, downstream of ours, contributed by the
+image model and by the fact that much of what varies in the text
+("post-modern", "appropriated source") lands in the same visual place.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 7. Text versus vision diversity on 97 rendered artworks. (c) Pairwise similarities in the two spaces correlate at only r = 0.170.}]{figures/fig12_vision.png}}
+
+\emph{Figure 7. Text versus vision diversity on 97 rendered artworks.
+(c) Pairwise similarities in the two spaces correlate at only r =
+0.170.}
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={Figure 8. Sixteen renders per policy, same generator, same budget, same image model. Rows 1--2, naive prompting: a corpus with a 0.000 exact-duplicate rate and healthy lexical diversity that still returns one visual mode, with magenta and cyan collage, barcodes and QR codes, Renaissance portraits and classical busts, Michelangelo hands, warning triangles and neon OPEN signs recurring across nearly every panel. Rows 3--4, max-min steering with literal and latent repulsion on both the text and vision sides: medium, palette, register and composition all move, across a medieval triptych, a botanical cabinet, a photographed sculpture installation, a torn-paper abstract and a civic notice. Tiling survives the steering: 38\% of the steered renders still score as literal tilings and 42\% still share a palette with a nearest neighbour, which §6.6 and §6.11 quantify.}]{figures/fig13_contact_sheet.png}}
+
+\emph{Figure 8. Sixteen renders per policy, same generator, same budget,
+same image model. Rows 1--2, naive prompting: a corpus with a 0.000
+exact-duplicate rate and healthy lexical diversity that still returns
+one visual mode, with magenta and cyan collage, barcodes and QR codes,
+Renaissance portraits and classical busts, Michelangelo hands, warning
+triangles and neon OPEN signs recurring across nearly every panel. Rows
+3--4, max-min steering with literal and latent repulsion on both the
+text and vision sides: medium, palette, register and composition all
+move, across a medieval triptych, a botanical cabinet, a photographed
+sculpture installation, a torn-paper abstract and a civic notice. Tiling
+survives the steering: 38\% of the steered renders still score as
+literal tilings and 42\% still share a palette with a nearest neighbour,
+which §6.6 and §6.11 quantify.}
+
+A reader looking at rows 3 and 4 of Figure 8 will notice that they still
+favour grids, panels and tiled compositions more than a human art
+director would, and the structural audit agrees: 38\% of those renders
+score above 0.5 on the autocorrelation tiling measure. That is what the
+objective asks for and no more. A max-min corpus is scored on how far
+apart its items are, and nothing in the score says the corpus should
+look like any particular distribution of artworks --- there is no
+likelihood term, no reference set, no penalty for sitting in a region of
+image space that real post-modern art rarely occupies. If the
+generator\textquotesingle s prior happens to place a whole family of
+mutually distant images inside the tiled-grid region, spreading points
+is satisfied by staying there and varying what fills the cells. Part
+II\textquotesingle s objective is the one that has a reference
+distribution in it, and a corpus scored on coverage of human-written
+material inherits a pull toward where that material actually sits.
+Buying both at once means carrying both terms, which is a different
+optimization from the one measured here.
+
+The vision-steered arm closes the loop where the product actually lives.
+It renders a bounded sample of accepted instructions, embeds them with
+CLIP, and feeds two things back into the text-side loop: a least-squares
+map from the crowded \emph{image} directions into instruction-embedding
+space, so the text-side orthogonality term can push away from visual
+redundancy it cannot itself perceive; and mined \emph{visual} attractors
+from the vision judge, appended to the same append-only ledger as the
+textual ones and repelled against in subsequent prompts. It is the
+paper\textquotesingle s mechanism applied one level down: the ledger
+already repels against what the model keeps saying, and now also against
+what it keeps showing. It is the best arm in the table.
+
+\subsubsection{6.7 Attractor mining works, and is
+legible}\label{67-attractor-mining-works-and-is-legible}
+
+The mining step produces findings specific enough to act on. From the
+poetry pilot, round 1 (\emph{n} = 25): \emph{"self-correction and
+immediate retraction: speakers repeatedly interrupt their own claims"};
+\emph{"ceremonial or institutional address: the voice of a bell-ringer,
+town crier, registrar, witness"}; \emph{"threshold imagery and delayed
+passage: doors, gates, windows, bridges, shores"}. By round 2 (\emph{n}
+= 50) it tracks the corpus\textquotesingle s \emph{drift} rather than
+restating round 1, noting that technical vocabulary is now being placed
+inside mythic frames and that recursive epistemic backtracking has
+become structural.
+
+These findings are nameable and therefore repellable, which is what
+makes them usable as prompt constraints; a finding of "similar tone"
+would not be. And several of them are artifacts of \emph{our own axis
+elicitation} --- asking for craft-level axes like "relationship to its
+own claim" reliably produces self-correcting speakers. \textbf{The
+system\textquotesingle s own conditioning becomes the next attractor.}
+The ledger catches the system\textquotesingle s own habits alongside the
+model\textquotesingle s.
+
+\subsubsection{6.8 The exam bank: a judged enemy-item
+radius}\label{68-the-exam-bank-a-judged-enemy-item-radius}
+
+Exam items invert the semantics of the other two domains. Two
+operational items closer than δ are \emph{enemy items} (seeing one gives
+away the other) a test-security failure at any bank size, so the floor
+is a hard constraint rather than a term in a weighted sum, and the
+min-distance check must be exact against the full bank rather than
+subsampled. Item templates expose few manipulable slots, so each mode is
+a low-dimensional disk and the δ-packing number of a bank is finite and
+small: a bank has a capacity, and the operative question is what
+fraction of a nominal bank is actually usable. That turns on δ, so we
+measured it. 236 item pairs drawn from a human-written bank (MMLU)
+across the full range of embedding distance were put to a blind
+psychometric adjudication --- does seeing one item give a material
+advantage on the other, through a shared fact, a re-skin, or matched
+distractor misconceptions --- with the judge shown neither the distance
+nor the provenance. A logistic fit of enemy verdicts on distance crosses
+50\% at \textbf{δ = 0.0354}, which is the operative radius for this
+embedder and item type.
+
+Applying that radius to real banks --- six generation policies at 2,500
+items each, and the human bank under identical treatment:
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+bank & exact-dup & items with an enemy & usable after the floor \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+MMLU (human-written) & 0.024 & 0.092 & 2,373 (94.9\%) \\
+naive prompting & 0.695 & 0.884 & 382 (15.3\%) \\
+high temperature & 0.710 & 0.897 & 365 (14.6\%) \\
+Self-Instruct & 0.047 & 0.616 & 1,373 (54.9\%) \\
+Evol-Instruct & 0.012 & 0.424 & 1,870 (74.8\%) \\
+persona conditioning & 0.007 & 0.047 & 2,425 (97.0\%) \\
+\textbf{RAC} & \textbf{0.000} & \textbf{0.000} & \textbf{1,058
+(100.0\%)} \\
+\end{longtable}
+
+A naively generated bank of 2,500 items yields 382 that can coexist on
+one form --- 15\% of nominal capacity, against 94.9\% for the human
+bank. Temperature makes it slightly worse. Both conditioned policies
+exceed the human bank\textquotesingle s usable fraction, and the
+axis-conditioned bank contains no enemy pair at all at the judged
+radius, though it is measured at 1,058 items rather than 2,500 and the
+comparison should be read at that size.
+
+\subsubsection{6.9 Head-to-head against a human-written exam
+bank}\label{69-head-to-head-against-a-human-written-exam-bank}
+
+The comparisons above are against our own reimplementations, which is
+the right experiment for isolating mechanisms and the wrong one for the
+question \emph{is this actually good?} --- a reimplementation can be
+weak in ways that flatter us. So we also compare against an item bank
+that humans wrote: \textbf{MMLU}, \textasciitilde14,000 multiple-choice
+items drawn from real practice exams and textbooks across 57 subjects,
+by many authors, with editorial review, over years. All arms are sampled
+uniformly at random and evaluated at matched \emph{n} = 1,000 with
+identical metric code.
+
+\begin{longtable}[]{@{}lllllll@{}}
+\toprule\noalign{}
+source & exact-dup ↓ & distinct-2 ↑ & self-repetition ↓ & \emph{n}-gram
+Vendi ↑ & centered Vendi ↑ & median NN dist ↑ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{MMLU (human-written)} & 0.0040 & \textbf{0.5888} & 0.0585 &
+495.2 & \textbf{197.50} & \textbf{0.2838} \\
+naive gpt-5.6-luna & 0.6560 & 0.1196 & 0.8383 & 12.1 & 6.52 & 0.0000 \\
+high temperature & 0.6840 & 0.1161 & 0.8567 & 10.2 & 6.66 & 0.0000 \\
+Self-Instruct & 0.0280 & 0.1990 & 0.4797 & 277.6 & 57.22 & 0.0351 \\
+Evol-Instruct & 0.0060 & 0.2642 & 0.3855 & 381.9 & 89.23 & 0.0792 \\
+persona conditioning & 0.0040 & 0.3887 & 0.1711 & 543.3 & 99.71 &
+0.1346 \\
+\textbf{RAC} & \textbf{0.0000} & 0.4377 & \textbf{0.0503} &
+\textbf{622.2} & 135.58 & 0.2235 \\
+\end{longtable}
+
+The synthetic and human comparisons come out differently, and the
+difference matters.
+
+Against every synthetic method, RAC wins every column. Centered Vendi
+135.6 against the best baseline\textquotesingle s 99.7 --- a 36\% margin
+over persona conditioning, which is the closest published relative of
+our approach and differs from it exactly by the three components we add.
+Self-repetition 0.050 against persona\textquotesingle s 0.171. The
+undiversified arms are not close: naive and high-temperature prompting
+score \textasciitilde6.5 centered Vendi, because two-thirds of their
+corpora are byte-identical duplicates, and their median
+nearest-neighbour distance is exactly 0.0000 --- the median item has a
+perfect twin.
+
+Against the human bank the result splits. We \emph{beat} MMLU on exact
+duplication (0.0000 vs 0.0040 --- the human bank has some), on 4-gram
+self-repetition (0.050 vs 0.059), and on \emph{n}-gram Vendi (622 vs
+495): our items reuse less language than human-written ones do. We
+\emph{lose} on the semantic measures --- centered Vendi 135.6 against
+197.5, and median nearest-neighbour distance 0.224 against 0.284. We
+reach roughly 69\% of a human exam bank\textquotesingle s effective
+semantic diversity.
+
+That gap is the honest measure of what is left. MMLU\textquotesingle s
+spread comes from 57 genuinely different subjects; ours comes from an
+axis lattice a single model proposed in one call, refined a handful of
+times. The lexical result says our surface variety already exceeds
+human-authored items; the semantic result says our \emph{conceptual}
+variety does not, and that closing the remaining 31\% is a question
+about how much genuinely different subject matter the generator can be
+induced to reach, which is precisely the reachable-dimension question of
+§3, not a tuning problem.
+
+\subsubsection{6.10 Which metrics are independent of the
+objective}\label{610-which-metrics-are-independent-of-the-objective}
+
+Our selection rule maximizes a weighted sum of embedding-space
+orthogonality and embedding-space min-gap. We then report
+embedding-space diversity metrics. Those two facts are not independent:
+the centered Vendi Score is a monotone function of how flat the
+embedding Gram spectrum is, which is close to exactly what the
+orthogonality term climbs, and the median nearest-neighbour distance
+\emph{is} the min-gap term. To that extent, the wins on centered Vendi
+and median nearest-neighbour distance are partly tautological: the
+method optimizes them and the baselines do not, so they should be read
+as confirmation that the optimizer works rather than as independent
+evidence.
+
+The independent evidence is that the method never observes the
+\emph{literal} metrics at all. It reads embeddings; it has no access to
+token counts, \emph{n}-gram overlap, or string identity. So
+exact-duplicate rate, distinct-2, 4-gram self-repetition, and
+\emph{n}-gram Vendi are independent of the objective in a way the
+embedding metrics are not, and the method wins those too, including
+against the human-written bank on two of the four. Sorted by how much
+weight they can bear:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Embedding-space measures (Vendi, NN distance):} partly
+  circular; confirmation that the optimizer works.
+\item
+  \textbf{Literal-space measures (duplication, distinct-2,
+  self-repetition, \emph{n}-gram Vendi):} independent, since nothing in
+  the method targets them. These carry the argument.
+\item
+  \textbf{Rendered-artifact measures (CLIP, CLAP, MERT):} the most
+  independent, living downstream of a second generative model the method
+  never sees, which is why §6.6 matters more than its length suggests.
+\end{itemize}
+
+A reader who trusts only the third category still has the \emph{r} =
+0.170 result, which is a finding about every method in the table rather
+than a comparison between them.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{6.11 Literal-space repulsion: fixing what the embeddings
+cannot
+see}\label{611-literal-space-repulsion-fixing-what-the-embeddings-cannot-see}
+
+Embedding metrics miss an entire class of repetition: tiled grids of one
+cell, prominent typography, a single shared palette, the same
+composition recolored. Audited with deliberately dumb, non-semantic
+signatures (a 16×16 luminance layout map, an autocorrelation tiling
+score, a hue histogram): half the images had a layout twin above 0.5
+cosine, 40--45\% were literal tilings, and 63--78\% shared a palette,
+while prompt-level Jaccard sat at a healthy 0.14--0.17. Varied words,
+one visual mode: the conditional-dimension gap operating inside the
+\emph{renderer}.
+
+The fix is a four-quadrant repulsion (\{text, vision\} × \{literal,
+latent\}) where the two literal quadrants were previously unpopulated:
+content-word overlap penalties and live overused-word bans on the text
+side; and on the vision side, measured structural bans injected into
+prompts (grids banned when recent renders tile, dominant hue pairs named
+and banned, layout-change demands when layouts collide), plus a learned
+text→bad-structure bridge that penalizes candidates near prompts whose
+renders tiled. Rerun at matched budget, palette twins halved (0.78 →
+0.35 in the coverage arm), the coverage objective improved 21\% (0.206 →
+0.247), and layout/tiling moved modestly (0.51 → 0.46--0.48; 0.45 →
+0.33) --- a partial improvement, with the residue attributable to the
+image model\textquotesingle s own prior resisting text-side instruction.
+
+\subsubsection{6.12 Audio: prompts, the steered corpus, and embedder
+dependence}\label{612-audio-prompts-the-steered-corpus-and-embedder-dependence}
+
+\textbf{Prompt-level diversity.} At matched \emph{n}, matched prompt
+length and the same generator, the conditioned arm reaches centered
+Vendi 43.03 against naive\textquotesingle s 22.99 (1.87×), halves 4-gram
+self-repetition (0.140 vs 0.291), raises distinct-2 (0.545 vs 0.348) and
+\emph{n}-gram Vendi (75.3 vs 56.0), and holds roughly three times the
+room between nearest neighbours (0.079 vs 0.027), on 100 prompts per
+arm. Neither arm produces exact duplicates, so the effect is semantic.
+This replicates on a third artifact type the pattern of §6.3 and §6.5:
+conditioning moves the number, sampling temperature does not.
+
+\textbf{The steered corpus.} 100 Lyria-3-Pro instrumentals generated by
+cross-modal steering with zero rejection --- selection happens over
+prompts, every render is kept. Final measurements: 100\% of tracks
+verify as instrumental in CLAP space (minimum instrumental-vs-vocal
+margin 0.077); mean-centered CLAP Vendi 17.43, against 11.5 (naive
+prompts), and 14.1 (axis-conditioned prompts) for the unsteered 47-track
+arms under the same embedder; opening loudness at 0.72 of each
+track\textquotesingle s own median over the first three seconds, against
+a 0.46--0.61 baseline --- the sparse-opening attractor substantially,
+not fully, suppressed.
+
+\textbf{Structural control.} Lyria honors its own section-marker format
+(\texttt{{[}{[}A0{]}{]}\ {[}{[}B1{]}{]}\ …}), and ignores wall-clock
+timestamps. Compliance with a requested section sequence is
+length-dependent: exact at prompt lengths near 560 characters, 0.11 at a
+mean of 658, zero by \textasciitilde1,600. Structural contracts for
+music must be short or they are noise.
+
+Whether a prompt can be steered before rendering turns out to be a
+property of the embedder rather than of music. Prompt-to-track alignment
+(Spearman between prompt-pair similarity through the text tower and
+track-pair similarity through the audio tower, naive/conditioned arms):
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+embedder & alignment & note \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{MuQ-MuLan} (open MuLan-style) & \textbf{0.68 / 0.47} & a usable
+steering gradient \\
+CLAP-fused & 0.50 / 0.21 & weak; \textasciitilde0.05 on the steered
+corpus \\
+CLAP-music & 0.18 / 0.06 & worst; median within-corpus NN distance 0.004
+--- it hears one track \\
+MERT & --- & no text tower (control) \\
+\end{longtable}
+
+Cross-embedder agreement on pairwise track similarity spans 0.22--0.84;
+per-arm diversity verdicts flip between embedders, and each embedder
+nominates a different most-redundant pair. Two prescriptions follow:
+steer music with MuQ-MuLan rather than CLAP, and never publish an
+audio-diversity number without naming its embedder.
+
+\subsubsection{6.13 Scale and cost}\label{613-scale-and-cost}
+
+\subsection{\texorpdfstring{The text corpora comprise 43,171 real
+generations for roughly \$8.50 of OpenRouter spend, plus 690 rendered
+images across seven arms at two quality tiers, 100 rendered Lyria
+instrumentals, and 236 adjudicated exam-item pairs. Both \texttt{naive}
+arms reach \emph{n} = 10,000; the reimplemented baselines reach 2,500
+each. Every comparison is reported at a matched \emph{n} that all
+compared arms actually
+reached.}{The text corpora comprise 43,171 real generations for roughly \$8.50 of OpenRouter spend, plus 690 rendered images across seven arms at two quality tiers, 100 rendered Lyria instrumentals, and 236 adjudicated exam-item pairs. Both naive arms reach n = 10,000; the reimplemented baselines reach 2,500 each. Every comparison is reported at a matched n that all compared arms actually reached.}}\label{the-text-corpora-comprise-43171-real-generations-for-roughly-850-of-openrouter-spend-plus-690-rendered-images-across-seven-arms-at-two-quality-tiers-100-rendered-lyria-instrumentals-and-236-adjudicated-exam-item-pairs-both-naive-arms-reach-n--10000-the-reimplemented-baselines-reach-2500-each-every-comparison-is-reported-at-a-matched-n-that-all-compared-arms-actually-reached}
+
+\subsection{7. Relation to the coverage
+problem}\label{7-relation-to-the-coverage-problem}
+
+Two objectives share the generation budget. \textbf{Max--min} is a
+packing objective: \emph{k}-center-like, driven by the worst-case
+nearest pair, with no approximation guarantee under greedy selection.
+\textbf{Coverage} (given a finite budget, maximize the volume of a union
+of ε-balls) is a covering objective, closer to facility location, and
+monotone submodular, so greedy selection carries a (1 − 1/\emph{e})
+guarantee. The sections above develop the max--min side; Part II
+develops the coverage side across two further domains.
+
+Each objective\textquotesingle s strength is the other\textquotesingle s
+failure mode. Packing spreads points toward the boundary and
+over-invests in outliers, which is why max--min is sensitive to
+outliers: outliers are what it is designed to seek. Covering weights
+regions by measure and fills the bulk, which is why it leaves the
+frontier sparse. Neither reduces to the other, and the tools that serve
+one degrade the other.
+
+Both problems share this paper\textquotesingle s structural constraints,
+and we expect the conditional-dimension results to be \emph{more}
+consequential for coverage than for packing: covered volume is governed
+by reachable dimension, not by how many distinct prompts one can write,
+so the gap between how many distinct specs one can write and how many
+independent directions they actually move in bites harder there. The
+no-inverse-oracle assumption also degrades coverage\textquotesingle s
+greedy guarantee, since the guarantee is relative to the best subset
+\emph{of what was proposed}, and the proposal distribution is confined
+to a slice.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{8. Limitations}\label{8-limitations}
+
+\textbf{One embedding oracle.} All geometry is \texttt{nomic-embed-text}
+geometry in the live runs. Whether "diverse" under one embedder
+transfers to another is untested here and is a real threat to any
+embedding-based diversity claim, including ours.
+
+\textbf{Judge bias is unmeasured.} Language-model judges have systematic
+preferences, often \emph{for} fluent and typical text, which is exactly
+the bias that would work against a diversity system. We use a judge for
+craft and validity scores and did not calibrate its error against human
+raters.
+
+\textbf{Additive spec composition.} The axis scoring treats conditioning
+attributes as composing additively in embedding space, which is what
+makes a spec\textquotesingle s position predictable before it is
+generated. Real interactions between prompt attributes are not additive.
+
+\textbf{The exam-item judgments are model-made.} The enemy-item radius
+is calibrated against a blind adjudication by a language model under a
+psychometric rubric (§6.8), not by a credentialed psychometrician, and δ
+is specific to this embedder and this item type.
+
+\textbf{Quality is scalar.} Craft is not one number, and collapsing it
+to one lets a system trade away dimensions of quality the judge does not
+score.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{9. Conclusion}\label{9-conclusion}
+
+The infinite-horizon diversity objective is easy to write, cheap to
+maintain, and largely beside the point. What determines whether a corpus
+can keep growing without collapsing into paraphrase is the dimension of
+the generator\textquotesingle s conditional support relative to the
+manifold it lives in, and every practically important consequence
+follows from that one gap: saturation arrives at rate
+\emph{n}−1/\emph{m} rather than \emph{n}−1/\emph{d}; a single prompt
+covers an ε\emph{d}−\emph{m} fraction of what the model could write; and
+only transverse prompt motion raises the ceiling.
+
+Given an embedding oracle and no inverse, the system cannot compute its
+way to the next item. It can only choose what to condition on. The
+axis-scoring rule (spread, transversality, independence, headroom) is
+our answer to that choice, and its most valuable output is not the
+ranking but the \textbf{refine} signal: the moment it reports that
+nothing available is transverse any more is the moment the horizon has
+actually been reached, and the only remaining move is to ask the
+generator to subdivide its own vocabulary of variation.
+
+That recursion is the single mechanism we found that changes the
+asymptote rather than the constant. Everything else (better selection,
+more candidates, higher temperature) buys a constant factor against a
+problem that is asymptotic, and the loudest of them buys it by quietly
+breaking the generator.
+
+The measurements make the stakes concrete in a way the theory could not.
+A strong model, asked a perfectly reasonable question ten thousand
+times, returns the same item 2,726 times; the temperature knob barely
+moves that number and conditioning nearly erases it. Two diversity
+metrics computed on the same growing corpus point in opposite
+directions. And the text embeddings every method in this literature
+optimizes turn out to explain about two percent of the variance in
+whether the rendered images look alike. Each of those is a reason to
+distrust a single diversity number, and together they are the argument
+for the practice we ended up recommending: measure at the level of the
+artifact you are shipping, report the literal and the latent separately,
+publish the similarity distribution your kernel is operating on, and
+count your duplicates before you compute anything else.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\end{document}
