@@ -18,7 +18,24 @@ generator, the same embedders and the same budget, and we find they disagree
 sharply: **greedy k-center wins min-gap and finishes last on coverage** — a sixth
 of random — while the highest-Vendi selectors are among the worst covering ones.
 
-The site: **https://thehalleyyoung.github.io/coverage-max-min/**
+## Previewing the site
+
+The repo is private, so GitHub Pages is switched off (Pages on a private repo
+needs Pro or higher). Nothing is lost: `index.html` embeds every figure and
+loads no external assets, so it renders locally exactly as it will when
+published.
+
+    ./preview.sh              # opens index.html in your browser
+    python3 build_site.py     # rebuild it after editing the paper
+
+**When you make the repo public again**, re-enable Pages — going private
+deleted the Pages configuration, so flipping visibility back will not restore
+it on its own:
+
+    gh api -X POST repos/thehalleyyoung/coverage-max-min/pages \
+      -f 'source[branch]=main' -f 'source[path]=/'
+
+The URL returns to https://thehalleyyoung.github.io/coverage-max-min/
 
 ---
 
